@@ -55,3 +55,30 @@ find . -name "*.js"
 mkdir -p netlify/functions
 nano netlify/functions/create-preference.js
 nano netlify.toml
+git add .
+git commit -m "agrego backend Mercado Pago"
+git push
+git status
+find ~ -name "create-preference.js"
+mkdir -p netlify/functions
+nano netlify/functions/create-preference.js
+git remote add origin https://github.com/facundogonzalezsolano2-source/papu.git
+git branch -M main
+git push -u origin main
+no changes added to commit (use "git add" and/or "git commit -a")
+papu
+git branch -M main
+git push -u origin main
+git branch -M main
+git push -u origin main
+echo "hola"
+git remote add origin TU_URL
+git push -u origin main
+git remote add origin https://github.com/facundogonzalezsolano2-source/papu.git
+git push -u origin main
+git remote remove origin
+git remote add origin https://github.com/facundogonzalezsolano2-source/papu.git
+git remote remove origin
+git remote add origin https://github.com/facundogonzalezsolano2-source/papu.git
+git remote remove origin
+git remote add origin https://github.com/facundogonzalezsolano2-source/papu.git
