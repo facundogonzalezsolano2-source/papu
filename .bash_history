@@ -82,3 +82,18 @@ git remote remove origin
 git remote add origin https://github.com/facundogonzalezsolano2-source/papu.git
 git remote remove origin
 git remote add origin https://github.com/facundogonzalezsolano2-source/papu.git
+git branch -M main
+git add .
+git commit -m "backend mercado pago listo"
+git push -u origin main
+git remote remove origin
+git remote add origin https://github.com/facundogonzalezsolano2-source/papu.git
+git push -u origin main
+git remote remove origin
+git remote add origin https://github.com/facundogonzalezsolano2-source/papu.git
+git push -u origin main
+git remote remove origin
+git remote add origin https://github.com/facundogonzalezsolano2-source/papu.git
+git push -u origin main
+ls -a
+git rm -r --cached .gemini
