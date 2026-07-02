@@ -1,4 +1,4 @@
-import { MercadoPagoConfig, Preference } from "mercadopago";
+const { MercadoPagoConfig, Preference } from "mercadopago";
 
 export async function handler(event) {
   const accessToken = process.env.MP_ACCESS_TOKEN;
