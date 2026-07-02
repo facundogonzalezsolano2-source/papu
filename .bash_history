@@ -44,3 +44,14 @@ node -v
 npm install -g firebase-tools
 git init
 git add 
+git add .
+git commit -m "primer deploy con funciones"
+git config --global user.name "Facundo Gonzalez"
+git config --global user.email "facundogonzalezsolano2@gmail.com"
+git commit -m "primer deploy con funciones"
+ls
+ls netlify
+find . -name "*.js"
+mkdir -p netlify/functions
+nano netlify/functions/create-preference.js
+nano netlify.toml
