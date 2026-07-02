@@ -97,3 +97,9 @@ git remote add origin https://github.com/facundogonzalezsolano2-source/papu.git
 git push -u origin main
 ls -a
 git rm -r --cached .gemini
+git add .
+git commit -m "remove broken gemini extension causing netlify error"
+git push
+git submodule status
+git rm -r --cached .gemini/extensions/vertex
+rm -rf .gemini
