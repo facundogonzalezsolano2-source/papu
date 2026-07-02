@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tuapunte - Marketplace Educativo</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- CARGA DE SDKs DE FIREBASE DESDE LA NUBE -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              light: '#6366F1',
+              DEFAULT: '#4F46E5', 
+              dark: '#3730A3',
+            }
+          }
+        }
+      }
+    };
+
+    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    window.MP_API_BASE_URL = isLocalDev
+      ? 'http://localhost:8888/.netlify/functions'
+      : 'https://frolicking-sorbet-935acd.netlify.app/.netlify/functions';
+  </script>
+  <style>
+    html,
+    body {
+      overflow-x: hidden;
+    }
+
+    .protected-view {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+    .protected-view img {
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans">
+
+  <!-- BARRA SUPERIOR -->
+  <header class="bg-white shadow-sm border-b border-slate-100 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+      
+      <!-- Logo -->
+      <div class="flex items-center gap-2 cursor-pointer" onclick="resetFilters()">
+        <div class="bg-brand w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-white font-black text-lg">T</div>
+        <span class="text-base sm:text-2xl font-black tracking-tight text-brand">Tuapunte</span>
+      </div>
+
+      <!-- Buscador Principal -->
+      <div class="flex-1 w-full relative">
+        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <input type="text" id="searchInput" onkeyup="filterItems()" placeholder="Buscar por materia, ciudad, palabra clave..." class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all shadow-sm">
+      </div>
+
+      <!-- Acciones de Usuario -->
+      <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto">
+        <button onclick="openVenderModal()" class="bg-brand hover:bg-brand-dark text-white px-4 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md text-xs sm:text-sm">
+          <i class="fa-solid fa-file-circle-plus"></i>
+          <span>Publicar</span>
+        </button>
+
+        <div id="authContainer" class="w-full sm:w-auto">
+          <button onclick="openAuthModal()" class="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs transition-all">
+            Ingresar / Registrarse
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MENSAJE DE ESTADO DE CONEXIÓN A LA NUBE -->
+  <div id="connectionStatus" class="bg-amber-100 border-b border-amber-200 text-amber-800 text-center py-2 text-xs font-bold">
+    ⚠️ Estás usando el modo de prueba local. Para conectar tu base de datos real en la nube, debes pegar tus llaves de Firebase en el código del archivo index.html.
+  </div>
+
+  <datalist id="citySuggestions"></datalist>
+
+  <datalist id="institutionSuggestions">
+    <option value="Universidad de Buenos Aires"></option>
+    <option value="Universidad Nacional de Córdoba"></option>
+    <option value="Universidad Nacional de La Plata"></option>
+    <option value="Universidad Nacional de Rosario"></option>
+    <option value="Universidad Nacional de Mar del Plata"></option>
+    <option value="Universidad Nacional del Litoral"></option>
+    <option value="Universidad Nacional de Tucumán"></option>
+    <option value="Universidad Nacional del Sur"></option>
+    <option value="Universidad Nacional de Cuyo"></option>
+    <option value="Universidad Nacional de San Juan"></option>
+    <option value="Universidad Nacional de Salta"></option>
+    <option value="Universidad Tecnológica Nacional"></option>
+    <option value="Universidad Católica Argentina"></option>
+    <option value="Universidad Austral"></option>
+    <option value="Instituto Tecnológico de Buenos Aires"></option>
+    <option value="Universidad de Belgrano"></option>
+    <option value="Universidad Di Tella"></option>
+    <option value="Universidad Abierta Interamericana"></option>
+    <option value="Universidad de San Andrés"></option>
+    <option value="Universidad del Salvador"></option>
+    <option value="ORT Argentina"></option>
+    <option value="Universidad Nacional de Quilmes"></option>
+    <option value="Universidad Nacional de Tres de Febrero"></option>
+    <option value="Universidad Nacional de San Martín"></option>
+    <option value="Universidad Nacional de Catamarca"></option>
+    <option value="Otra"></option>
+  </datalist>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+    
+    <!-- FILTROS MOVIL -->
+    <div class="lg:hidden bg-white rounded-3xl border border-slate-100 p-4 mb-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-extrabold text-sm text-slate-800">Filtros</h3>
+        <i class="fa-solid fa-sliders text-brand"></i>
+      </div>
+      <div class="grid grid-cols-1 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Ciudad</label>
+          <input type="text" id="filterCityMobile" list="citySuggestions" onkeyup="copyMobileFilterValue()" placeholder="Ej: CABA, Córdoba..." class="w-full p-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-brand focus:outline-none text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Materia</label>
+          <input type="text" id="filterSubjectMobile" onkeyup="copyMobileFilterValue()" placeholder="Ej: Álgebra, Historia..." class="w-full p-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-brand focus:outline-none text-xs">
+        </div>
+      </div>
+    </div>
+
+    <!-- NUEVOS FILTROS SIMPLIFICADOS -->
+    <aside class="w-64 flex-shrink-0 hidden lg:block bg-white p-6 rounded-2xl border border-slate-100 h-fit space-y-5 shadow-sm">
+      <h3 class="font-extrabold text-sm border-b pb-3 flex justify-between items-center text-slate-800">
+        Filtros de Búsqueda <i class="fa-solid fa-sliders text-brand"></i>
+      </h3>
+      
+      <!-- Filtro Ciudad -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Ciudad</label>
+        <input type="text" id="filterCity" list="citySuggestions" onkeyup="filterItems()" placeholder="Ej: CABA, Córdoba..." class="w-full p-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-brand focus:outline-none text-xs">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Materia</label>
+        <input type="text" id="filterSubject" onkeyup="filterItems()" placeholder="Ej: Álgebra, Historia..." class="w-full p-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-brand focus:outline-none text-xs">
+      </div>
+    </aside>
+
+    <!-- Grilla de Apuntes -->
+    <section class="flex-1">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-base font-black text-slate-800">Publicaciones Disponibles</h2>
+        <span id="resultsCount" class="text-xs text-slate-500 font-bold">Mostrando 0 apuntes</span>
+      </div>
+
+      <div id="publicationsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Renderizado de tarjetas -->
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL DE DETALLE Y COMPRA -->
+  <div id="detailModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative p-6 md:p-8 flex flex-col md:flex-row gap-8">
+      <button onclick="closeDetailModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+
+      <!-- Visor de Portada / Páginas -->
+      <div class="w-full md:w-1/2 flex flex-col gap-4">
+        <div id="imageViewer" class="aspect-[3/4] bg-indigo-50 rounded-2xl flex flex-col items-center justify-center border border-indigo-100 p-4 relative overflow-y-auto">
+          <!-- Portada -->
+        </div>
+        <div id="protectionWarning" class="hidden bg-red-50 border border-red-200 rounded-xl p-3 flex gap-2 text-xs text-red-700">
+          <i class="fa-solid fa-user-shield text-base"></i>
+          <div>
+            <p class="font-bold">Contenido Protegido por Tuapunte</p>
+            <p class="text-slate-500 mt-0.5">Clic derecho y descarga deshabilitadas para proteger los derechos del autor.</p>
+          </div>
+        </div>
+        <div id="protectedContentPlaceholder" class="hidden mt-4 bg-slate-50 border border-slate-200 rounded-3xl p-4 text-slate-600 text-sm">
+          <p class="font-bold text-slate-800">Contenido protegido</p>
+          <p>Las imágenes internas solo se muestran tras completar la compra.</p>
+        </div>
+        <div id="protectedContent" class="hidden mt-4 bg-slate-50 border border-slate-200 rounded-3xl p-4 text-slate-600 text-sm">
+          <div id="protectedContentText"></div>
+        </div>
+      </div>
+
+      <!-- Datos del Material -->
+      <div class="w-full md:w-1/2 flex flex-col justify-between">
+        <div class="space-y-4">
+          <span id="modalType" class="bg-indigo-100 text-brand text-[10px] font-black px-2.5 py-1 rounded-full uppercase">TIPO</span>
+          <h2 id="modalTitle" class="text-xl font-black text-slate-900 leading-tight">Título</h2>
+          <p id="modalPrice" class="text-slate-700 font-bold text-sm">$0 ARS</p>
+          <p id="modalDescription" class="text-slate-500 text-xs">Descripción</p>
+
+          <div class="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl text-xs font-semibold text-slate-700">
+            <div><i class="fa-solid fa-building-columns text-brand mr-1"></i> <span id="modalInst">Institución</span></div>
+            <div><i class="fa-solid fa-book-bookmark text-brand mr-1"></i> <span id="modalSub">Materia</span></div>
+            <div><i class="fa-solid fa-location-dot text-brand mr-1"></i> <span id="modalCity">Ciudad</span></div>
+            <div><i class="fa-solid fa-user text-brand mr-1"></i> <span id="modalAuthor">Autor</span></div>
+          </div>
+          <div class="flex items-center gap-2 text-[10px] text-slate-500 font-bold mt-3">
+            <i class="fa-solid fa-images"></i>
+            <span id="modalImageCount">0 imágenes protegidas</span>
+          </div>
+        </div>
+
+        <div class="mt-6 space-y-4">
+          <div id="modalPublisherPanel" class="bg-slate-50 border border-slate-200 rounded-3xl p-4 text-slate-700 text-xs">
+            <div class="flex items-center gap-3 mb-4">
+              <img id="modalPublisherAvatar" src="https://via.placeholder.com/40?text=U" alt="Autor" class="w-14 h-14 rounded-3xl object-cover border border-slate-200" />
+              <div>
+                <p id="modalPublisherName" onclick="openUserProfile('${data.authorId || ''}')" class="text-sm font-black text-slate-900 cursor-pointer hover:text-brand">Autor</p>
+                <p id="modalPublisherBadge" class="text-[11px] text-slate-500">Calificación, publicaciones y reseñas</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-white rounded-3xl p-3 text-center">
+                <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Publicaciones</p>
+                <p id="modalPublisherPublications" class="text-xl font-black text-slate-900">0</p>
+              </div>
+              <div class="bg-white rounded-3xl p-3 text-center">
+                <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Reseñas</p>
+                <p id="modalPublisherReviews" class="text-xl font-black text-slate-900">0</p>
+              </div>
+              <div class="bg-white rounded-3xl p-3 text-center col-span-2">
+                <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Promedio</p>
+                <p id="modalPublisherRating" class="text-2xl font-black text-brand">0.0</p>
+                <p id="modalPublisherPercent" class="text-[10px] text-slate-500 mt-1">0% de satisfacción</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="purchasePrompt" class="bg-slate-50 border border-slate-200 rounded-3xl p-4 text-slate-600 text-sm">
+            <p class="font-bold text-slate-800 mb-2">Compra el material para dejar tu opinión.</p>
+            <p>Después de comprar, podrás calificar y dejar un comentario sobre este resumen o examen.</p>
+          </div>
+
+          <div id="buyButtonContainer"></div>
+
+          <div id="publicationReviewsSection" class="hidden mt-4 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-black text-slate-800">Reseñas de esta publicación</h3>
+              <span id="publicationReviewsSummary" class="text-xs text-slate-500">Mostrando reseñas reales</span>
+            </div>
+            <div id="publicationReviewsList" class="space-y-4"></div>
+            <p id="publicationReviewsEmpty" class="text-sm text-slate-500">Todavía no hay reseñas para esta publicación.</p>
+          </div>
+
+          <div id="detailReviewSection" class="hidden">
+            <div>
+              <h3 class="text-base font-black text-slate-800">¿Qué tal te ha parecido este resumen, examen...?</h3>
+              <p class="text-sm text-slate-500">Tu valoración ayuda a mejorar la experiencia para futuros estudiantes.</p>
+            </div>
+
+            <form id="detailReviewForm" class="space-y-3">
+              <div>
+                <label class="block font-bold text-slate-600 mb-1">Tu calificación</label>
+                <select id="detailReviewStars" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand text-xs">
+                  <option value="">-- Selecciona estrellas --</option>
+                  <option value="5">⭐⭐⭐⭐⭐</option>
+                  <option value="4">⭐⭐⭐⭐</option>
+                  <option value="3">⭐⭐⭐</option>
+                  <option value="2">⭐⭐</option>
+                  <option value="1">⭐</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-600 mb-1">Comentario</label>
+                <textarea id="detailReviewComment" rows="3" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand text-xs" placeholder="Cuenta qué te gustó y cómo se puede mejorar."></textarea>
+              </div>
+              <p id="detailReviewHint" class="text-xs text-slate-500">Si tu calificación es menor a 3 estrellas, el comentario es obligatorio. Si es 3 o más, es opcional.</p>
+              <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs">Enviar reseña</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE PUBLICACIÓN (FORMULARIO) -->
+  <div id="venderModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative p-6">
+      <button onclick="closeVenderModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+
+      <h2 class="text-xl font-black text-brand mb-4 flex items-center gap-2"><i class="fa-solid fa-file-circle-plus"></i> Publicar Material</h2>
+      <p class="text-sm text-slate-500 mb-3">Todas las publicaciones pasan por moderación antes de aparecer en el marketplace. Esto ayuda a mantener la calidad, evitar duplicados y proteger a los estudiantes; puede tardar unos minutos mientras el equipo revisa el contenido.</p>
+      <form id="venderForm" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Título *</label>
+          <input type="text" id="formTitle" required placeholder="Ej: Resumen Química CBC" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Descripción *</label>
+          <textarea id="formDesc" required placeholder="Describe de qué trata..." class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand h-16"></textarea>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Foto de Portada (Obligatoria)</label>
+          <input type="file" id="formCover" accept="image/*" required class="block w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-brand file:text-white">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Contenido protegido (imágenes)</label>
+          <input type="file" id="formProtectedImages" accept="image/*" multiple required class="block w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-slate-100 file:text-slate-700">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Precio (ARS) *</label>
+            <input type="number" id="formPrice" required placeholder="Ej: 1500" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Tipo de Publicación *</label>
+            <select id="formType" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+              <option value="Resumen">Resumen</option>
+              <option value="Examen">Examen</option>
+              <option value="Trabajo práctico">Trabajo práctico</option>
+            </select>
+          </div>
+        </div>
+        <div id="commissionSummary" class="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-black">Resumen de comisión</span>
+            <span class="text-[11px] font-bold">TuApunte cobra 15%</span>
+          </div>
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span>Precio del estudiante</span>
+              <span id="commissionStudentAmount" class="font-black">$0</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Protección de contenido</span>
+              <span class="font-black">10%</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Servicios vinculados</span>
+              <span class="font-black">5%</span>
+            </div>
+            <div class="flex items-center justify-between text-emerald-700">
+              <span>Lo que recibes tú</span>
+              <span id="commissionSellerAmount" class="font-black">$0</span>
+            </div>
+          </div>
+          <p class="mt-2 text-[11px] text-amber-800">Todo el proceso está respaldado por Mercado Pago y queda 100% seguro para la venta y el cobro.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Ciudad *</label>
+            <input type="text" id="formCity" list="citySuggestions" required placeholder="Ej: CABA" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Institución Educativa *</label>
+            <input type="text" id="formInst" list="institutionSuggestions" required placeholder="Ej: UBA" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Profesor *</label>
+          <input type="text" id="formProfessor" required placeholder="Ej: Prof. García" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Materia *</label>
+          <input type="text" id="formSubject" required placeholder="Ej: Química" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+        <button type="submit" class="w-full bg-brand text-white py-3 rounded-xl font-bold text-xs shadow-md">Publicar Ahora</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE AUTENTICACIÓN -->
+  <div id="authModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl relative p-6">
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      
+      <div class="flex justify-center gap-4 border-b pb-4 mb-6">
+        <button onclick="switchAuthTab('login')" id="tabLogin" class="text-sm font-black text-brand border-b-2 border-brand pb-1">Iniciar Sesión</button>
+        <button onclick="switchAuthTab('register')" id="tabRegister" class="text-sm font-bold text-slate-400 pb-1">Registrarse</button>
+      </div>
+
+      <!-- Formulario de Login -->
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Correo Electrónico</label>
+          <input type="email" id="loginEmail" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Contraseña</label>
+          <input type="password" id="loginPass" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+        <button type="submit" class="w-full bg-brand text-white py-3 rounded-xl font-bold">Ingresar</button>
+        <button type="button" onclick="handleGoogleLogin()" class="w-full border border-slate-200 text-slate-700 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-50"><i class="fa-brands fa-google text-red-500"></i> Entrar con Google</button>
+      </form>
+
+      <!-- Formulario de Registro -->
+      <form id="registerForm" onsubmit="handleRegister(event)" class="hidden space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Nombre de usuario único *</label>
+          <input type="text" id="regUser" required placeholder="Ej: SofiEstudios" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Correo Electrónico *</label>
+          <input type="email" id="regEmail" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Contraseña *</label>
+          <input type="password" id="regPass" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Foto de perfil</label>
+          <input type="file" id="regAvatarFile" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-slate-100 file:text-slate-700">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">O URL de avatar</label>
+          <input type="url" id="regAvatarUrl" placeholder="https://..." class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand text-xs">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Ciudad (Argentina) *</label>
+            <input type="text" id="regCity" list="citySuggestions" required placeholder="CABA" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Institución *</label>
+            <input type="text" id="regInst" list="institutionSuggestions" required placeholder="UBA" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+          </div>
+        </div>
+        <button type="submit" class="w-full bg-brand text-white py-3 rounded-xl font-bold">Registrarse</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="profilePage" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+        <button onclick="closeProfilePage()" class="text-slate-500 hover:text-slate-900 font-bold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver al marketplace
+        </button>
+        <div class="flex items-center gap-4">
+          <img id="profileAvatar" src="https://via.placeholder.com/120?text=Perfil" alt="Avatar" class="w-28 h-28 rounded-full object-cover border border-slate-200 shadow-sm" />
+          <div>
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Perfil</p>
+            <h2 id="profileUsername" class="text-3xl font-black text-slate-900">usuario</h2>
+          </div>
+        </div>
+        <div class="flex flex-col gap-2">
+          <button onclick="toggleProfileEdit()" class="bg-brand text-white px-4 py-3 rounded-2xl font-bold">Editar perfil</button>
+          <button onclick="closeProfilePage()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-2xl font-bold">Cerrar perfil</button>
+        </div>
+      </div>
+
+      <div id="profileEditSection" class="hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-sm mb-6">
+        <h3 class="text-lg font-black text-slate-900 mb-4">Editar información de perfil</h3>
+        <form id="profileEditForm" onsubmit="saveProfileEdits(event)" class="grid gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Nombre de usuario</label>
+            <input type="text" id="editUsername" required class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Ciudad</label>
+            <input type="text" id="editCity" list="citySuggestions" required class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Institución</label>
+            <input type="text" id="editInstitution" list="institutionSuggestions" required class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Foto de perfil</label>
+            <input type="file" id="editAvatarFile" accept="image/*" class="w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-slate-100 file:text-slate-700" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">O URL de avatar</label>
+            <input type="url" id="editAvatarUrl" placeholder="https://..." class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+          </div>
+          <div class="flex gap-3">
+            <button type="submit" class="bg-brand text-white px-5 py-3 rounded-2xl font-bold text-sm">Guardar cambios</button>
+            <button type="button" onclick="toggleProfileEdit()" class="bg-slate-100 text-slate-700 px-5 py-3 rounded-2xl font-bold text-sm">Cancelar</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="grid gap-6 lg:grid-cols-[320px,1fr]">
+        <aside class="space-y-6">
+          <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
+                  <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center">
+              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Publicaciones</p>
+              <p id="profilePublicationsCount" class="text-3xl font-black text-slate-900">0</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center">
+              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Reseñas</p>
+              <p id="profileReviewsCount" class="text-3xl font-black text-slate-900">0</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center">
+              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Valoración</p>
+              <p id="profileRating" class="text-3xl font-black text-slate-900">0.0</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center">
+              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Ciudad</p>
+              <p id="profileCity" class="text-2xl font-black text-slate-900">CABA</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center">
+              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Institución</p>
+              <p id="profileInstitution" class="text-2xl font-black text-slate-900">N/D</p>
+            </div>
+          </div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h3 class="text-sm font-black text-slate-900 mb-3">Sobre mí</h3>
+            <p class="text-sm text-slate-600 mb-4"><span class="font-bold">Institución:</span> <span id="profileInstitution">N/D</span></p>
+            <p class="text-sm text-slate-600">Este es tu perfil público. Tus publicaciones aparecen abajo en tiempo real para que otros usuarios vean tu trabajo.</p>
+          </div>
+        </aside>
+
+        <section class="space-y-6">
+          <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <div class="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <h3 class="text-lg font-black text-slate-900">Tus publicaciones</h3>
+                <p class="text-xs text-slate-500">Mira tus apuntes publicados y el estado de cada uno.</p>
+              </div>
+            </div>
+            <div id="profilePublicationsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminPanel" class="hidden fixed inset-0 bg-slate-900/80 z-50 overflow-y-auto">
+    <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+      <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <div class="flex items-center justify-between gap-4 border-b border-slate-200 p-5">
+          <div>
+            <h2 class="text-xl font-black text-slate-900">Panel de Moderación</h2>
+            <p class="text-sm text-slate-500">Revisa, advierte o elimina publicaciones en el marketplace.</p>
+          </div>
+          <button onclick="closeAdminPanel()" class="text-slate-500 hover:text-slate-900 rounded-full p-3 bg-slate-100">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="p-5 space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-slate-50 rounded-3xl p-5 border border-slate-200">
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Total de publicaciones</p>
+              <p id="adminPublicationsCount" class="text-3xl font-black text-slate-900">0</p>
+            </div>
+            <div class="bg-slate-50 rounded-3xl p-5 border border-slate-200">
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Publicaciones pendientes</p>
+              <p id="adminPendingCount" class="text-3xl font-black text-slate-900">0</p>
+            </div>
+            <div class="bg-slate-50 rounded-3xl p-5 border border-slate-200">
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Acciones disponibles</p>
+              <p class="text-sm text-slate-700">Eliminar, advertir o marcar como revisada.</p>
+            </div>
+          </div>
+          <div id="adminPublicationsGrid" class="grid gap-4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==============================================
+    // 🟢 TUS LLAVES REALES DE LA NUBE CARGADAS 🟢
+    // ==============================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyDyal6ABrCi2l1Ye1wgkE5Dw5xFGlUUsaM",
+      authDomain: "tuapunte-cd94a.firebaseapp.com",
+      projectId: "tuapunte-cd94a",
+      storageBucket: "tuapunte-cd94a.firebasestorage.app",
+      messagingSenderId: "984806073833",
+      appId: "1:984806073833:web:24ca6d233f1df62a8a5778",
+      measurementId: "G-EKMCL6RQVC"
+    };
+
+    let isRealFirebase = false;
+    const adminEmails = ['facundogonzalezsolanoyt@gmail.com'];
+
+    let localDB = [
+      {
+        id: 1,
+        title: "Resumen Álgebra CBC",
+        description: "Apunte con todos los temas del primer parcial.",
+        price: 1500,
+        type: "Resumen",
+        city: "CABA",
+        institution: "UBA",
+        subject: "Álgebra",
+        authorNick: "Juani",
+        authorAvatar: "https://via.placeholder.com/80?text=J",
+        authorId: "autor_1",
+        portadaUrl: "https://via.placeholder.com/400x520?text=Portada+Álgebra",
+        protectedUrls: [
+          "https://via.placeholder.com/600x800?text=Página+1",
+          "https://via.placeholder.com/600x800?text=Página+2",
+          "https://via.placeholder.com/600x800?text=Página+3"
+        ],
+        adminStatus: 'approved'
+      },
+      {
+        id: 2,
+        title: "Examen Química General",
+        description: "Examen resuelto paso a paso con respuestas justificadas.",
+        price: 2000,
+        type: "Examen",
+        city: "Rosario",
+        institution: "UNR",
+        subject: "Química",
+        authorNick: "Luz",
+        authorAvatar: "https://via.placeholder.com/80?text=L",
+        authorId: "autor_2",
+        portadaUrl: "https://via.placeholder.com/400x520?text=Portada+Química",
+        protectedUrls: [
+          "https://via.placeholder.com/600x800?text=Página+1",
+          "https://via.placeholder.com/600x800?text=Página+2"
+        ],
+        adminStatus: 'approved'
+      }
+    ];
+
+    let localUsers = [
+      { id: 'autor_1', username: 'Juani', avatarUrl: 'https://via.placeholder.com/80?text=J', city: 'CABA', institution: 'UBA' },
+      { id: 'autor_2', username: 'Luz', avatarUrl: 'https://via.placeholder.com/80?text=L', city: 'Rosario', institution: 'UNR' },
+      { id: 'user_1', username: 'María', avatarUrl: 'https://via.placeholder.com/80?text=M', city: 'La Plata', institution: 'UNLP' },
+      { id: 'user_2', username: 'Facu', avatarUrl: 'https://via.placeholder.com/80?text=F', city: 'CABA', institution: 'UTN' }
+    ];
+
+    let localReviews = [
+      { id: 'r1', publicationId: 1, reviewerId: 'user_1', reviewerName: 'María', reviewerAvatar: 'https://via.placeholder.com/40?text=M', estrellas: 5, comentario: 'Excelente resumen, muy completo.' },
+      { id: 'r2', publicationId: 1, reviewerId: 'user_2', reviewerName: 'Facu', reviewerAvatar: 'https://via.placeholder.com/40?text=F', estrellas: 4, comentario: 'Buen material, me ayudó mucho.' },
+      { id: 'r3', publicationId: 2, reviewerId: 'user_1', reviewerName: 'María', reviewerAvatar: 'https://via.placeholder.com/40?text=M', estrellas: 4, comentario: 'Clara explicación y buenos ejemplos.' }
+    ];
+
+    // INICIALIZACIÓN
+    const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+    const dbRef = firebase.firestore();
+    const authRef = firebase.auth();
+    const storage = firebase.storage();
+    const idAutorEjemplo = "CLIENTE_PRUEBA";
+    const nombreAutorEjemplo = "Usuario Anónimo";
+    let currentUser = null;
+    let currentUserData = null;
+    let currentUserIsAdmin = false;
+    let allPublications = [];
+    let loadedPublications = [];
+    let publicationsLastVisible = null;
+    let publicationsLoading = false;
+    let hasMorePublications = true;
+    let currentCityFilter = '';
+    let currentSubjectFilter = '';
+    const publicationsPageSize = 30;
+    const defaultAvatar = 'https://via.placeholder.com/40?text=U';
+
+    if (firebaseConfig.apiKey !== "TU_API_KEY") {
+      isRealFirebase = true;
+      try {
+        firebase.analytics();
+      } catch (e) {
+        console.warn("Analytics solo funciona al subir la app a Firebase Hosting.");
+      }
+      const statusEl = document.getElementById('connectionStatus');
+      if (statusEl) {
+        statusEl.style.display = 'none';
+      }
+    } else {
+      const statusEl = document.getElementById('connectionStatus');
+      if (statusEl) {
+        statusEl.innerText = "⚠️ Estás usando el modo de prueba local. Para conectar tu base de datos real en la nube, debes pegar tus llaves de Firebase en el código del archivo index.html.";
+      }
+    }
+
+    // ESCUCHAR ESTADO DE SESIÓN REAL
+    if (isRealFirebase) {
+      authRef.onAuthStateChanged(user => {
+        if (user) {
+          currentUser = user;
+          dbRef.collection('users').doc(user.uid).get().then(doc => {
+            const data = doc.data() || {};
+            currentUserData = data;
+            currentUserIsAdmin = adminEmails.includes(user.email);
+            updateAuthContainer();
+          });
+        } else {
+          currentUser = null;
+          currentUserData = null;
+          currentUserIsAdmin = false;
+          updateAuthContainer();
+        }
+      });
+    }
+
+    function updateAuthContainer() {
+      const authContainer = document.getElementById('authContainer');
+      if (!authContainer) return;
+
+      if (currentUser) {
+        authContainer.innerHTML = `
+          <div class="flex items-center gap-2">
+            <button onclick="openProfilePage()" class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 hover:bg-slate-50 transition-all">
+              <img src="${currentUserData?.avatarUrl || defaultAvatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover" />
+              <span class="text-xs font-bold text-slate-700">${currentUserData?.username || 'Usuario'}</span>
+            </button>
+            ${currentUserIsAdmin ? `<button onclick="openAdminPanel()" class="bg-amber-100 text-amber-700 px-3 py-2 rounded-xl text-xs font-bold hover:bg-amber-200 transition-all">Admin</button>` : ''}
+            <button onclick="handleLogout()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold">Salir</button>
+          </div>
+        `;
+      } else {
+        authContainer.innerHTML = `
+          <button onclick="openAuthModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-xl font-bold text-xs">Ingresar</button>
+        `;
+      }
+    }
+
+    const detailReviewForm = document.getElementById("detailReviewForm");
+
+    if (detailReviewForm) {
+      detailReviewForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const estrellas = parseInt(document.getElementById("detailReviewStars").value, 10);
+        const comentario = document.getElementById("detailReviewComment").value.trim();
+        const publicationId = document.getElementById("detailModal").dataset.publicationId;
+        const authorId = document.getElementById("detailModal").dataset.authorId;
+        const reviewerId = currentUser ? currentUser.uid : idAutorEjemplo;
+        const reviewerName = currentUserData?.username || nombreAutorEjemplo;
+
+        if (!publicationId) {
+          alert("No se encontró la publicación para reseñar.");
+          return;
+        }
+
+        if (estrellas < 3 && !comentario) {
+          alert("Para calificaciones de 1 o 2 estrellas, el comentario es obligatorio.");
+          return;
+        }
+
+        try {
+          const consultaDuplicado = dbRef.collection('reseñas')
+            .where("publicationId", "==", publicationId)
+            .where("idAutor", "==", reviewerId);
+          const snapshot = await consultaDuplicado.get();
+
+          if (!snapshot.empty) {
+            alert("⚠️ Ya has calificado esta publicación anteriormente.");
+            return;
+          }
+
+          await dbRef.collection('reseñas').add({
+            publicationId,
+            idAutor: reviewerId,
+            nombreAutor: reviewerName,
+            estrellas,
+            comentario,
+            fecha: new Date(),
+            reportado: false
+          });
+
+          alert("¡Muchas gracias! Tu opinión ha sido registrada.");
+          detailReviewForm.reset();
+          if (authorId) {
+            loadAuthorStatistics(authorId, document.getElementById('modalAuthor').innerText, document.getElementById('modalPublisherAvatar').src);
+          }
+        } catch (error) {
+          alert("Error al enviar reseña: " + error.message);
+        }
+      });
+    }
+
+    async function loadAuthorStatistics(authorId, authorNick, authorAvatar) {
+      const avatarEl = document.getElementById('modalPublisherAvatar');
+      const nameEl = document.getElementById('modalPublisherName');
+      const badgeEl = document.getElementById('modalPublisherBadge');
+      const pubsEl = document.getElementById('modalPublisherPublications');
+      const reviewsEl = document.getElementById('modalPublisherReviews');
+      const ratingEl = document.getElementById('modalPublisherRating');
+      const percentEl = document.getElementById('modalPublisherPercent');
+
+      if (!avatarEl || !nameEl || !badgeEl || !pubsEl || !reviewsEl || !ratingEl || !percentEl) return;
+
+      avatarEl.src = authorAvatar || defaultAvatar;
+      nameEl.innerText = authorNick || 'Autor';
+      badgeEl.innerText = 'Perfil del vendedor';
+      pubsEl.innerText = '0';
+      reviewsEl.innerText = '0';
+      ratingEl.innerText = '0.0';
+      percentEl.innerText = '0% de satisfacción';
+
+      if (!isRealFirebase || !authorId) return;
+
+      try {
+        const userDoc = await dbRef.collection('users').doc(authorId).get();
+        if (userDoc.exists) {
+          const userData = userDoc.data() || {};
+          if (userData.avatarUrl) avatarEl.src = userData.avatarUrl;
+          nameEl.innerText = userData.username || authorNick || 'Autor';
+        }
+
+        const publicationsSnapshot = await dbRef.collection('publications').where('authorId', '==', authorId).get();
+        const publicationIds = publicationsSnapshot.docs.map(doc => doc.id);
+        pubsEl.innerText = publicationIds.length;
+
+        let reviewsCount = 0;
+        let ratingSum = 0;
+
+        if (publicationIds.length) {
+          const batches = [];
+          for (let i = 0; i < publicationIds.length; i += 10) {
+            batches.push(publicationIds.slice(i, i + 10));
+          }
+          for (const batch of batches) {
+            const reviewsSnapshot = await dbRef.collection('reseñas').where('publicationId', 'in', batch).get();
+            reviewsSnapshot.forEach(doc => {
+              const data = doc.data();
+              reviewsCount += 1;
+              ratingSum += (data.estrellas || 0);
+            });
+          }
+        }
+
+        reviewsEl.innerText = reviewsCount;
+        const averageRating = reviewsCount ? (ratingSum / reviewsCount).toFixed(1) : '0.0';
+        ratingEl.innerText = averageRating;
+        percentEl.innerText = `${Math.round((parseFloat(averageRating) || 0) / 5 * 100)}% de satisfacción`;
+      } catch (error) {
+        console.error('Error cargando estadísticas de autor:', error);
+      }
+    }
+
+    // REGISTRO DE USUARIOS
+    async function handleRegister(e) {
+      e.preventDefault();
+      const email = document.getElementById('regEmail').value;
+      const pass = document.getElementById('regPass').value;
+      const username = document.getElementById('regUser').value;
+      const city = document.getElementById('regCity').value;
+      const inst = document.getElementById('regInst').value;
+      const avatarUrlInput = document.getElementById('regAvatarUrl').value.trim();
+      const avatarFile = document.getElementById('regAvatarFile').files[0];
+
+      if (!isRealFirebase) {
+        alert("Modo local: Registro simulado con éxito.");
+        closeAuthModal();
+        return;
+      }
+
+      try {
+        const cred = await authRef.createUserWithEmailAndPassword(email, pass);
+        let avatarUrl = avatarUrlInput || '';
+
+        if (avatarFile) {
+          const avatarRef = storage.ref(`avatars/${Date.now()}_${avatarFile.name}`);
+          await avatarRef.put(avatarFile);
+          avatarUrl = await avatarRef.getDownloadURL();
+        }
+
+        const userDoc = {
+          username: username,
+          email: email,
+          city: city,
+          institution: inst,
+          avatarUrl: avatarUrl || '',
+          isAdmin: adminEmails.includes(email),
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await dbRef.collection('users').doc(cred.user.uid).set(userDoc);
+        currentUserData = userDoc;
+        alert("¡Cuenta creada en Firebase!");
+        closeAuthModal();
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    }
+
+    // INICIAR SESIÓN
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const pass = document.getElementById('loginPass').value;
+
+      if (!isRealFirebase) {
+        currentUser = { email };
+        currentUserData = {
+          username: email === adminEmails[0] ? 'Administrador' : email.split('@')[0],
+          avatarUrl: defaultAvatar,
+          email
+        };
+        currentUserIsAdmin = adminEmails.includes(email);
+        updateAuthContainer();
+        alert("Modo local: Ingreso simulado con éxito.");
+        closeAuthModal();
+        return;
+      }
+
+      authRef.signInWithEmailAndPassword(email, pass)
+        .then(() => {
+          alert("¡Sesión iniciada con éxito!");
+          closeAuthModal();
+        })
+        .catch(err => alert("Error: " + err.message));
+    }
+
+    // GOOGLE LOGIN
+    function handleGoogleLogin() {
+      if (!isRealFirebase) {
+        alert("Modo local: Google login simulado.");
+        closeAuthModal();
+        return;
+      }
+      const provider = new firebase.auth.GoogleAuthProvider();
+      authRef.signInWithPopup(provider)
+        .then(result => {
+          const user = result.user;
+          dbRef.collection('users').doc(user.uid).set({
+            username: user.displayName ? user.displayName.replace(/\s+/g, '').toLowerCase() : `user${Date.now()}`,
+            email: user.email,
+            city: "Argentina",
+            institution: "UBA",
+            avatarUrl: user.photoURL || ''
+          }, { merge: true });
+          closeAuthModal();
+        })
+        .catch(err => alert(err.message));
+    }
+
+    function handleLogout() {
+      if (isRealFirebase) {
+        authRef.signOut();
+      } else {
+        alert("Sesión cerrada.");
+      }
+    }
+
+    // PUBLICAR MATERIAL
+    let isPublishing = false;
+
+    function handlePublish(e) {
+      e.preventDefault();
+      if (isPublishing) return;
+      isPublishing = true;
+
+      const form = e.target;
+      const submitButton = form.querySelector('button[type="submit"]');
+      const resetSubmitState = () => {
+        isPublishing = false;
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.innerText = 'Publicar Ahora';
+        }
+      };
+
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerText = 'Publicando...';
+      }
+
+      const title = document.getElementById('formTitle').value;
+      const desc = document.getElementById('formDesc').value;
+      const coverFile = document.getElementById('formCover').files[0];
+      const protectedFiles = document.getElementById('formProtectedImages').files;
+      const price = parseFloat(document.getElementById('formPrice').value);
+      const type = document.getElementById('formType').value;
+      const city = document.getElementById('formCity').value;
+      const inst = document.getElementById('formInst').value;
+      const professor = document.getElementById('formProfessor').value;
+      const subject = document.getElementById('formSubject').value;
+
+      if (!coverFile) {
+        alert('Debes elegir una foto de portada.');
+        resetSubmitState();
+        return;
+      }
+      if (!protectedFiles.length) {
+        alert('Debes elegir al menos una imagen protegida.');
+        resetSubmitState();
+        return;
+      }
+
+      const postData = {
+        title,
+        description: desc,
+        price,
+        type,
+        city,
+        institution: inst,
+        professor,
+        subject,
+        authorId: currentUser ? currentUser.uid : idAutorEjemplo,
+        authorNick: currentUserData?.username || nombreAutorEjemplo,
+        authorAvatar: currentUserData?.avatarUrl || defaultAvatar,
+        createdAt: isRealFirebase ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
+      };
+
+      const savePublication = async (coverUrl, protectedUrls) => {
+        const finalData = {
+          ...postData,
+          portadaUrl: coverUrl,
+          protectedUrls,
+          adminStatus: 'pending',
+          adminNote: 'Publicación pendiente de revisión por el equipo de administración.',
+        };
+
+        if (!isRealFirebase) {
+          localDB.unshift({ id: localDB.length + 1, ...finalData });
+          renderGrid(localDB);
+          form.reset();
+          closeVenderModal();
+          alert('Tu publicación fue enviada y está pendiente de revisión. El administrador la revisará en breve.');
+          resetSubmitState();
+          return;
+        }
+
+        try {
+          await dbRef.collection('publications').add(finalData);
+          alert('¡Guardado en la base de datos Firestore en tiempo real!');
+          form.reset();
+          closeVenderModal();
+        } catch (err) {
+          alert(err.message);
+        } finally {
+          resetSubmitState();
+        }
+      };
+
+      const uploadCover = async () => {
+        if (!isRealFirebase) {
+          return URL.createObjectURL(coverFile);
+        }
+        const coverRef = storage.ref(`portadas/${Date.now()}_${coverFile.name}`);
+        await coverRef.put(coverFile);
+        return await coverRef.getDownloadURL();
+      };
+
+      const uploadProtectedImages = async () => {
+        const urls = [];
+        for (const file of protectedFiles) {
+          if (!isRealFirebase) {
+            urls.push(URL.createObjectURL(file));
+            continue;
+          }
+          const protectedRef = storage.ref(`protegidos/${Date.now()}_${file.name}`);
+          await protectedRef.put(file);
+          urls.push(await protectedRef.getDownloadURL());
+        }
+        return urls;
+      };
+
+      Promise.all([uploadCover(), uploadProtectedImages()])
+        .then(([coverUrl, protectedUrls]) => savePublication(coverUrl, protectedUrls))
+        .catch(err => {
+          alert('Error al subir archivos: ' + err.message);
+          resetSubmitState();
+        });
+    }
+
+    window.handlePublish = handlePublish;
+
+    // CARGAR GRILLA DESDE LA NUBE O LOCAL
+    function loadGrid() {
+      resetPublicationLoad();
+    }
+
+    async function loadPublicationsPage() {
+      if (publicationsLoading || !hasMorePublications) return;
+      publicationsLoading = true;
+
+      const cityFilterValue = document.getElementById('filterCity').value.trim();
+      const subjectFilterValue = document.getElementById('filterSubject').value.trim().toLowerCase();
+      const searchValue = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      if (cityFilterValue !== currentCityFilter || subjectFilterValue !== currentSubjectFilter) {
+        currentCityFilter = cityFilterValue;
+        currentSubjectFilter = subjectFilterValue;
+      }
+
+      if (isRealFirebase) {
+        try {
+          let query = dbRef.collection('publications').orderBy('createdAt', 'desc').limit(publicationsPageSize);
+          if (currentCityFilter) {
+            query = dbRef.collection('publications')
+              .where('city', '==', currentCityFilter)
+              .orderBy('createdAt', 'desc')
+              .limit(publicationsPageSize);
+          }
+          if (publicationsLastVisible) {
+            query = query.startAfter(publicationsLastVisible);
+          }
+
+          const snapshot = await query.get();
+          if (snapshot.empty) {
+            hasMorePublications = false;
+          } else {
+            const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const approvedItems = items.filter(item => item.adminStatus !== 'pending');
+            publicationsLastVisible = snapshot.docs[snapshot.docs.length - 1];
+            if (snapshot.size < publicationsPageSize) {
+              hasMorePublications = false;
+            }
+            loadedPublications = [...loadedPublications, ...approvedItems];
+            allPublications = loadedPublications;
+            renderGrid(applyFilters(loadedPublications));
+          }
+        } catch (error) {
+          console.error('Error cargando publicaciones paginadas:', error);
+          hasMorePublications = false;
+        }
+      } else {
+        const filteredLocal = localDB.filter(item => {
+          const city = item.city.toLowerCase();
+          const subject = (item.subject || '').toLowerCase();
+          const searchText = `${item.title} ${item.description} ${item.city} ${item.subject} ${item.professor} ${item.institution}`.toLowerCase();
+          const cityMatch = !currentCityFilter || city.includes(currentCityFilter.toLowerCase());
+          const subjectMatch = !currentSubjectFilter || subject.includes(currentSubjectFilter);
+          const searchMatch = !searchValue || searchText.includes(searchValue);
+          const approved = item.adminStatus !== 'pending';
+          return approved && cityMatch && subjectMatch && searchMatch;
+        });
+        const page = filteredLocal.slice(0, publicationsPageSize);
+        loadedPublications = page;
+        allPublications = page;
+        hasMorePublications = filteredLocal.length > publicationsPageSize;
+        renderGrid(loadedPublications);
+      }
+
+      publicationsLoading = false;
+    }
+
+    function resetPublicationLoad() {
+      loadedPublications = [];
+      allPublications = [];
+      publicationsLastVisible = null;
+      hasMorePublications = true;
+      document.getElementById('publicationsGrid').innerHTML = '';
+      document.getElementById('resultsCount').innerText = 'Cargando publicaciones...';
+      loadPublicationsPage();
+    }
+
+    function applyFilters(items) {
+      const searchInput = document.getElementById('searchInput').value.trim().toLowerCase();
+      const filterSubject = document.getElementById('filterSubject').value.trim().toLowerCase();
+
+      return items.filter(item => {
+        const title = (item.title || '').toLowerCase();
+        const desc = (item.description || '').toLowerCase();
+        const city = (item.city || '').toLowerCase();
+        const subject = (item.subject || '').toLowerCase();
+        const professor = (item.professor || '').toLowerCase();
+        const institution = (item.institution || '').toLowerCase();
+        const globalText = `${title} ${desc} ${city} ${subject} ${professor} ${institution}`;
+
+        const matchesSearch = !searchInput || globalText.includes(searchInput);
+        const matchesSubject = !filterSubject || subject.includes(filterSubject);
+
+        return matchesSearch && matchesSubject;
+      });
+    }
+
+    function renderGrid(items) {
+      const grid = document.getElementById('publicationsGrid');
+      grid.innerHTML = '';
+      document.getElementById('resultsCount').innerText = `Mostrando ${items.length} apuntes`;
+
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-2xl border border-slate-150 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer";
+        card.setAttribute('onclick', `openDetailModal(${JSON.stringify(item.id)})`);
+        card.innerHTML = `
+          <div class="overflow-hidden h-48">
+            <img src="${item.portadaUrl || 'https://via.placeholder.com/400x320?text=Sin+portada'}" alt="${item.title}" class="w-full h-full object-cover" />
+          </div>
+          <div class="p-5 flex flex-col gap-3">
+            <div class="flex justify-between items-start gap-3">
+              <span class="bg-indigo-100 text-brand text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-md uppercase">${item.type}</span>
+              <div class="flex items-center gap-2">
+                <span id="pubRatingBadge-${item.id}" class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[10px] text-slate-700 cursor-pointer" onclick="openDetailModal(${JSON.stringify(item.id)}, true)">
+                  <i class="fa-solid fa-star text-amber-400"></i>
+                  ${item.publicationAverage || '0.0'}
+                </span>
+                <span id="pubReviewsBadge-${item.id}" class="text-[10px] text-slate-400">${item.publicationReviewCount ? item.publicationReviewCount + ' reseñas' : 'Sin reseñas'}</span>
+                <span class="text-brand font-black text-sm">$${item.price} ARS</span>
+              </div>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-sm text-slate-900 mb-1 leading-tight">${item.title}</h4>
+              <div class="flex items-center gap-2 text-[10px] text-slate-500 font-bold mb-2">
+                <img src="${item.authorAvatar || defaultAvatar}" alt="Avatar" class="w-5 h-5 rounded-full object-cover" />
+                <a href="javascript:void(0)" onclick="openUserProfile('${item.authorId}')" class="underline hover:text-brand">${item.authorNick || 'Anónimo'}</a>
+              </div>
+              <p class="text-xs text-slate-400 line-clamp-2">${item.description}</p>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-500 font-bold border-t pt-3">
+              <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> ${item.city}</div>
+              <div class="flex items-center gap-2"><i class="fa-solid fa-building-columns"></i> ${item.institution}</div>
+              <div class="flex items-center gap-2"><i class="fa-solid fa-book-bookmark"></i> ${item.subject}</div>
+              <div class="flex items-center gap-2"><i class="fa-solid fa-chalkboard-user"></i> ${item.professor}</div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function renderProfilePublications(publications) {
+      const grid = document.getElementById('profilePublicationsGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      if (!publications.length) {
+        grid.innerHTML = '<div class="col-span-full bg-slate-50 border border-slate-200 rounded-3xl p-6 text-slate-500 text-sm">Todavía no tienes publicaciones. Publica tu primer material para que otros estudiantes te descubran.</div>';
+        return;
+      }
+
+      publications.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-all';
+        card.setAttribute('onclick', `openDetailModal(${JSON.stringify(item.id)})`);
+        card.innerHTML = `
+          <div class="h-40 overflow-hidden">
+            <img src="${item.portadaUrl || 'https://via.placeholder.com/400x320?text=Sin+portada'}" alt="${item.title}" class="w-full h-full object-cover" />
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-black">${item.type}</span>
+              <span class="text-brand text-sm font-black">$${item.price} ARS</span>
+            </div>
+            <h3 class="text-sm font-black text-slate-900 leading-tight">${item.title}</h3>
+            <p class="text-[11px] text-slate-500 line-clamp-2">${item.subject} · ${item.professor}</p>
+            <div class="flex items-center gap-2 text-[11px] text-slate-400">
+              <i class="fa-solid fa-location-dot"></i>
+              <span>${item.city}</span>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterItems() {
+      const cityValue = document.getElementById('filterCity').value.trim();
+      const subjectValue = document.getElementById('filterSubject').value.trim();
+      const searchValue = document.getElementById('searchInput').value.trim();
+
+      if (cityValue !== currentCityFilter || subjectValue.toLowerCase() !== currentSubjectFilter) {
+        resetPublicationLoad();
+        return;
+      }
+
+      renderGrid(applyFilters(loadedPublications));
+    }
+
+    function resetFilters() {
+      const searchInput = document.getElementById('searchInput');
+      const filterCityInput = document.getElementById('filterCity');
+      const filterSubjectInput = document.getElementById('filterSubject');
+      const filterCityMobile = document.getElementById('filterCityMobile');
+      const filterSubjectMobile = document.getElementById('filterSubjectMobile');
+      if (searchInput) searchInput.value = '';
+      if (filterCityInput) filterCityInput.value = '';
+      if (filterSubjectInput) filterSubjectInput.value = '';
+      if (filterCityMobile) filterCityMobile.value = '';
+      if (filterSubjectMobile) filterSubjectMobile.value = '';
+      currentCityFilter = '';
+      currentSubjectFilter = '';
+      resetPublicationLoad();
+    }
+
+    function copyMobileFilterValue() {
+      const filterCityMobile = document.getElementById('filterCityMobile');
+      const filterSubjectMobile = document.getElementById('filterSubjectMobile');
+      const filterCityInput = document.getElementById('filterCity');
+      const filterSubjectInput = document.getElementById('filterSubject');
+      if (filterCityMobile && filterCityInput) filterCityInput.value = filterCityMobile.value;
+      if (filterSubjectMobile && filterSubjectInput) filterSubjectInput.value = filterSubjectMobile.value;
+      filterItems();
+    }
+
+    async function loadCitySuggestions() {
+      const datalist = document.getElementById('citySuggestions');
+      if (!datalist) return;
+
+      const maxPerPage = 1000;
+      let start = 0;
+      let total = 0;
+      const cities = [];
+
+      try {
+        do {
+          const url = `https://apis.datos.gob.ar/georef/api/localidades?campos=nombre&max=${maxPerPage}&inicio=${start}`;
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          const locales = data.localidades || [];
+          total = data.total || locales.length;
+          locales.forEach(loc => {
+            if (loc.nombre) cities.push(loc.nombre);
+          });
+          start += data.cantidad || locales.length;
+        } while (start < total && start < 5000);
+
+        const uniqueCities = [...new Set(cities)].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+        datalist.innerHTML = uniqueCities.map(name => `<option value="${name}"></option>`).join('');
+      } catch (error) {
+        console.warn('No se pudieron cargar las localidades dinámicas de georef:', error);
+      }
+    }
+
+    // MODAL DETALLE
+    function openDetailModal(id, focusReviews = false) {
+      const item = isRealFirebase ? null : localDB.find(x => x.id === id);
+      
+      const setupModal = (data) => {
+        document.getElementById('modalTitle').innerText = data.title;
+        document.getElementById('modalDescription').innerText = data.description;
+        document.getElementById('modalType').innerText = data.type;
+        document.getElementById('modalPrice').innerText = `$${data.price} ARS`;
+        document.getElementById('modalInst').innerText = data.institution;
+        document.getElementById('modalSub').innerText = data.subject;
+        document.getElementById('modalCity').innerText = data.city;
+        document.getElementById('modalAuthor').innerText = data.authorNick || 'Anónimo';
+
+        const imageViewer = document.getElementById('imageViewer');
+        imageViewer.innerHTML = `
+          <div class="text-center p-4">
+            <img src="${data.portadaUrl || 'https://via.placeholder.com/300x400?text=Sin+portada'}" alt="Portada" class="w-full rounded-3xl object-cover max-h-96" />
+          </div>
+        `;
+        const protectedUrls = data.protectedUrls || [];
+        document.getElementById('modalImageCount').innerText = protectedUrls.length
+          ? `${protectedUrls.length} imagen${protectedUrls.length === 1 ? '' : 'es'} protegida${protectedUrls.length === 1 ? '' : 's'}`
+          : 'Sin imágenes protegidas';
+        document.getElementById('protectedContentPlaceholder').classList.remove('hidden');
+        document.getElementById('protectedContent').classList.add('hidden');
+        document.getElementById('protectedContentText').innerHTML = protectedUrls.length
+          ? protectedUrls.map(url => `<img src="${url}" alt="Contenido protegido" class="w-full rounded-2xl mb-3" />`).join('')
+          : '<p class="text-sm text-slate-500">El contenido protegido está disponible tras la compra.</p>';
+        document.getElementById('buyButtonContainer').innerHTML = `
+          <div class="flex items-center gap-2">
+            <button onclick="simulatePurchase()" class="flex-1 bg-[#009EE3] text-white py-3.5 rounded-xl font-bold text-xs shadow-md">Comprar</button>
+            <span class="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-bold text-[#009EE3]">Mercado Pago</span>
+          </div>
+        `;
+        document.getElementById('detailModal').dataset.publicationId = data.id || '';
+        document.getElementById('detailModal').dataset.authorId = data.authorId || '';
+        document.getElementById('detailModal').dataset.purchased = 'false';
+        const reviewForm = document.getElementById('detailReviewForm');
+        if (reviewForm) reviewForm.reset();
+        const reviewSection = document.getElementById('detailReviewSection');
+        if (reviewSection) reviewSection.classList.add('hidden');
+        const purchasePrompt = document.getElementById('purchasePrompt');
+        if (purchasePrompt) purchasePrompt.classList.remove('hidden');
+        loadAuthorStatistics(data.authorId, data.authorNick, data.authorAvatar);
+        document.getElementById('detailModal').classList.remove('hidden');
+      };
+
+      if (isRealFirebase) {
+        dbRef.collection('publications').doc(id).get().then(doc => {
+          if (!doc.exists) {
+            alert('No se encontró la publicación en la nube.');
+            return;
+          }
+          setupModal({ id: id, ...doc.data() });
+        });
+      } else if (item) {
+        setupModal(item);
+      }
+    }
+
+    async function connectSellerOAuth() {
+      const sellerId = 'seller-' + Date.now();
+
+      const authUrl = new URL('https://auth.mercadopago.com/authorization');
+      authUrl.searchParams.set('client_id', '7685708579680165');
+      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('platform_id', 'mp');
+      authUrl.searchParams.set('redirect_uri', 'https://frolicking-sorbet-935acd.netlify.app/mp/oauth/callback');
+      authUrl.searchParams.set('state', sellerId);
+
+      window.location.href = authUrl.toString();
+    }
+
+    async function simulatePurchase() {
+      const modal = document.getElementById('detailModal');
+      if (!modal) return;
+
+      const publicationId = modal.dataset.publicationId || '';
+      const item = isRealFirebase ? null : localDB.find(x => String(x.id) === String(publicationId));
+      const selectedItem = item || (isRealFirebase ? null : null);
+
+      if (!selectedItem && !publicationId) {
+        alert('No se encontró la publicación seleccionada.');
+        return;
+      }
+
+      const title = selectedItem?.title || 'Material educativo';
+      const description = selectedItem?.description || 'Acceso al material protegido';
+      const price = Number(selectedItem?.price || 0);
+      const orderId = `order-${Date.now()}`;
+      const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+      const functionUrl = isLocalHost
+        ? 'http://localhost:8888/.netlify/functions/create-preference'
+        : '/.netlify/functions/create-preference';
+
+      const buyButton = document.getElementById('buyButtonContainer');
+      if (buyButton) {
+        buyButton.innerHTML = '<button disabled class="w-full bg-slate-400 text-white py-3.5 rounded-xl font-bold text-xs shadow-md">Creando pago...</button>';
+      }
+
+      try {
+        const response = await fetch(functionUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId,
+            title,
+            description,
+            price,
+            items: [{ title, description, quantity: 1, unit_price: price }],
+            backUrls: {
+              success: `${window.location.origin}/payment/success`,
+              failure: `${window.location.origin}/payment/failure`,
+              pending: `${window.location.origin}/payment/pending`
+            }
+          })
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.preferenceId) {
+          throw new Error(result.error || 'No se pudo crear la preferencia de pago');
+        }
+
+        window.location.href = result.initPoint || `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${result.preferenceId}`;
+      } catch (error) {
+        console.error('Error creando preferencia de Mercado Pago:', error);
+        alert('No se pudo iniciar el pago. Verificá que la función create-preference esté disponible en Netlify.');
+
+        if (buyButton) {
+          buyButton.innerHTML = '<button onclick="simulatePurchase()" class="w-full bg-[#009EE3] text-white py-3.5 rounded-xl font-bold text-xs shadow-md">Reintentar pago</button>';
+        }
+      }
+    }
+
+    // SEGURIDAD DE CLIC DERECHO
+    document.addEventListener('contextmenu', e => {
+      if (isProtectionActive) { e.preventDefault(); alert("⚠️ Contenido protegido contra copias."); }
+    });
+
+    // COMPORTAMIENTOS BÁSICOS
+    function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
+    function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
+    function openVenderModal() { document.getElementById('venderModal').classList.remove('hidden'); }
+    function closeVenderModal() { document.getElementById('venderModal').classList.add('hidden'); }
+    function closeDetailModal() { document.getElementById('detailModal').classList.add('hidden'); }
+
+    function updateCommissionSummary() {
+      const priceInput = document.getElementById('formPrice');
+      const studentAmountEl = document.getElementById('commissionStudentAmount');
+      const platformAmountEl = document.getElementById('commissionPlatformAmount');
+      const sellerAmountEl = document.getElementById('commissionSellerAmount');
+      if (!priceInput || !studentAmountEl || !platformAmountEl || !sellerAmountEl) return;
+
+      const price = Number(priceInput.value || 0);
+      const commissionRate = 0.15;
+      const commissionAmount = Math.round(price * commissionRate);
+      const sellerAmount = Math.max(0, price - commissionAmount);
+
+      studentAmountEl.innerText = `$${price.toLocaleString('es-AR')}`;
+      platformAmountEl.innerText = `$${commissionAmount.toLocaleString('es-AR')}`;
+      sellerAmountEl.innerText = `$${sellerAmount.toLocaleString('es-AR')}`;
+    }
+    function openProfilePage() {
+      if (!currentUser) {
+        alert('Debes iniciar sesión para ver tu perfil.');
+        return;
+      }
+      loadProfileData();
+      document.getElementById('profilePage').classList.remove('hidden');
+    }
+    function closeProfilePage() { document.getElementById('profilePage').classList.add('hidden'); }
+    function toggleNotifications() { document.getElementById('notificationsMenu').classList.toggle('hidden'); }
+    function toggleProfileMenu() { document.getElementById('profileMenu').classList.toggle('hidden'); }
+    function openAdminPanel() {
+      if (!currentUserIsAdmin) {
+        alert('Solo los administradores pueden abrir este panel.');
+        return;
+      }
+      loadAdminPublications();
+      document.getElementById('adminPanel').classList.remove('hidden');
+    }
+
+    function closeAdminPanel() {
+      document.getElementById('adminPanel').classList.add('hidden');
+    }
+
+    async function loadAdminPublications() {
+      const adminGrid = document.getElementById('adminPublicationsGrid');
+      const countEl = document.getElementById('adminPublicationsCount');
+      if (!adminGrid || !countEl) return;
+
+      adminGrid.innerHTML = '<p class="text-sm text-slate-500">Cargando publicaciones...</p>';
+
+      try {
+        const items = [];
+        if (isRealFirebase) {
+          const snapshot = await dbRef.collection('publications').orderBy('createdAt', 'desc').get();
+          snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+        } else {
+          items.push(...localDB.map(item => ({ ...item })));
+        }
+
+        const pendingCount = items.filter(item => item.adminStatus === 'pending').length;
+        countEl.innerText = items.length;
+        const pendingEl = document.getElementById('adminPendingCount');
+        if (pendingEl) pendingEl.innerText = pendingCount;
+        renderAdminPublications(items);
+      } catch (error) {
+        console.error('Error cargando publicaciones de administración:', error);
+        adminGrid.innerHTML = '<p class="text-sm text-red-500">No se pudieron cargar las publicaciones.</p>';
+      }
+    }
+
+    function renderAdminPublications(items) {
+      const adminGrid = document.getElementById('adminPublicationsGrid');
+      if (!adminGrid) return;
+      if (!items.length) {
+        adminGrid.innerHTML = '<div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 text-slate-500 text-sm">No hay publicaciones para moderar.</div>';
+        return;
+      }
+
+      adminGrid.innerHTML = '';
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'bg-white border border-slate-200 rounded-3xl p-5 shadow-sm';
+        card.innerHTML = `
+          <div class="sm:flex sm:justify-between sm:items-start gap-4">
+            <div class="sm:flex-1">
+              <div class="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3">
+                <span>${item.type || 'Publicación'}</span>
+                ${item.adminStatus ? `<span class="inline-flex items-center bg-amber-100 text-amber-700 rounded-full px-2 py-1">${item.adminStatus === 'warning' ? 'Advertencia' : item.adminStatus}</span>` : ''}
+              </div>
+              <h3 class="text-base font-black text-slate-900 mb-2">${item.title}</h3>
+              <p class="text-xs text-slate-500 mb-3">${item.description || ''}</p>
+              <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+                <div><strong>Autor:</strong> ${item.authorNick || 'Anónimo'}</div>
+                <div><strong>Ciudad:</strong> ${item.city || 'N/D'}</div>
+                <div><strong>Materia:</strong> ${item.subject || 'N/D'}</div>
+                <div><strong>Precio:</strong> $${item.price || 0} ARS</div>
+              </div>
+              ${item.adminNote ? `<p class="mt-3 text-xs text-amber-700"><strong>Nota admin:</strong> ${item.adminNote}</p>` : ''}
+            </div>
+            <div class="mt-4 sm:mt-0 flex flex-col gap-3 w-full sm:w-auto">
+              <button onclick="adminDeletePublication('${item.id}')" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-2xl text-xs font-bold">Eliminar</button>
+              <button onclick="adminWarnPublication('${item.id}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-2xl text-xs font-bold">Advertir</button>
+              <button onclick="adminClearStatus('${item.id}')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-2xl text-xs font-bold">${item.adminStatus === 'pending' ? 'Aprobar' : 'Marcar OK'}</button>
+              ${item.authorId ? `<button onclick="adminDeleteAuthor('${item.authorId}')" class="w-full bg-slate-300 hover:bg-slate-400 text-slate-900 py-3 rounded-2xl text-xs font-bold">Eliminar autor</button>` : ''}
+            </div>
+          </div>
+        `;
+        adminGrid.appendChild(card);
+      });
+    }
+
+    async function adminDeletePublication(publicationId) {
+      if (!confirm('¿Querés eliminar esta publicación definitivamente?')) return;
+      try {
+        if (isRealFirebase) {
+          await dbRef.collection('publications').doc(publicationId).delete();
+        } else {
+          const index = localDB.findIndex(item => String(item.id) === String(publicationId));
+          if (index >= 0) localDB.splice(index, 1);
+        }
+        alert('Publicación eliminada.');
+        loadGrid();
+        loadAdminPublications();
+      } catch (error) {
+        console.error('Error eliminando publicación:', error);
+        alert('No se pudo eliminar la publicación.');
+      }
+    }
+
+    async function adminWarnPublication(publicationId) {
+      const note = prompt('Ingresa una advertencia o nota para esta publicación:');
+      if (note === null) return;
+      try {
+        if (isRealFirebase) {
+          await dbRef.collection('publications').doc(publicationId).set({
+            adminStatus: 'warning',
+            adminNote: note,
+            lastAdminAction: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        } else {
+          const item = localDB.find(pub => String(pub.id) === String(publicationId));
+          if (item) {
+            item.adminStatus = 'warning';
+            item.adminNote = note;
+          }
+        }
+        alert('Advertencia registrada.');
+        loadAdminPublications();
+      } catch (error) {
+        console.error('Error registrando advertencia:', error);
+        alert('No se pudo registrar la advertencia.');
+      }
+    }
+
+    async function adminDeleteAuthor(authorId) {
+      if (!confirm('¿Querés eliminar al autor y sus publicaciones? Esta acción es irreversible.')) return;
+      try {
+        if (isRealFirebase) {
+          await dbRef.collection('users').doc(authorId).delete();
+          const publicationsSnapshot = await dbRef.collection('publications').where('authorId', '==', authorId).get();
+          const batch = dbRef.batch();
+          publicationsSnapshot.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+        } else {
+          for (let i = localDB.length - 1; i >= 0; i--) {
+            if (String(localDB[i].authorId) === String(authorId)) {
+              localDB.splice(i, 1);
+            }
+          }
+        }
+        alert('Autor y sus publicaciones eliminados.');
+        loadGrid();
+        loadAdminPublications();
+      } catch (error) {
+        console.error('Error eliminando autor:', error);
+        alert('No se pudo eliminar la cuenta del autor.');
+      }
+    }
+
+    async function adminClearStatus(publicationId) {
+      if (!confirm('¿Querés marcar esta publicación como revisada y OK?')) return;
+      try {
+        if (isRealFirebase) {
+          await dbRef.collection('publications').doc(publicationId).set({
+            adminStatus: 'approved',
+            adminNote: '',
+            lastAdminAction: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        } else {
+          const item = localDB.find(pub => String(pub.id) === String(publicationId));
+          if (item) {
+            delete item.adminStatus;
+            delete item.adminNote;
+          }
+        }
+        alert('Publicación marcada como OK.');
+        loadAdminPublications();
+      } catch (error) {
+        console.error('Error actualizando estado admin:', error);
+        alert('No se pudo actualizar el estado.');
+      }
+    }
+
+    async function loadProfileData() {
+      if (!currentUser) return;
+      const userId = currentUser.uid;
+      const userDoc = currentUserData || (await dbRef.collection('users').doc(userId).get()).data();
+      currentUserData = userDoc;
+
+      const publicationsSnapshot = await dbRef.collection('publications').where('authorId', '==', userId).get();
+      const publicationIds = [];
+      publicationsSnapshot.forEach(doc => publicationIds.push(doc.id));
+      const publicationCount = publicationsSnapshot.size;
+
+      let reviewsCount = 0;
+      let ratingSum = 0;
+      if (publicationIds.length) {
+        const batches = [];
+        for (let i = 0; i < publicationIds.length; i += 10) {
+          batches.push(publicationIds.slice(i, i + 10));
+        }
+        for (const batch of batches) {
+          const reviewsSnapshot = await dbRef.collection('reseñas').where('publicationId', 'in', batch).get();
+          reviewsSnapshot.forEach(doc => {
+            const data = doc.data();
+            reviewsCount += 1;
+            ratingSum += (data.estrellas || 0);
+          });
+        }
+      }
+
+      const averageRating = reviewsCount ? (ratingSum / reviewsCount).toFixed(1) : '0.0';
+
+      document.getElementById('profileAvatar').src = userDoc.avatarUrl || defaultAvatar;
+      document.getElementById('profileUsername').innerText = userDoc.username || 'usuario';
+      document.getElementById('profileCity').innerText = userDoc.city || 'N/D';
+      document.getElementById('profilePublicationsCount').innerText = publicationCount;
+      document.getElementById('profileReviewsCount').innerText = reviewsCount;
+      document.getElementById('profileRating').innerText = averageRating;
+      document.getElementById('profileInstitution').innerText = userDoc.institution || 'N/D';
+      document.getElementById('editUsername').value = userDoc.username || '';
+      document.getElementById('editCity').value = userDoc.city || '';
+      document.getElementById('editInstitution').value = userDoc.institution || '';
+      document.getElementById('editAvatarUrl').value = userDoc.avatarUrl || '';
+      renderProfilePublications(publicationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }
+
+    function toggleProfileEdit() {
+      const section = document.getElementById('profileEditSection');
+      if (!section) return;
+      section.classList.toggle('hidden');
+    }
+
+    async function saveProfileEdits(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const username = document.getElementById('editUsername').value.trim();
+      const city = document.getElementById('editCity').value.trim();
+      const institution = document.getElementById('editInstitution').value.trim();
+      const avatarUrl = document.getElementById('editAvatarUrl').value.trim();
+      const avatarFile = document.getElementById('editAvatarFile').files[0];
+
+      if (!username || !city || !institution) {
+        alert('Completa nombre, ciudad e institución.');
+        return;
+      }
+
+      try {
+        let finalAvatarUrl = avatarUrl;
+        if (avatarFile) {
+          if (!isRealFirebase) {
+            finalAvatarUrl = URL.createObjectURL(avatarFile);
+          } else {
+            const avatarRef = storage.ref(`avatars/${Date.now()}_${avatarFile.name}`);
+            await avatarRef.put(avatarFile);
+            finalAvatarUrl = await avatarRef.getDownloadURL();
+          }
+        }
+
+        const updateData = {
+          username,
+          city,
+          institution,
+          avatarUrl: finalAvatarUrl || currentUserData?.avatarUrl || ''
+        };
+
+        if (isRealFirebase) {
+          await dbRef.collection('users').doc(currentUser.uid).set(updateData, { merge: true });
+        }
+
+        currentUserData = { ...currentUserData, ...updateData };
+        updateAuthContainer();
+
+        alert('Perfil actualizado con éxito.');
+        toggleProfileEdit();
+        loadProfileData();
+      } catch (error) {
+        console.error('Error guardando perfil:', error);
+        alert('No se pudo guardar el perfil.');
+      }
+    }
+
+    function switchAuthTab(tab) {
+      if (tab === 'login') {
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('tabLogin').className = "text-sm font-black text-brand border-b-2 border-brand pb-1";
+        document.getElementById('tabRegister').className = "text-sm font-bold text-slate-400 pb-1";
+      } else {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerForm').classList.remove('hidden');
+        document.getElementById('tabRegister').className = "text-sm font-black text-brand border-b-2 border-brand pb-1";
+        document.getElementById('tabLogin').className = "text-sm font-bold text-slate-400 pb-1";
+      }
+    }
+
+    window.onload = async () => {
+      loadGrid();
+      await loadCitySuggestions();
+      const venderForm = document.getElementById("venderForm");
+      const priceInput = document.getElementById('formPrice');
+      if (venderForm) {
+        venderForm.addEventListener("submit", handlePublish);
+      } else {
+        console.warn("venderForm no encontrado al cargar la página.");
+      }
+
+      if (priceInput) {
+        priceInput.addEventListener('input', updateCommissionSummary);
+      }
+
+      window.addEventListener('scroll', () => {
+        const scrollPosition = window.scrollY + window.innerHeight;
+        const pageHeight = document.documentElement.scrollHeight;
+        if (pageHeight - scrollPosition < 300) {
+          loadPublicationsPage();
+        }
+      });
+    };
+  </script>
+</body>
+</html>
