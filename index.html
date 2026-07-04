@@ -32,9 +32,6 @@
     };
 
     const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    window.MP_API_BASE_URL = isLocalDev
-      ? 'http://localhost:8888/.netlify/functions'
-      : 'https://frolicking-sorbet-935acd.netlify.app/.netlify/functions';
   </script>
   <style>
     html,
@@ -336,7 +333,7 @@
         <div id="commissionSummary" class="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
           <div class="flex items-center justify-between mb-2">
             <span class="font-black">Resumen de comisión</span>
-            <span class="text-[11px] font-bold">TuApunte cobra 15%</span>
+            <span class="text-[11px] font-bold">Servicios vinculados: 15%</span>
           </div>
           <div class="space-y-1.5">
             <div class="flex items-center justify-between">
@@ -344,12 +341,8 @@
               <span id="commissionStudentAmount" class="font-black">$0</span>
             </div>
             <div class="flex items-center justify-between">
-              <span>Protección de contenido</span>
-              <span class="font-black">10%</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span>Servicios vinculados</span>
-              <span class="font-black">5%</span>
+              <span>Servicios vinculados (protección de contenidos y medio de pago)</span>
+              <span class="font-black">15%</span>
             </div>
             <div class="flex items-center justify-between text-emerald-700">
               <span>Lo que recibes tú</span>
@@ -1409,10 +1402,7 @@
       const description = selectedItem?.description || 'Acceso al material protegido';
       const price = Number(selectedItem?.price || 0);
       const orderId = `order-${Date.now()}`;
-      const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
-      const functionUrl = isLocalHost
-        ? 'http://localhost:8888/.netlify/functions/create-preference'
-        : '/.netlify/functions/create-preference';
+      const functionUrl = getCreatePreferenceFunctionUrl();
 
       const buyButton = document.getElementById('buyButtonContainer');
       if (buyButton) {
@@ -1442,7 +1432,8 @@
           throw new Error(result.error || 'No se pudo crear la preferencia de pago');
         }
 
-        window.location.href = result.initPoint || `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${result.preferenceId}`;
+        const initPoint = result.initPoint || result.init_point;
+        window.location.href = initPoint || `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${result.preferenceId}`;
       } catch (error) {
         console.error('Error creando preferencia de Mercado Pago:', error);
         alert('No se pudo iniciar el pago. Verificá que la función create-preference esté disponible en Netlify.');
@@ -1451,6 +1442,17 @@
           buyButton.innerHTML = '<button onclick="simulatePurchase()" class="w-full bg-[#009EE3] text-white py-3.5 rounded-xl font-bold text-xs shadow-md">Reintentar pago</button>';
         }
       }
+    }
+
+    function getCreatePreferenceFunctionUrl() {
+      const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+      const isFileProtocol = window.location.protocol === 'file:';
+
+      if (isLocalHost || isFileProtocol) {
+        return 'http://localhost:8888/.netlify/functions/create-preference';
+      }
+
+      return `${window.location.origin}/.netlify/functions/create-preference`;
     }
 
     // SEGURIDAD DE CLIC DERECHO
