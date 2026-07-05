@@ -1272,9 +1272,23 @@
         || null;
     }
 
+    function normalizePayoutStatus(value) {
+      const normalized = String(value || '').trim().toUpperCase();
+      if (!normalized) return 'NP';
+      if (normalized === 'NO PAGO') return 'NP';
+      if (normalized === 'PAGADO') return 'PAGADO';
+      return normalized;
+    }
+
+    function isPurchaseAccessApproved(entry) {
+      const accessStatus = String(entry?.accessStatus || entry?.paymentStatus || entry?.gatewayStatus || '').trim().toLowerCase();
+      const legacyStatus = String(entry?.status || '').trim().toLowerCase();
+      return accessStatus === 'approved' || accessStatus === 'success' || legacyStatus === 'approved';
+    }
+
     function getPurchaseEntryForPublication(publicationId) {
       const targetId = String(publicationId || '');
-      return currentPurchaseHistory.find(entry => String(entry.publicationId || '') === targetId && String(entry.status || '').toLowerCase() === 'approved') || null;
+      return currentPurchaseHistory.find(entry => String(entry.publicationId || '') === targetId && isPurchaseAccessApproved(entry)) || null;
     }
 
     function getAccessiblePublicationContent(publication) {
@@ -1530,6 +1544,8 @@
       const buyerPayout = await getBuyerPayoutDataSnapshot(userId);
       const sellerId = String(publication.authorId || '');
       const sellerPayout = await getSellerPayoutDataSnapshot(sellerId, publication);
+      const basePrice = Number(publication.price || 0);
+      const payoutAmount85 = Number((basePrice * 0.85).toFixed(2));
 
       const entry = {
         buyerId: userId,
@@ -1541,7 +1557,10 @@
         institution: publication.institution || '',
         contentAssets: Array.isArray(publication.contentAssets) ? publication.contentAssets : [],
         orderId: String(orderId || ''),
-        price: Number(publication.price || 0),
+        price: basePrice,
+        listPrice: basePrice,
+        purchasePrice: basePrice,
+        payoutAmount85,
         quantity: Number(quantity || 1),
         authorId: sellerId,
         authorNick: publication.authorNick || 'Anónimo',
@@ -1550,12 +1569,18 @@
         sellerPayoutAlias: String(sellerPayout.payoutAlias || ''),
         sellerPayoutCbu: String(sellerPayout.payoutCbu || ''),
         sellerPayoutOwnerName: String(sellerPayout.payoutOwnerName || ''),
+        // Campos administrativos solicitados para visualizar y operar desde Firestore.
+        buyerPayoutAliasCbu: String(sellerPayout.cbuAliasCombined || ''),
+        buyerPayoutOwnerName: String(sellerPayout.payoutOwnerName || ''),
         buyer_cbu_alias: String(buyerPayout.cbuAliasCombined || ''),
         buyerPayoutAlias: buyerPayout.payoutAlias || '',
         buyerPayoutCbu: buyerPayout.payoutCbu || '',
         buyerPayoutOwnerName: buyerPayout.payoutOwnerName || '',
         createdAt: new Date(),
-        status: 'pendiente'
+        status: 'NP',
+        payoutStatus: 'NP',
+        accessStatus: 'pending',
+        paymentStatus: 'pending'
       };
 
       if (isRealFirebase) {
@@ -1583,6 +1608,8 @@
       const buyerPayout = await getBuyerPayoutDataSnapshot(userId);
       const sellerId = String(publication.authorId || '');
       const sellerPayout = await getSellerPayoutDataSnapshot(sellerId, publication);
+      const basePrice = Number(publication.price || 0);
+      const payoutAmount85 = Number((basePrice * 0.85).toFixed(2));
       const approvedEntry = {
         buyerId: userId,
         publicationId: String(publication.id || ''),
@@ -1593,7 +1620,10 @@
         institution: publication.institution || '',
         contentAssets: Array.isArray(publication.contentAssets) ? publication.contentAssets : [],
         orderId: String(orderId || ''),
-        price: Number(publication.price || 0),
+        price: basePrice,
+        listPrice: basePrice,
+        purchasePrice: basePrice,
+        payoutAmount85,
         quantity: Number(quantity || 1),
         authorId: sellerId,
         authorNick: publication.authorNick || 'Anónimo',
@@ -1601,13 +1631,18 @@
         sellerPayoutAlias: String(sellerPayout.payoutAlias || ''),
         sellerPayoutCbu: String(sellerPayout.payoutCbu || ''),
         sellerPayoutOwnerName: String(sellerPayout.payoutOwnerName || ''),
+        buyerPayoutAliasCbu: String(sellerPayout.cbuAliasCombined || ''),
+        buyerPayoutOwnerName: String(sellerPayout.payoutOwnerName || ''),
         buyer_cbu_alias: String(buyerPayout.cbuAliasCombined || ''),
         buyerPayoutAlias: buyerPayout.payoutAlias || '',
         buyerPayoutCbu: buyerPayout.payoutCbu || '',
         buyerPayoutOwnerName: buyerPayout.payoutOwnerName || '',
         createdAt: new Date(),
         approvedAt: new Date(),
-        status: 'approved'
+        status: 'NP',
+        payoutStatus: 'NP',
+        accessStatus: 'approved',
+        paymentStatus: 'approved'
       };
 
       if (isRealFirebase) {
@@ -1622,8 +1657,15 @@
           currentPurchaseHistory.unshift({ id: added.id, ...approvedEntry });
         } else {
           const doc = existingSnapshot.docs[0];
-          await doc.ref.set(approvedEntry, { merge: true });
-          currentPurchaseHistory = currentPurchaseHistory.map(entry => String(entry.id) === String(doc.id) ? { ...entry, ...approvedEntry, id: doc.id } : entry);
+          const currentData = doc.data() || {};
+          const persistedStatus = normalizePayoutStatus(currentData.payoutStatus || currentData.status || 'NP');
+          const entryToPersist = {
+            ...approvedEntry,
+            status: persistedStatus,
+            payoutStatus: persistedStatus
+          };
+          await doc.ref.set(entryToPersist, { merge: true });
+          currentPurchaseHistory = currentPurchaseHistory.map(entry => String(entry.id) === String(doc.id) ? { ...entry, ...entryToPersist, id: doc.id } : entry);
         }
       } else {
         const storageKey = getUserScopedStorageKey('tuapunte:purchaseHistory', userId);
@@ -2329,47 +2371,6 @@
         .replace(/'/g, '&#39;');
     }
 
-    async function copyTextToClipboard(value, successMessage = 'Dato copiado.') {
-      const text = String(value || '').trim();
-      if (!text || text === 'N/D') {
-        alert('No hay datos para copiar.');
-        return;
-      }
-
-      try {
-        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-          await navigator.clipboard.writeText(text);
-          alert(successMessage);
-          return;
-        }
-      } catch (error) {
-        console.warn('Clipboard API no disponible', error);
-      }
-
-      const fallbackInput = document.createElement('textarea');
-      fallbackInput.value = text;
-      fallbackInput.setAttribute('readonly', 'readonly');
-      fallbackInput.style.position = 'fixed';
-      fallbackInput.style.opacity = '0';
-      document.body.appendChild(fallbackInput);
-      fallbackInput.focus();
-      fallbackInput.select();
-
-      let copied = false;
-      try {
-        copied = document.execCommand('copy');
-      } catch (error) {
-        copied = false;
-      }
-
-      document.body.removeChild(fallbackInput);
-      if (copied) {
-        alert(successMessage);
-      } else {
-        alert('No se pudo copiar automáticamente. Intenta mantener presionado y copiar manualmente.');
-      }
-    }
-
     function getRouteSegments() {
       return String(window.location.hash || '').replace(/^#/, '').split('?')[0].split('/').filter(Boolean);
     }
@@ -2442,7 +2443,10 @@
     function openPurchaseDetailPage(userId = currentUser?.uid || '', publicationId = '') {
       const targetUserId = String(userId || '').trim();
       const targetPublicationId = String(publicationId || '').trim();
-      if (!targetUserId || !targetPublicationId) return;
+      if (!targetUserId || !targetPublicationId) {
+        alert('No se pudo abrir el detalle porque falta el ID de la compra.');
+        return;
+      }
       window.location.hash = `perfil/${encodeURIComponent(targetUserId)}/compras/${encodeURIComponent(targetPublicationId)}`;
     }
 
@@ -2553,7 +2557,7 @@
         }));
       }
 
-      if (isRealFirebase && publication?.id && purchaseEntry && String(purchaseEntry.status || '').toLowerCase() === 'approved') {
+      if (isRealFirebase && publication?.id && purchaseEntry && isPurchaseAccessApproved(purchaseEntry)) {
         try {
           const access = await requestSecureContentAccess(publication.id);
           const accessAssets = Array.isArray(access?.assets) ? access.assets : [];
@@ -2593,19 +2597,11 @@
         const cover = entry.portadaUrl || publication?.portadaUrl || 'https://via.placeholder.com/640x420?text=Material';
         const priceNumber = Number(entry.price || publication?.price || 0);
         const price = priceNumber.toLocaleString('es-AR');
-        const payoutAmount = (priceNumber * 1.85).toLocaleString('es-AR');
         const dateLabel = formatDate(entry.createdAt || entry.purchasedAt || entry.date);
-        const status = String(entry.status || 'pendiente');
-        const canOpen = true;
+        const status = normalizePayoutStatus(entry.payoutStatus || entry.status || 'NP');
+        const detailPublicationId = String(entry.publicationId || publication?.id || entry.id || '').trim();
+        const canOpen = Boolean(detailPublicationId);
         const institution = entry.institution || publication?.institution || 'N/D';
-        const subject = entry.subject || publication?.subject || 'N/D';
-        const sellerAliasOrCbu = String(entry.cbu_alias || entry.sellerPayoutAlias || entry.sellerPayoutCbu || 'N/D');
-        const sellerOwnerName = String(entry.sellerPayoutOwnerName || 'N/D');
-        const authorId = String(entry.authorId || publication?.authorId || 'N/D');
-        const authorNick = String(entry.authorNick || publication?.authorNick || 'N/D');
-        const buyerId = String(entry.buyerId || currentUser?.uid || 'N/D');
-        const orderId = String(entry.orderId || 'N/D');
-        const publicationId = String(entry.publicationId || publication?.id || 'N/D');
 
         return `
           <article class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
@@ -2636,36 +2632,8 @@
                     <p class="mt-1 font-black text-slate-900">${institution}</p>
                   </div>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2 text-xs text-slate-700">
-                  <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black">Control de compra</p>
-                  <p><span class="font-black text-slate-800">Author ID:</span> ${authorId}</p>
-                  <p><span class="font-black text-slate-800">Author Nick:</span> ${authorNick}</p>
-                  <p><span class="font-black text-slate-800">Buyer ID:</span> ${buyerId}</p>
-                  <p><span class="font-black text-slate-800">Buyer payout alias/CBU:</span> ${sellerAliasOrCbu}</p>
-                  <p><span class="font-black text-slate-800">Buyer payout owner name:</span> ${sellerOwnerName}</p>
-                  <p><span class="font-black text-slate-800">Cuándo se creó:</span> ${dateLabel}</p>
-                  <p><span class="font-black text-slate-800">Descripción:</span> ${description}</p>
-                  <p><span class="font-black text-slate-800">Institución:</span> ${institution}</p>
-                  <p><span class="font-black text-slate-800">Order ID:</span> ${orderId}</p>
-                  <p><span class="font-black text-slate-800">Portada URL:</span> ${cover}</p>
-                  <p><span class="font-black text-slate-800">Precio:</span> $${price} ARS</p>
-                  <p><span class="font-black text-slate-800">Publicación:</span> ${publicationId}</p>
-                  <p><span class="font-black text-slate-800">Estatus:</span> ${status}</p>
-                  <p><span class="font-black text-slate-800">Materia:</span> ${subject}</p>
-                  <p><span class="font-black text-slate-800">Título:</span> ${title}</p>
-                  <div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                    <p class="font-black text-emerald-800">Parte a pagar (185%)</p>
-                    <p class="text-emerald-700 mt-1">$${payoutAmount} ARS</p>
-                    <p class="text-emerald-700 mt-1">Pago por CBU/alias: ${sellerAliasOrCbu}</p>
-                    <p class="text-emerald-700">Nombre: ${sellerOwnerName}</p>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                      <button type="button" onclick="copyTextToClipboard('${String(sellerAliasOrCbu || '').replace(/'/g, "\\'")}', 'CBU/Alias copiado.')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-black">Copiar CBU/Alias</button>
-                      <button type="button" onclick="copyTextToClipboard('${String(sellerOwnerName || '').replace(/'/g, "\\'")}', 'Nombre copiado.')" class="px-3 py-1.5 rounded-lg bg-emerald-700 text-white text-[11px] font-black">Copiar nombre</button>
-                    </div>
-                  </div>
-                </div>
                 <div class="flex flex-wrap gap-3">
-                  <button type="button" onclick="openPurchaseDetailPage('${String(entry.buyerId || currentUser?.uid || '')}', '${String(entry.publicationId || '')}')" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-white shadow-sm ${canOpen ? '' : 'opacity-60 cursor-not-allowed pointer-events-none'}">
+                  <button type="button" onclick='openPurchaseDetailPage(${JSON.stringify(String(currentUser?.uid || entry.buyerId || ''))}, ${JSON.stringify(detailPublicationId)})' class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-white shadow-sm ${canOpen ? '' : 'opacity-60 cursor-not-allowed pointer-events-none'}">
                     <i class="fa-solid fa-images"></i>
                     Ver detalles
                   </button>
@@ -2685,7 +2653,12 @@
       const container = document.getElementById('purchaseHistoryPageContent');
       if (!container) return false;
 
-      const purchaseEntry = currentPurchaseHistory.find(entry => String(entry.publicationId || '') === String(publicationId || '') && String(entry.buyerId || currentUser?.uid || '') === String(targetUserId || currentUser?.uid || ''));
+      const normalizedTargetUserId = String(targetUserId || currentUser?.uid || '');
+      const purchaseEntry = currentPurchaseHistory.find(entry => {
+        const samePublication = String(entry.publicationId || '') === String(publicationId || '');
+        const entryBuyerId = String(entry.buyerId || normalizedTargetUserId || '');
+        return samePublication && entryBuyerId === normalizedTargetUserId;
+      });
       let publication = getPublicationById(publicationId) || purchaseEntry || null;
 
       if (!publication && isRealFirebase && publicationId) {
@@ -2708,20 +2681,10 @@
       const description = purchaseEntry?.description || publication?.description || 'Sin descripción disponible.';
       const cover = purchaseEntry?.portadaUrl || publication?.portadaUrl || 'https://via.placeholder.com/960x640?text=Material';
       const purchaseDate = formatDate(purchaseEntry?.createdAt || purchaseEntry?.purchasedAt || purchaseEntry?.date);
-      const status = String(purchaseEntry?.status || 'pendiente');
-      const isApprovedPurchase = String(status || '').toLowerCase() === 'approved' || !isRealFirebase;
+      const status = normalizePayoutStatus(purchaseEntry?.payoutStatus || purchaseEntry?.status || 'NP');
+      const isApprovedPurchase = isPurchaseAccessApproved(purchaseEntry) || !isRealFirebase;
       const assets = isApprovedPurchase ? await getPurchasedContentAssets(publication, purchaseEntry) : [];
       const priceNumber = Number(purchaseEntry?.price || publication?.price || 0);
-      const sellerAliasOrCbu = String(purchaseEntry?.cbu_alias || purchaseEntry?.sellerPayoutAlias || purchaseEntry?.sellerPayoutCbu || 'N/D');
-      const sellerOwnerName = String(purchaseEntry?.sellerPayoutOwnerName || 'N/D');
-      const authorId = String(purchaseEntry?.authorId || publication?.authorId || 'N/D');
-      const authorNick = String(purchaseEntry?.authorNick || publication?.authorNick || 'N/D');
-      const buyerId = String(purchaseEntry?.buyerId || currentUser?.uid || 'N/D');
-      const institution = String(purchaseEntry?.institution || publication?.institution || 'N/D');
-      const subject = String(purchaseEntry?.subject || publication?.subject || 'N/D');
-      const orderId = String(purchaseEntry?.orderId || 'N/D');
-      const publicationIdLabel = String(purchaseEntry?.publicationId || publication?.id || 'N/D');
-      const payoutAmount = (priceNumber * 1.85).toLocaleString('es-AR');
 
       container.innerHTML = `
         <div class="space-y-6">
@@ -2751,34 +2714,6 @@
                   <div class="rounded-2xl bg-slate-50 p-4 sm:col-span-2">
                     <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Vendedor</p>
                     <p class="mt-1 font-black text-slate-900">${purchaseEntry?.authorNick || publication?.authorNick || 'Anónimo'}</p>
-                  </div>
-                </div>
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2 text-xs text-slate-700">
-                  <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black">Control de compra</p>
-                  <p><span class="font-black text-slate-800">Author ID:</span> ${authorId}</p>
-                  <p><span class="font-black text-slate-800">Author Nick:</span> ${authorNick}</p>
-                  <p><span class="font-black text-slate-800">Buyer ID:</span> ${buyerId}</p>
-                  <p><span class="font-black text-slate-800">Buyer payout alias/CBU:</span> ${sellerAliasOrCbu}</p>
-                  <p><span class="font-black text-slate-800">Buyer payout owner name:</span> ${sellerOwnerName}</p>
-                  <p><span class="font-black text-slate-800">Cuándo se creó:</span> ${purchaseDate}</p>
-                  <p><span class="font-black text-slate-800">Descripción:</span> ${description}</p>
-                  <p><span class="font-black text-slate-800">Institución:</span> ${institution}</p>
-                  <p><span class="font-black text-slate-800">Order ID:</span> ${orderId}</p>
-                  <p><span class="font-black text-slate-800">Portada URL:</span> ${cover}</p>
-                  <p><span class="font-black text-slate-800">Precio:</span> $${priceNumber.toLocaleString('es-AR')} ARS</p>
-                  <p><span class="font-black text-slate-800">Publicación:</span> ${publicationIdLabel}</p>
-                  <p><span class="font-black text-slate-800">Estatus:</span> ${status}</p>
-                  <p><span class="font-black text-slate-800">Materia:</span> ${subject}</p>
-                  <p><span class="font-black text-slate-800">Título:</span> ${title}</p>
-                  <div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                    <p class="font-black text-emerald-800">Parte a pagar (185%)</p>
-                    <p class="text-emerald-700 mt-1">$${payoutAmount} ARS</p>
-                    <p class="text-emerald-700 mt-1">Pago por CBU/alias: ${sellerAliasOrCbu}</p>
-                    <p class="text-emerald-700">Nombre: ${sellerOwnerName}</p>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                      <button type="button" onclick="copyTextToClipboard('${String(sellerAliasOrCbu || '').replace(/'/g, "\\'")}', 'CBU/Alias copiado.')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-black">Copiar CBU/Alias</button>
-                      <button type="button" onclick="copyTextToClipboard('${String(sellerOwnerName || '').replace(/'/g, "\\'")}', 'Nombre copiado.')" class="px-3 py-1.5 rounded-lg bg-emerald-700 text-white text-[11px] font-black">Copiar nombre</button>
-                    </div>
                   </div>
                 </div>
                 <button type="button" onclick="closePurchaseHistoryPage()" class="w-full rounded-xl bg-brand px-4 py-3 text-sm font-black text-white shadow-sm">Volver a mis compras</button>
