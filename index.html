@@ -147,7 +147,6 @@
     </div>
     <div class="px-4 pb-3">
       <div id="mobileQuickFilters" class="mobile-chip-scroll flex items-center gap-2 overflow-x-auto whitespace-nowrap">
-        <button type="button" data-mobile-filter="cerca" onclick="setMobileQuickFilter('cerca')" class="mobile-filter-chip bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold">Cerca tuyo</button>
         <button type="button" data-mobile-filter="materia" onclick="setMobileQuickFilter('materia')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Por materia</button>
         <button type="button" data-mobile-filter="universidad" onclick="setMobileQuickFilter('universidad')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Universidad</button>
         <button type="button" data-mobile-filter="escuela" onclick="setMobileQuickFilter('escuela')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Escuela</button>
@@ -182,7 +181,7 @@
 
       <!-- Acciones de Usuario -->
       <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto">
-        <button onclick="openVenderModal()" class="bg-brand hover:bg-brand-dark text-white px-4 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md text-xs sm:text-sm">
+        <button onclick="openVenderModal()" class="bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-4 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md text-xs sm:text-sm">
           <i class="fa-solid fa-file-circle-plus"></i>
           <span>Publicar</span>
         </button>
@@ -421,7 +420,7 @@
     <div class="grid grid-cols-5 gap-1">
       <button onclick="window.location.reload()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-house text-base"></i><span>Inicio</span></button>
       <button onclick="openMobileSearch()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-magnifying-glass text-base"></i><span>Buscar</span></button>
-      <button onclick="openVenderModal()" class="h-12 rounded-xl bg-brand text-white text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-plus text-base"></i><span>Publicar</span></button>
+      <button onclick="openVenderModal()" class="h-12 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-file-circle-plus text-base"></i><span>Publicar</span></button>
       <button onclick="openTopRanking()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-fire text-base"></i><span>Top</span></button>
       <button onclick="openProfilePage()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-regular fa-user text-base"></i><span>Perfil</span></button>
     </div>
@@ -939,7 +938,7 @@
     let hasMorePublications = true;
     let currentCityFilter = '';
     let currentSubjectFilter = '';
-    let activeMobileQuickFilter = 'cerca';
+    let activeMobileQuickFilter = '';
     let userLocationContext = { city: '', province: '', country: '', institution: '', latitude: null, longitude: null };
     let nearbyPublicationIds = new Set();
     let nearbyPublicationDistanceKm = new Map();
@@ -2209,7 +2208,7 @@
     }
 
     async function setMobileQuickFilter(filterKey) {
-      activeMobileQuickFilter = filterKey || 'cerca';
+      activeMobileQuickFilter = String(filterKey || '').trim();
       document.querySelectorAll('.mobile-filter-chip').forEach(chip => {
         const isActive = chip.dataset.mobileFilter === activeMobileQuickFilter;
         chip.classList.toggle('bg-slate-900', isActive);
@@ -2217,10 +2216,28 @@
         chip.classList.toggle('bg-slate-100', !isActive);
         chip.classList.toggle('text-slate-700', !isActive);
       });
-      if (activeMobileQuickFilter === 'cerca') {
-        await refreshNearbyPublicationsCache(loadedPublications);
-      }
+      await refreshNearbyPublicationsCache(loadedPublications);
       renderGrid(applyFilters(loadedPublications));
+    }
+
+    function getPublicationRankingScore(item, nowMs = Date.now()) {
+      const rating = Math.max(0, Math.min(5, Number(item?.publicationAverage || 0)));
+      const ratingScore = rating / 5;
+
+      const reviewCount = Math.max(0, Number(item?.publicationReviewCount || 0));
+      const reviewScore = Math.min(1, Math.log10(reviewCount + 1) / Math.log10(15));
+
+      const ageMs = Math.max(0, nowMs - getPublicationTimestamp(item));
+      const ageDays = ageMs / (1000 * 60 * 60 * 24);
+      const freshnessScore = Math.exp(-ageDays / 45);
+
+      const distance = Number(nearbyPublicationDistanceKm.get(String(item?.id || '')));
+      const proximityScore = Number.isFinite(distance)
+        ? Math.max(0, 1 - (distance / 200))
+        : (nearbyPublicationIds.has(String(item?.id || '')) ? 0.85 : 0.35);
+
+      const baseQuality = (ratingScore * 0.4) + (reviewScore * 0.2) + (freshnessScore * 0.15) + (proximityScore * 0.25);
+      return Number(baseQuality.toFixed(6));
     }
 
     function getPublicationTimestamp(item) {
@@ -3293,22 +3310,29 @@
             return /escuela|colegio|instituto/.test(inst);
           });
         }
-        if (activeMobileQuickFilter === 'cerca') {
-          filtered = [...filtered].sort((a, b) => {
-            const aDistance = Number(nearbyPublicationDistanceKm.get(String(a?.id || '')));
-            const bDistance = Number(nearbyPublicationDistanceKm.get(String(b?.id || '')));
-            const safeADistance = Number.isFinite(aDistance) ? aDistance : Number.POSITIVE_INFINITY;
-            const safeBDistance = Number.isFinite(bDistance) ? bDistance : Number.POSITIVE_INFINITY;
-            if (safeADistance !== safeBDistance) return safeADistance - safeBDistance;
-            return getPublicationTimestamp(b) - getPublicationTimestamp(a);
-          });
-        }
         if (activeMobileQuickFilter === 'mas-vendidos') {
           filtered = [...filtered].sort((a, b) => (Number(b.publicationReviewCount || 0) - Number(a.publicationReviewCount || 0)));
         }
         if (activeMobileQuickFilter === 'mas-recientes') {
           filtered = [...filtered].sort((a, b) => getPublicationTimestamp(b) - getPublicationTimestamp(a));
         }
+      }
+
+      const shouldUseSmartRanking = activeMobileQuickFilter !== 'mas-vendidos' && activeMobileQuickFilter !== 'mas-recientes';
+      if (shouldUseSmartRanking) {
+        const now = Date.now();
+        filtered = [...filtered].sort((a, b) => {
+          const scoreDiff = getPublicationRankingScore(b, now) - getPublicationRankingScore(a, now);
+          if (scoreDiff !== 0) return scoreDiff;
+
+          const aDistance = Number(nearbyPublicationDistanceKm.get(String(a?.id || '')));
+          const bDistance = Number(nearbyPublicationDistanceKm.get(String(b?.id || '')));
+          const safeADistance = Number.isFinite(aDistance) ? aDistance : Number.POSITIVE_INFINITY;
+          const safeBDistance = Number.isFinite(bDistance) ? bDistance : Number.POSITIVE_INFINITY;
+          if (safeADistance !== safeBDistance) return safeADistance - safeBDistance;
+
+          return getPublicationTimestamp(b) - getPublicationTimestamp(a);
+        });
       }
 
       return filtered;
@@ -3665,8 +3689,8 @@
       if (filterSubjectMobile) filterSubjectMobile.value = '';
       currentCityFilter = '';
       currentSubjectFilter = '';
-      activeMobileQuickFilter = 'cerca';
-      setMobileQuickFilter('cerca');
+      activeMobileQuickFilter = '';
+      setMobileQuickFilter('');
       resetPublicationLoad();
     }
 
