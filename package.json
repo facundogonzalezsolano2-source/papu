@@ -1,1 +1,8 @@
-
+{
+  "name": "papu",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "mercadopago": "^2.13.0"
+  }
+}
