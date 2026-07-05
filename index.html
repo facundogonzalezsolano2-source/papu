@@ -520,7 +520,7 @@
       <form id="venderForm" class="space-y-4 text-xs">
         <div id="publishPayoutWarning" class="hidden rounded-2xl border border-rose-200 bg-rose-50 p-3 text-rose-700">
           <p class="font-black mb-1">Antes de publicar debes completar tus datos de cobro.</p>
-          <p class="text-[11px] mb-2">Es obligatorio para vendedores cargar CBU/alias y nombre del titular de la cuenta.</p>
+          <p class="text-[11px] mb-2">Es obligatorio para vendedores cargar CBU y alias, junto al nombre del titular de la cuenta.</p>
           <button type="button" onclick="goToPayoutSetupFromPublish()" class="h-9 px-3 rounded-xl bg-rose-600 text-white font-bold text-[11px]">Hacer clic aquí</button>
         </div>
         <div>
@@ -1099,8 +1099,8 @@
       const alias = String(userData?.payoutAlias || '').trim();
       const ownerName = String(userData?.payoutOwnerName || '').trim();
       const cbu = normalizeCbu(userData?.payoutCbu || '');
-      const hasAliasOrCbu = Boolean(alias || cbu.length === 22);
-      return Boolean(ownerName && hasAliasOrCbu);
+      const hasCompletePayoutData = Boolean(alias && cbu.length === 22);
+      return Boolean(ownerName && hasCompletePayoutData);
     }
 
     function updatePublishPayoutWarning() {
@@ -1195,6 +1195,36 @@
         || null;
     }
 
+    async function getBuyerPayoutDataSnapshot(userId) {
+      // Tomamos primero lo que ya está en memoria y en el formulario de perfil como fallback.
+      let payoutAlias = String(currentUserData?.payoutAlias || document.getElementById('editPayoutAlias')?.value || '').trim();
+      let payoutCbu = normalizeCbu(currentUserData?.payoutCbu || document.getElementById('editPayoutCbu')?.value || '');
+      let payoutOwnerName = String(currentUserData?.payoutOwnerName || document.getElementById('editPayoutOwnerName')?.value || '').trim();
+
+      // Si estamos en Firebase, refrescamos desde users/{uid} para evitar campos vacíos por estado desactualizado.
+      if (isRealFirebase && userId) {
+        try {
+          const userDoc = await dbRef.collection('users').doc(String(userId)).get();
+          if (userDoc.exists) {
+            const dbUser = userDoc.data() || {};
+            payoutAlias = String(dbUser.payoutAlias || payoutAlias || '').trim();
+            payoutCbu = normalizeCbu(dbUser.payoutCbu || payoutCbu || '');
+            payoutOwnerName = String(dbUser.payoutOwnerName || payoutOwnerName || '').trim();
+          }
+        } catch (error) {
+          console.warn('No se pudo refrescar datos de cobro del comprador', error);
+        }
+      }
+
+      const cbuAliasCombined = payoutAlias || payoutCbu || '';
+      return {
+        payoutAlias,
+        payoutCbu,
+        payoutOwnerName,
+        cbuAliasCombined
+      };
+    }
+
     async function toggleFavorite(publicationId, event = null) {
       if (event) {
         event.stopPropagation();
@@ -1244,6 +1274,7 @@
     async function addPurchaseHistoryEntry(publication, quantity = 1) {
       const userId = getCurrentUserId();
       if (!userId || !publication) return;
+      const buyerPayout = await getBuyerPayoutDataSnapshot(userId);
 
       const entry = {
         buyerId: userId,
@@ -1257,6 +1288,11 @@
         quantity: Number(quantity || 1),
         authorId: publication.authorId || '',
         authorNick: publication.authorNick || 'Anónimo',
+        // Mapeo explícito para evitar undefined en Firestore.
+        cbu_alias: buyerPayout.cbuAliasCombined || '',
+        buyerPayoutAlias: buyerPayout.payoutAlias || '',
+        buyerPayoutCbu: buyerPayout.payoutCbu || '',
+        buyerPayoutOwnerName: buyerPayout.payoutOwnerName || '',
         createdAt: new Date(),
         status: 'pendiente'
       };
@@ -2135,7 +2171,7 @@
       }
 
       if (!hasValidSellerPayoutData(currentUserData)) {
-        alert('Antes de publicar debes completar CBU/alias y titular en tu perfil.');
+        alert('Antes de publicar debes completar CBU, alias y titular en tu perfil.');
         goToPayoutSetupFromPublish();
         resetSubmitState();
         return;
@@ -2708,7 +2744,8 @@
 
     // MODAL DETALLE
     function openDetailModal(id, focusReviews = false) {
-      const item = isRealFirebase ? null : localDB.find(x => x.id === id);
+      const normalizedId = String(id || '');
+      const item = isRealFirebase ? null : localDB.find(x => String(x.id) === normalizedId);
       
       const setupModal = (data) => {
         document.getElementById('modalTitle').innerText = data.title;
@@ -2755,12 +2792,12 @@
       };
 
       if (isRealFirebase) {
-        dbRef.collection('publications').doc(id).get().then(doc => {
+        dbRef.collection('publications').doc(normalizedId).get().then(doc => {
           if (!doc.exists) {
             alert('No se encontró la publicación en la nube.');
             return;
           }
-          setupModal({ id: id, ...doc.data() });
+          setupModal({ id: normalizedId, ...doc.data() });
         });
       } else if (item) {
         setupModal(item);
@@ -3321,9 +3358,9 @@
 
       const hasAnyPayoutField = Boolean(payoutAlias || payoutCbu || payoutOwnerName);
       if (hasAnyPayoutField) {
-        const hasAliasOrCbu = Boolean(payoutAlias || payoutCbu);
-        if (!hasAliasOrCbu || !payoutOwnerName) {
-          alert('Para guardar datos de cobro debes completar CBU/alias y titular.');
+        const hasAliasAndCbu = Boolean(payoutAlias && payoutCbu);
+        if (!hasAliasAndCbu || !payoutOwnerName) {
+          alert('Para guardar datos de cobro debes completar CBU, alias y titular.');
           return;
         }
         if (payoutCbu && payoutCbu.length !== 22) {
