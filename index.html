@@ -224,7 +224,7 @@
             <div class="flex items-center gap-3 mb-4">
               <img id="modalPublisherAvatar" src="https://via.placeholder.com/40?text=U" alt="Autor" class="w-14 h-14 rounded-3xl object-cover border border-slate-200" />
               <div>
-                <p id="modalPublisherName" onclick="openUserProfile('${data.authorId || ''}')" class="text-sm font-black text-slate-900 cursor-pointer hover:text-brand">Autor</p>
+                <p id="modalPublisherName" class="text-sm font-black text-slate-900 cursor-pointer hover:text-brand">Autor</p>
                 <p id="modalPublisherBadge" class="text-[11px] text-slate-500">Calificación, publicaciones y reseñas</p>
               </div>
             </div>
@@ -319,7 +319,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-slate-600 mb-1">Precio (ARS) *</label>
-            <input type="number" id="formPrice" required placeholder="Ej: 1500" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+            <input type="number" id="formPrice" required placeholder="Ej: 1500" oninput="updateCommissionSummary()" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
           </div>
           <div>
             <label class="block font-bold text-slate-600 mb-1">Tipo de Publicación *</label>
@@ -786,6 +786,7 @@
 
       avatarEl.src = authorAvatar || defaultAvatar;
       nameEl.innerText = authorNick || 'Autor';
+      nameEl.onclick = () => openUserProfile(authorId || '');
       badgeEl.innerText = 'Perfil del vendedor';
       pubsEl.innerText = '0';
       reviewsEl.innerText = '0';
@@ -940,6 +941,7 @@
 
     // PUBLICAR MATERIAL
     let isPublishing = false;
+    const PUBLISH_LOGIN_REQUIRED_MESSAGE = 'Debes loggearte primero para publicar.';
 
     function handlePublish(e) {
       e.preventDefault();
@@ -983,6 +985,17 @@
         return;
       }
 
+      const activeUser = isRealFirebase ? ((authRef && authRef.currentUser) || currentUser) : currentUser;
+
+      if (isRealFirebase && !activeUser?.uid) {
+        alert(PUBLISH_LOGIN_REQUIRED_MESSAGE);
+        openAuthModal();
+        resetSubmitState();
+        return;
+      }
+
+      const ownerUid = activeUser?.uid || idAutorEjemplo;
+
       const postData = {
         title,
         description: desc,
@@ -992,7 +1005,7 @@
         institution: inst,
         professor,
         subject,
-        authorId: currentUser ? currentUser.uid : idAutorEjemplo,
+        authorId: ownerUid,
         authorNick: currentUserData?.username || nombreAutorEjemplo,
         authorAvatar: currentUserData?.avatarUrl || defaultAvatar,
         createdAt: isRealFirebase ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
@@ -1019,11 +1032,18 @@
 
         try {
           await dbRef.collection('publications').add(finalData);
-          alert('¡Guardado en la base de datos Firestore en tiempo real!');
+          alert('¡Publicación creada con éxito!');
           form.reset();
           closeVenderModal();
+          resetPublicationLoad();
         } catch (err) {
-          alert(err.message);
+          console.error('Error guardando publicación en Firestore', err);
+          if (err?.code === 'storage/unauthorized' || err?.code === 'permission-denied' || err?.code === 'auth/unauthenticated') {
+            alert(PUBLISH_LOGIN_REQUIRED_MESSAGE);
+            openAuthModal();
+          } else {
+            alert('No se pudo crear la publicación. Intenta nuevamente.');
+          }
         } finally {
           resetSubmitState();
         }
@@ -1033,7 +1053,8 @@
         if (!isRealFirebase) {
           return URL.createObjectURL(coverFile);
         }
-        const coverRef = storage.ref(`portadas/${Date.now()}_${coverFile.name}`);
+        const safeName = String(coverFile.name || 'cover').replace(/\s+/g, '_');
+        const coverRef = storage.ref(`portadas/${ownerUid}/${Date.now()}_${safeName}`);
         await coverRef.put(coverFile);
         return await coverRef.getDownloadURL();
       };
@@ -1045,7 +1066,8 @@
             urls.push(URL.createObjectURL(file));
             continue;
           }
-          const protectedRef = storage.ref(`protegidos/${Date.now()}_${file.name}`);
+          const safeName = String(file.name || 'file').replace(/\s+/g, '_');
+          const protectedRef = storage.ref(`protegidos/${ownerUid}/${Date.now()}_${safeName}`);
           await protectedRef.put(file);
           urls.push(await protectedRef.getDownloadURL());
         }
@@ -1055,7 +1077,14 @@
       Promise.all([uploadCover(), uploadProtectedImages()])
         .then(([coverUrl, protectedUrls]) => savePublication(coverUrl, protectedUrls))
         .catch(err => {
-          alert('Error al subir archivos: ' + err.message);
+          console.error('Error al subir archivos', err);
+          if (err?.code === 'storage/unauthorized') {
+            alert(PUBLISH_LOGIN_REQUIRED_MESSAGE);
+            openAuthModal();
+            resetSubmitState();
+            return;
+          }
+          alert('No se pudo subir los archivos. Intenta nuevamente.');
           resetSubmitState();
         });
     }
@@ -1098,12 +1127,13 @@
             hasMorePublications = false;
           } else {
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const approvedItems = items.filter(item => item.adminStatus !== 'pending');
+            const activeUserId = (authRef && authRef.currentUser && authRef.currentUser.uid) || currentUser?.uid || '';
+            const visibleItems = items.filter(item => item.adminStatus !== 'pending' || (activeUserId && item.authorId === activeUserId));
             publicationsLastVisible = snapshot.docs[snapshot.docs.length - 1];
             if (snapshot.size < publicationsPageSize) {
               hasMorePublications = false;
             }
-            loadedPublications = [...loadedPublications, ...approvedItems];
+            loadedPublications = [...loadedPublications, ...visibleItems];
             allPublications = loadedPublications;
             renderGrid(applyFilters(loadedPublications));
           }
@@ -1113,14 +1143,15 @@
         }
       } else {
         const filteredLocal = localDB.filter(item => {
+          const activeUserId = currentUser?.uid || '';
           const city = item.city.toLowerCase();
           const subject = (item.subject || '').toLowerCase();
           const searchText = `${item.title} ${item.description} ${item.city} ${item.subject} ${item.professor} ${item.institution}`.toLowerCase();
           const cityMatch = !currentCityFilter || city.includes(currentCityFilter.toLowerCase());
           const subjectMatch = !currentSubjectFilter || subject.includes(currentSubjectFilter);
           const searchMatch = !searchValue || searchText.includes(searchValue);
-          const approved = item.adminStatus !== 'pending';
-          return approved && cityMatch && subjectMatch && searchMatch;
+          const visible = item.adminStatus !== 'pending' || (activeUserId && item.authorId === activeUserId);
+          return visible && cityMatch && subjectMatch && searchMatch;
         });
         const page = filteredLocal.slice(0, publicationsPageSize);
         loadedPublications = page;
@@ -1195,6 +1226,7 @@
               </div>
               <p class="text-xs text-slate-400 line-clamp-2">${item.description}</p>
             </div>
+            <button class="buy-publication-btn w-full bg-[#009EE3] text-white py-2.5 rounded-xl font-bold text-xs shadow-sm">Comprar</button>
             <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-500 font-bold border-t pt-3">
               <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> ${item.city}</div>
               <div class="flex items-center gap-2"><i class="fa-solid fa-building-columns"></i> ${item.institution}</div>
@@ -1203,6 +1235,15 @@
             </div>
           </div>
         `;
+
+        const buyButton = card.querySelector('.buy-publication-btn');
+        if (buyButton) {
+          buyButton.addEventListener('click', event => {
+            event.stopPropagation();
+            iniciarPago(item);
+          });
+        }
+
         grid.appendChild(card);
       });
     }
@@ -1385,6 +1426,89 @@
       window.location.href = authUrl.toString();
     }
 
+    function normalizarPrecio(valor) {
+      const limpio = String(valor ?? '')
+        .trim()
+        .replace(/\s/g, '')
+        .replace(/\./g, '')
+        .replace(',', '.')
+        .replace(/[^\d.-]/g, '');
+      const num = Number(limpio);
+      return Number.isFinite(num) ? num : NaN;
+    }
+
+    async function iniciarPago(publicacion, quantity = 1) {
+      const title = String(publicacion?.title || publicacion?.name || 'Producto').trim();
+      const price = normalizarPrecio(publicacion?.price);
+      const safeQuantity = Number(quantity) > 0 ? Number(quantity) : 1;
+      const payload = { title, price, quantity: safeQuantity };
+
+      if (!publicacion?.id) console.warn('Publicación sin id al iniciar pago', publicacion);
+
+      if (!title || !Number.isFinite(price) || price <= 0) {
+        alert('El precio de esta publicación es inválido. Editalo antes de comprar.');
+        console.error('Precio inválido detectado', { original: publicacion?.price, normalizado: price, publicacion });
+        return false;
+      }
+
+      try {
+        const response = await fetch('/.netlify/functions/create-preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        let data = {};
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          console.error('No se pudo parsear la respuesta del servidor de pagos', {
+            status: response.status,
+            ok: response.ok,
+            parseError,
+            payload
+          });
+        }
+
+        if (!response.ok) {
+          console.error('Error al crear preferencia de pago', {
+            status: response.status,
+            ok: response.ok,
+            data,
+            payload
+          });
+
+          if (data && data.error) {
+            alert(String(data.error));
+          } else {
+            alert('No se pudo iniciar el pago');
+          }
+          return false;
+        }
+
+        if (!data || !data.init_point) {
+          console.error('Respuesta inválida del servidor de pagos', {
+            status: response.status,
+            ok: response.ok,
+            data,
+            payload
+          });
+          alert('Respuesta inválida del servidor de pagos');
+          return false;
+        }
+
+        window.location.href = data.init_point;
+        return true;
+      } catch (error) {
+        console.error('No se pudo iniciar el pago: error de red o backend', {
+          error,
+          payload
+        });
+        alert('No se pudo iniciar el pago');
+        return false;
+      }
+    }
+
     async function simulatePurchase() {
       const modal = document.getElementById('detailModal');
       if (!modal) return;
@@ -1398,49 +1522,20 @@
         return;
       }
 
-      const title = selectedItem?.title || 'Material educativo';
-      const description = selectedItem?.description || 'Acceso al material protegido';
-      const price = Number(selectedItem?.price || 0);
-      const orderId = `order-${Date.now()}`;
-      const functionUrl = getCreatePreferenceFunctionUrl();
+      const title = selectedItem?.title || document.getElementById('modalTitle')?.innerText || 'Material educativo';
+      const modalPriceText = document.getElementById('modalPrice')?.innerText || '';
+      const modalPrice = Number(modalPriceText.replace(/[^0-9.,-]/g, '').replace('.', '').replace(',', '.'));
+      const price = Number(selectedItem?.price ?? (Number.isFinite(modalPrice) ? modalPrice : 0));
+      const quantity = 1;
 
       const buyButton = document.getElementById('buyButtonContainer');
       if (buyButton) {
         buyButton.innerHTML = '<button disabled class="w-full bg-slate-400 text-white py-3.5 rounded-xl font-bold text-xs shadow-md">Creando pago...</button>';
       }
 
-      try {
-        const response = await fetch(functionUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId,
-            title,
-            description,
-            price,
-            items: [{ title, description, quantity: 1, unit_price: price }],
-            backUrls: {
-              success: `${window.location.origin}/payment/success`,
-              failure: `${window.location.origin}/payment/failure`,
-              pending: `${window.location.origin}/payment/pending`
-            }
-          })
-        });
-
-        const result = await response.json();
-        if (!response.ok || !result.preferenceId) {
-          throw new Error(result.error || 'No se pudo crear la preferencia de pago');
-        }
-
-        const initPoint = result.initPoint || result.init_point;
-        window.location.href = initPoint || `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${result.preferenceId}`;
-      } catch (error) {
-        console.error('Error creando preferencia de Mercado Pago:', error);
-        alert('No se pudo iniciar el pago. Verificá que la función create-preference esté disponible en Netlify.');
-
-        if (buyButton) {
-          buyButton.innerHTML = '<button onclick="simulatePurchase()" class="w-full bg-[#009EE3] text-white py-3.5 rounded-xl font-bold text-xs shadow-md">Reintentar pago</button>';
-        }
+      const success = await iniciarPago({ title, price }, quantity);
+      if (!success && buyButton) {
+        buyButton.innerHTML = '<button onclick="simulatePurchase()" class="w-full bg-[#009EE3] text-white py-3.5 rounded-xl font-bold text-xs shadow-md">Reintentar pago</button>';
       }
     }
 
@@ -1463,7 +1558,16 @@
     // COMPORTAMIENTOS BÁSICOS
     function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
     function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
-    function openVenderModal() { document.getElementById('venderModal').classList.remove('hidden'); }
+    function openVenderModal() {
+      const activeUser = isRealFirebase ? ((authRef && authRef.currentUser) || currentUser) : currentUser;
+      if (isRealFirebase && !activeUser?.uid) {
+        alert(PUBLISH_LOGIN_REQUIRED_MESSAGE);
+        openAuthModal();
+        return;
+      }
+      document.getElementById('venderModal').classList.remove('hidden');
+      updateCommissionSummary();
+    }
     function closeVenderModal() { document.getElementById('venderModal').classList.add('hidden'); }
     function closeDetailModal() { document.getElementById('detailModal').classList.add('hidden'); }
 
@@ -1472,15 +1576,20 @@
       const studentAmountEl = document.getElementById('commissionStudentAmount');
       const platformAmountEl = document.getElementById('commissionPlatformAmount');
       const sellerAmountEl = document.getElementById('commissionSellerAmount');
-      if (!priceInput || !studentAmountEl || !platformAmountEl || !sellerAmountEl) return;
+      if (!priceInput || !studentAmountEl || !sellerAmountEl) return;
 
-      const price = Number(priceInput.value || 0);
+      const numericFromInput = Number(priceInput.valueAsNumber);
+      const rawValue = String(priceInput.value ?? '').replace(/[^\d.,-]/g, '').replace(',', '.');
+      const parsedPrice = Number.isFinite(numericFromInput) ? numericFromInput : Number(rawValue);
+      const price = Number.isFinite(parsedPrice) && parsedPrice > 0 ? parsedPrice : 0;
       const commissionRate = 0.15;
       const commissionAmount = Math.round(price * commissionRate);
       const sellerAmount = Math.max(0, price - commissionAmount);
 
       studentAmountEl.innerText = `$${price.toLocaleString('es-AR')}`;
-      platformAmountEl.innerText = `$${commissionAmount.toLocaleString('es-AR')}`;
+      if (platformAmountEl) {
+        platformAmountEl.innerText = `$${commissionAmount.toLocaleString('es-AR')}`;
+      }
       sellerAmountEl.innerText = `$${sellerAmount.toLocaleString('es-AR')}`;
     }
     function openProfilePage() {
@@ -1794,6 +1903,7 @@
 
       if (priceInput) {
         priceInput.addEventListener('input', updateCommissionSummary);
+        updateCommissionSummary();
       }
 
       window.addEventListener('scroll', () => {
