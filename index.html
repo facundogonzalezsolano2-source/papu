@@ -69,6 +69,56 @@
         font-size: 16px !important;
       }
     }
+
+    body.dark-mode {
+      background: #020617 !important;
+      color: #e2e8f0 !important;
+    }
+
+    body.dark-mode .bg-white {
+      background-color: #0f172a !important;
+    }
+
+    body.dark-mode .bg-slate-50,
+    body.dark-mode .bg-slate-100 {
+      background-color: #111827 !important;
+    }
+
+    body.dark-mode .bg-slate-200 {
+      background-color: #1f2937 !important;
+    }
+
+    body.dark-mode .border-slate-100,
+    body.dark-mode .border-slate-200 {
+      border-color: #334155 !important;
+    }
+
+    body.dark-mode .text-slate-900 {
+      color: #f8fafc !important;
+    }
+
+    body.dark-mode .text-slate-800,
+    body.dark-mode .text-slate-700,
+    body.dark-mode .text-slate-600 {
+      color: #cbd5e1 !important;
+    }
+
+    body.dark-mode .text-slate-500,
+    body.dark-mode .text-slate-400 {
+      color: #94a3b8 !important;
+    }
+
+    body.dark-mode input,
+    body.dark-mode textarea,
+    body.dark-mode select {
+      background-color: #0b1220 !important;
+      color: #e2e8f0 !important;
+      border-color: #334155 !important;
+    }
+
+    body.dark-mode .drawer-item:hover {
+      background-color: #1e293b !important;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans">
@@ -81,7 +131,7 @@
           <span class="text-xl font-black tracking-tight text-slate-900">Tu Apunte</span>
         </div>
         <button onclick="openAppDrawer()" class="w-11 h-11 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 text-lg">
-          <i class="fa-solid fa-bars"></i>
+          <i class="fa-solid fa-ellipsis-vertical"></i>
         </button>
       </div>
       <button onclick="openMobileSearch()" class="w-full h-12 rounded-2xl bg-slate-100 border border-slate-200 px-4 flex items-center gap-3 text-slate-500 font-semibold text-sm">
@@ -132,7 +182,7 @@
           </button>
         </div>
         <button onclick="openAppDrawer()" class="w-11 h-11 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 text-lg">
-          <i class="fa-solid fa-bars"></i>
+          <i class="fa-solid fa-ellipsis-vertical"></i>
         </button>
       </div>
     </div>
@@ -228,7 +278,7 @@
   <!-- MODAL DE DETALLE Y COMPRA -->
   <div id="detailModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative p-6 md:p-8 flex flex-col md:flex-row gap-8">
-      <button onclick="closeDetailModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      <button onclick="closeDetailModal()" class="absolute top-3 right-3 sm:top-4 sm:right-4 z-50 w-10 h-10 rounded-full bg-white/95 shadow-lg border border-slate-200 flex items-center justify-center text-slate-700"><i class="fa-solid fa-xmark"></i></button>
 
       <!-- Visor de Portada / Páginas -->
       <div class="w-full md:w-1/2 flex flex-col gap-4">
@@ -362,7 +412,7 @@
       <button onclick="openMobileSearch()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-magnifying-glass text-base"></i><span>Buscar</span></button>
       <button onclick="openVenderModal()" class="h-12 rounded-xl bg-brand text-white text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-plus text-base"></i><span>Publicar</span></button>
       <button onclick="openTopRanking()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-fire text-base"></i><span>Top</span></button>
-      <button onclick="openAppDrawer()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-bars text-base"></i><span>Menú</span></button>
+      <button onclick="openProfilePage()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-regular fa-user text-base"></i><span>Perfil</span></button>
     </div>
   </nav>
 
@@ -396,51 +446,23 @@
         <section>
           <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">Ayuda</h4>
           <div class="space-y-2 text-sm">
-            <button onclick="openInfoModal('centro_ayuda');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-circle-question mr-2"></i>Centro de ayuda</button>
-            <button onclick="openInfoModal('faq');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-list-check mr-2"></i>Preguntas frecuentes (FAQ)</button>
-            <button onclick="openInfoModal('contacto');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-envelope mr-2"></i>Contacto</button>
-            <button onclick="openReportModal('problema');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-bug mr-2"></i>Reportar un problema</button>
-            <button onclick="openReportModal('compra');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-receipt mr-2"></i>Reportar una compra</button>
-            <button onclick="openReportModal('usuario');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-user-slash mr-2"></i>Reportar un usuario</button>
-            <button onclick="openReportModal('publicacion');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-flag mr-2"></i>Reportar una publicación</button>
+            <button onclick="openInfoModal('centro_ayuda_breve');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-circle-question mr-2"></i>Centro de ayuda</button>
           </div>
         </section>
 
         <section>
-          <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">Legal</h4>
+          <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">Cómo Funciona</h4>
           <div class="space-y-2 text-sm">
-            <button onclick="openLegalDocument('terminos');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-file-lines mr-2"></i>Términos y Condiciones</button>
-            <button onclick="openLegalDocument('privacidad');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-user-shield mr-2"></i>Política de Privacidad</button>
-            <button onclick="openLegalDocument('cookies');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-cookie-bite mr-2"></i>Política de Cookies</button>
-            <button onclick="openLegalDocument('reembolsos');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-rotate-left mr-2"></i>Política de Reembolsos</button>
-            <button onclick="openLegalDocument('normas_vendedores');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-store mr-2"></i>Normas para Vendedores</button>
-            <button onclick="openLegalDocument('normas_compradores');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-cart-shopping mr-2"></i>Normas para Compradores</button>
-            <button onclick="openLegalDocument('procedimiento_denuncias');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-scale-balanced mr-2"></i>Procedimiento de Denuncias</button>
-            <button onclick="openLegalDocument('propiedad_intelectual');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-copyright mr-2"></i>Propiedad Intelectual</button>
+            <button onclick="openInfoModal('como_funciona_market');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-circle-info mr-2"></i>Comprador y Vendedor</button>
           </div>
         </section>
 
         <section>
-          <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">Información</h4>
+          <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">Información Legal</h4>
           <div class="space-y-2 text-sm">
-            <button onclick="openInfoModal('como_funciona');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-circle-info mr-2"></i>Cómo funciona la plataforma</button>
-            <button onclick="openInfoModal('como_comprar');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-bag-shopping mr-2"></i>Cómo comprar</button>
-            <button onclick="openInfoModal('como_vender');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-store mr-2"></i>Cómo vender</button>
-            <button onclick="openInfoModal('como_cobrar');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-money-bill-wave mr-2"></i>Cómo cobrar las ventas</button>
-            <button onclick="openInfoModal('comisiones');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-percent mr-2"></i>Comisiones de la plataforma</button>
-            <button onclick="openInfoModal('metodos_pago');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-credit-card mr-2"></i>Métodos de pago aceptados</button>
+            <button onclick="openLegalDocument('terminos');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-file-lines mr-2"></i>Ver PDF legal</button>
           </div>
         </section>
-      </div>
-
-      <div class="border-t border-slate-200 p-4 text-xs text-slate-500">
-        <p>Versión 1.0.0</p>
-        <p class="mt-1">© Tu Apunte 2026</p>
-        <div class="mt-2 flex items-center gap-3 text-slate-600 text-sm">
-          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>
-          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-facebook"></i></a>
-          <a href="https://x.com" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-x-twitter"></i></a>
-        </div>
       </div>
     </aside>
   </div>
@@ -797,13 +819,26 @@
     </div>
   </div>
 
-  <div id="topRankingModal" class="hidden fixed inset-0 bg-black/60 z-[70] p-4">
-    <div class="max-w-xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">
-      <div class="flex items-center justify-between border-b border-slate-200 p-4">
-        <h3 class="text-lg font-black text-slate-900">Top de ventas</h3>
-        <button onclick="closeTopRanking()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+  <div id="topPage" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28">
+      <div class="flex items-center justify-between gap-3 mb-5">
+        <button onclick="closeTopRanking()" class="text-slate-500 hover:text-slate-900 font-bold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver al marketplace
+        </button>
+        <h2 class="text-xl sm:text-2xl font-black text-slate-900">Top 50 de vendedores</h2>
       </div>
-      <div id="topRankingList" class="max-h-[70vh] overflow-y-auto p-4 space-y-3"></div>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-3xl p-4 sm:p-6">
+        <div id="topRankingList" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <div id="topCurrentUserBar" class="hidden fixed bottom-0 left-0 right-0 z-[60] border-t border-slate-200 bg-white/95 backdrop-blur px-4 py-3">
+      <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+        <p class="text-xs sm:text-sm font-bold text-slate-700">Tu posición en el top</p>
+        <p id="topCurrentUserRank" class="text-sm sm:text-base font-black text-brand">Top -</p>
+      </div>
     </div>
   </div>
 
@@ -907,6 +942,7 @@
     const cityCoordinatesCache = new Map();
     const publicationsPageSize = 30;
     const defaultAvatar = 'https://via.placeholder.com/40?text=U';
+    let isDarkModeEnabled = false;
     let legalDocumentsCache = null;
     const legalDocumentDefaults = {
       terminos: {
@@ -974,11 +1010,15 @@
     const infoModalContent = {
       configuracion: {
         title: 'Configuración',
-        body: '<p>Desde tu perfil puedes editar nombre, ubicación, institución y foto. Pronto agregaremos preferencias avanzadas de notificaciones y privacidad.</p>'
+        body: ''
       },
-      centro_ayuda: {
+      centro_ayuda_breve: {
         title: 'Centro de ayuda',
-        body: '<p>Si tienes problemas con una compra, una publicación o tu cuenta, usa las opciones de reporte en el menú Ayuda. Nuestro equipo revisa cada caso.</p>'
+        body: '<p>En breve vamos a sumar la sección completa de ayuda.</p>'
+      },
+      como_funciona_market: {
+        title: 'Cómo funciona Tu Apunte',
+        body: '<div class="space-y-3"><p>Tu Apunte conecta compradores y vendedores de material académico de forma simple y segura.</p><p><strong>Para compradores:</strong> puedes buscar resúmenes, exámenes y materiales por materia, institución o ciudad. Cuando compras una publicación, la operación queda registrada en tu historial y luego podrás ver el contenido asociado a esa compra.</p><p><strong>Para vendedores:</strong> publicas tus apuntes con portada, contenido protegido, precio y datos académicos. Cada venta se procesa en la plataforma y se acredita según las condiciones informadas.</p><p><strong>Portal para vendedores:</strong> desde tu perfil gestionas tus publicaciones, datos de cobro y tu actividad. La plataforma aplica una comisión del <strong>15%</strong> por servicios vinculados (protección de contenido, infraestructura y gestión operativa).</p></div>'
       },
       faq: {
         title: 'Preguntas frecuentes',
@@ -1445,6 +1485,42 @@
       });
     }
 
+    function applyDarkMode(enabled) {
+      isDarkModeEnabled = Boolean(enabled);
+      document.body.classList.toggle('dark-mode', isDarkModeEnabled);
+      localStorage.setItem('tuapunte:darkMode', isDarkModeEnabled ? '1' : '0');
+    }
+
+    function toggleDarkMode() {
+      applyDarkMode(!isDarkModeEnabled);
+      if (!document.getElementById('infoModal')?.classList.contains('hidden')) {
+        openInfoModal('configuracion');
+      }
+    }
+
+    function openProfileEditorFromSettings() {
+      closeInfoModal();
+      if (!currentUser) {
+        openAuthModal();
+        return;
+      }
+      openProfilePage();
+      setTimeout(() => {
+        const editSection = document.getElementById('profileEditSection');
+        if (editSection) editSection.classList.remove('hidden');
+      }, 180);
+    }
+
+    function getSettingsContentHtml() {
+      const darkLabel = isDarkModeEnabled ? 'Desactivar modo oscuro' : 'Activar modo oscuro';
+      return `
+        <div class="space-y-3">
+          <button type="button" onclick="openProfileEditorFromSettings()" class="w-full h-11 rounded-xl bg-brand text-white font-bold text-sm">Editar tu perfil</button>
+          <button type="button" onclick="toggleDarkMode()" class="w-full h-11 rounded-xl bg-slate-100 text-slate-800 font-bold text-sm">${darkLabel}</button>
+        </div>
+      `;
+    }
+
     function closeAppDrawer(event = null) {
       if (event && event.target && event.target.id !== 'appDrawer') return;
       const drawer = document.getElementById('appDrawer');
@@ -1703,6 +1779,9 @@
       const content = document.getElementById('infoModalContent');
       if (!modal || !title || !content) return;
       const data = infoModalContent[infoKey] || { title: 'Información', body: '<p>Contenido no disponible por el momento.</p>' };
+      if (infoKey === 'configuracion') {
+        data.body = getSettingsContentHtml();
+      }
       title.innerText = data.title;
       content.innerHTML = data.body;
       modal.classList.remove('hidden');
@@ -2341,6 +2420,7 @@
 
       items.forEach(item => {
         const reviewCount = Number(item.publicationReviewCount || 0);
+        const protectedImagesCount = Array.isArray(item.protectedUrls) ? item.protectedUrls.length : 0;
         const createdAtMs = getPublicationTimestamp(item);
         const isNew = createdAtMs ? (Date.now() - createdAtMs) < 1000 * 60 * 60 * 24 * 14 : false;
         const isTopSeller = reviewCount >= 3;
@@ -2369,6 +2449,7 @@
                 <p class="text-sm font-extrabold text-slate-800">Institución: ${item.institution || 'No indicada'}</p>
                 <p class="text-sm font-extrabold text-slate-800">Materia: ${item.subject || 'No indicada'}</p>
                 <p class="text-sm font-extrabold text-slate-800">Ciudad: ${item.city || 'No indicada'}</p>
+                <p class="text-xs font-black text-emerald-700">Contiene ${protectedImagesCount} imagen${protectedImagesCount === 1 ? '' : 'es'} protegida${protectedImagesCount === 1 ? '' : 's'}</p>
               </div>
               <button class="buy-publication-btn w-full bg-[#009EE3] text-white py-3 rounded-xl font-bold text-sm shadow-sm">Comprar</button>
             </div>
@@ -2406,6 +2487,7 @@
                 <div class="flex items-center gap-2"><i class="fa-solid fa-book-bookmark"></i> ${item.subject}</div>
                 <div class="flex items-center gap-2"><i class="fa-solid fa-chalkboard-user"></i> ${item.professor}</div>
               </div>
+              <p class="text-[11px] font-black text-emerald-700">${protectedImagesCount} imagen${protectedImagesCount === 1 ? '' : 'es'} protegida${protectedImagesCount === 1 ? '' : 's'}</p>
             </div>
           `;
         }
@@ -2908,16 +2990,28 @@
       return decodeURIComponent(hash.slice(prefix.length));
     }
 
-    async function handleProfileRoute() {
+    function isTopRoute() {
+      return String(window.location.hash || '') === '#top';
+    }
+
+    async function handleAppRoute() {
+      if (isTopRoute()) {
+        await renderTopPage();
+        document.getElementById('profilePage').classList.add('hidden');
+        return;
+      }
+
       const profileUserId = getProfileUserIdFromHash();
       if (!profileUserId) {
         closeProfilePage(false);
+        closeTopRanking(false);
         return;
       }
 
       const loaded = await loadProfileData(profileUserId);
       if (loaded) {
         document.getElementById('profilePage').classList.remove('hidden');
+        closeTopRanking(false);
       }
     }
 
@@ -2958,7 +3052,9 @@
           userMap.set(doc.id, {
             userId: doc.id,
             username: data.username || 'Usuario',
-            avatarUrl: data.avatarUrl || defaultAvatar
+            avatarUrl: data.avatarUrl || defaultAvatar,
+            institution: data.institution || 'Institución no indicada',
+            city: data.city || 'Ciudad no indicada'
           });
         });
 
@@ -2969,33 +3065,18 @@
           salesMap.set(sellerId, Number(salesMap.get(sellerId) || 0) + Number(data.quantity || 1));
         });
       } else {
-        localUsers.forEach(user => {
-          userMap.set(String(user.id), {
-            userId: String(user.id),
-            username: user.username || 'Usuario',
-            avatarUrl: user.avatarUrl || defaultAvatar
+        if (currentUser && currentUserData) {
+          const me = String(currentUser.uid);
+          userMap.set(me, {
+            userId: me,
+            username: currentUserData.username || 'Tú',
+            avatarUrl: currentUserData.avatarUrl || defaultAvatar,
+            institution: currentUserData.institution || 'Institución no indicada',
+            city: currentUserData.city || 'Ciudad no indicada'
           });
-        });
-
-        localPurchaseHistory.forEach(entry => {
-          const sellerId = String(entry.authorId || '');
-          if (!sellerId) return;
-          salesMap.set(sellerId, Number(salesMap.get(sellerId) || 0) + Number(entry.quantity || 1));
-        });
-      }
-
-      localDB.forEach(pub => {
-        const sellerId = String(pub.authorId || '');
-        if (!sellerId) return;
-        if (!userMap.has(sellerId)) {
-          userMap.set(sellerId, {
-            userId: sellerId,
-            username: pub.authorNick || 'Usuario',
-            avatarUrl: pub.authorAvatar || defaultAvatar
-          });
+          salesMap.set(me, 0);
         }
-        if (!salesMap.has(sellerId)) salesMap.set(sellerId, 0);
-      });
+      }
 
       const currentId = getCurrentUserId();
       if (currentId && !userMap.has(currentId)) {
@@ -3022,47 +3103,71 @@
       return ranking;
     }
 
-    async function openTopRanking() {
-      const modal = document.getElementById('topRankingModal');
+    async function renderTopPage() {
+      const topPage = document.getElementById('topPage');
       const list = document.getElementById('topRankingList');
-      if (!modal || !list) return;
+      const currentBar = document.getElementById('topCurrentUserBar');
+      const currentRankText = document.getElementById('topCurrentUserRank');
+      if (!topPage || !list || !currentBar || !currentRankText) return;
 
-      modal.classList.remove('hidden');
+      topPage.classList.remove('hidden');
       list.innerHTML = '<p class="text-sm text-slate-500">Cargando ranking...</p>';
 
       try {
         const ranking = await getTopRankingRows();
         if (!ranking.length) {
-          list.innerHTML = '<p class="text-sm text-slate-500">Aún no hay datos para mostrar el top.</p>';
+          list.innerHTML = '<p class="text-sm text-slate-500">Aún no hay usuarios logueados para mostrar en el top.</p>';
+          currentBar.classList.add('hidden');
           return;
         }
 
+        const visibleRanking = ranking.slice(0, 50);
         list.innerHTML = '';
-        ranking.forEach((entry, index) => {
+        visibleRanking.forEach((entry, index) => {
           const rank = index + 1;
           const row = document.createElement('div');
-          row.className = `${getTopBorderClass(rank)} rounded-2xl p-3 bg-white flex items-center justify-between gap-3`;
+          row.className = `${getTopBorderClass(rank)} rounded-2xl p-3 sm:p-4 bg-white flex items-center gap-3`;
           row.innerHTML = `
-            <div class="flex items-center gap-3 min-w-0">
-              <p class="text-xs font-black text-slate-500 w-14">Top ${rank}</p>
+            <p class="text-xs font-black text-slate-500 w-14 flex-shrink-0">Top ${rank}</p>
+            <div class="flex items-center gap-3 min-w-0 flex-1">
               <img src="${entry.avatarUrl || defaultAvatar}" alt="${entry.username}" class="w-10 h-10 rounded-full object-cover" />
               <button class="text-left min-w-0" onclick="openUserProfile('${entry.userId}')">
                 <p class="text-sm font-black text-slate-900 truncate">${entry.username}</p>
+                <p class="text-[11px] text-slate-500 truncate">${entry.institution || 'Institución no indicada'} · ${entry.city || 'Ciudad no indicada'}</p>
               </button>
             </div>
-            <p class="text-xs font-bold text-slate-600">${entry.soldCount} ventas</p>
           `;
           list.appendChild(row);
         });
+
+        const myUserId = getCurrentUserId();
+        const myIndex = ranking.findIndex(entry => String(entry.userId) === String(myUserId));
+        if (myUserId && myIndex >= 0) {
+          currentRankText.innerText = `Top ${myIndex + 1}`;
+          currentBar.classList.remove('hidden');
+        } else {
+          currentRankText.innerText = 'Top -';
+          currentBar.classList.add('hidden');
+        }
       } catch (error) {
         console.error('No se pudo cargar el ranking', error);
         list.innerHTML = '<p class="text-sm text-slate-500">No se pudo cargar el ranking.</p>';
+        currentBar.classList.add('hidden');
       }
     }
 
-    function closeTopRanking() {
-      const modal = document.getElementById('topRankingModal');
-      if (modal) modal.classList.add('hidden');
+    function openTopRanking() {
+      window.location.hash = 'top';
+    }
+
+    function closeTopRanking(updateUrl = true) {
+      const topPage = document.getElementById('topPage');
+      const currentBar = document.getElementById('topCurrentUserBar');
+      if (topPage) topPage.classList.add('hidden');
+      if (currentBar) currentBar.classList.add('hidden');
+      if (updateUrl && isTopRoute()) {
+        history.pushState(null, '', `${window.location.pathname}${window.location.search}`);
+      }
     }
 
     function toggleNotifications() { document.getElementById('notificationsMenu').classList.toggle('hidden'); }
@@ -3465,6 +3570,7 @@
     }
 
     window.onload = async () => {
+      applyDarkMode(localStorage.getItem('tuapunte:darkMode') === '1');
       updateAuthContainer();
       if (!isRealFirebase) {
         localPurchaseHistory = readLocalStorageArray('tuapunte:allPurchases');
@@ -3494,8 +3600,8 @@
         }
       });
 
-      window.addEventListener('hashchange', handleProfileRoute);
-      await handleProfileRoute();
+      window.addEventListener('hashchange', handleAppRoute);
+      await handleAppRoute();
 
       window.addEventListener('resize', () => {
         renderGrid(applyFilters(loadedPublications));
