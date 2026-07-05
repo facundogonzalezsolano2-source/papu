@@ -2599,7 +2599,7 @@
         const price = priceNumber.toLocaleString('es-AR');
         const dateLabel = formatDate(entry.createdAt || entry.purchasedAt || entry.date);
         const status = normalizePayoutStatus(entry.payoutStatus || entry.status || 'NP');
-        const detailPublicationId = String(entry.publicationId || publication?.id || entry.id || '').trim();
+        const detailPublicationId = String(entry.publicationId || publication?.id || '').trim() || String(entry.id || '').trim();
         const canOpen = Boolean(detailPublicationId);
         const institution = entry.institution || publication?.institution || 'N/D';
 
@@ -2656,16 +2656,18 @@
       const normalizedTargetUserId = String(targetUserId || currentUser?.uid || '');
       const purchaseEntry = currentPurchaseHistory.find(entry => {
         const samePublication = String(entry.publicationId || '') === String(publicationId || '');
+        const samePurchaseDoc = String(entry.id || '') === String(publicationId || '');
         const entryBuyerId = String(entry.buyerId || normalizedTargetUserId || '');
-        return samePublication && entryBuyerId === normalizedTargetUserId;
+        return (samePublication || samePurchaseDoc) && entryBuyerId === normalizedTargetUserId;
       });
-      let publication = getPublicationById(publicationId) || purchaseEntry || null;
+      const resolvedPublicationId = String(purchaseEntry?.publicationId || publicationId || '');
+      let publication = getPublicationById(resolvedPublicationId) || purchaseEntry || null;
 
-      if (!publication && isRealFirebase && publicationId) {
+      if (!publication && isRealFirebase && resolvedPublicationId) {
         try {
-          const publicationDoc = await dbRef.collection('publications').doc(String(publicationId)).get();
+          const publicationDoc = await dbRef.collection('publications').doc(String(resolvedPublicationId)).get();
           if (publicationDoc.exists) {
-            publication = { id: String(publicationId), ...publicationDoc.data() };
+            publication = { id: String(resolvedPublicationId), ...publicationDoc.data() };
           }
         } catch (error) {
           console.warn('No se pudo cargar la publicación comprada', error);
@@ -3538,7 +3540,6 @@
       }
 
       publications.forEach(item => {
-        const canDelete = Boolean(currentUser && String(currentUser.uid || '') === String(item.authorId || ''));
         const card = document.createElement('div');
         card.className = 'bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-all';
         card.setAttribute('onclick', `openDetailModal(${JSON.stringify(item.id)})`);
@@ -3557,11 +3558,6 @@
               <i class="fa-solid fa-location-dot"></i>
               <span>${item.city}</span>
             </div>
-            ${canDelete ? `
-              <button type="button" onclick="deleteOwnPublication(event, ${JSON.stringify(item.id)})" class="w-full mt-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 py-2 text-xs font-black hover:bg-rose-100 transition-colors">
-                Eliminar publicación
-              </button>
-            ` : ''}
           </div>
         `;
         grid.appendChild(card);
