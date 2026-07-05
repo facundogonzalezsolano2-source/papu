@@ -48,18 +48,60 @@
     .protected-view img {
       pointer-events: none;
     }
+
+    .mobile-chip-scroll {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .mobile-chip-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .mobile-safe-bottom {
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans">
 
+  <header class="sm:hidden sticky top-0 z-50 bg-white border-b border-slate-200">
+    <div class="px-4 pt-3 pb-2">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="resetFilters()">
+          <div class="bg-brand w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-lg">T</div>
+          <span class="text-xl font-black tracking-tight text-slate-900">Tu Apunte</span>
+        </div>
+        <button onclick="openMobileProfileSheet()" class="w-11 h-11 rounded-full border border-slate-200 overflow-hidden bg-slate-100 shrink-0">
+          <img id="mobileHeaderAvatar" src="https://via.placeholder.com/80?text=U" alt="Perfil" class="w-full h-full object-cover" />
+        </button>
+      </div>
+      <button onclick="openMobileSearch()" class="w-full h-12 rounded-2xl bg-slate-100 border border-slate-200 px-4 flex items-center gap-3 text-slate-500 font-semibold text-sm">
+        <span class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 text-base"><i class="fa-solid fa-magnifying-glass"></i></span>
+        Buscar publicaciones, materias o universidades
+      </button>
+    </div>
+    <div class="px-4 pb-3">
+      <div id="mobileQuickFilters" class="mobile-chip-scroll flex items-center gap-2 overflow-x-auto whitespace-nowrap">
+        <button type="button" data-mobile-filter="todos" onclick="setMobileQuickFilter('todos')" class="mobile-filter-chip bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold">Todos</button>
+        <button type="button" data-mobile-filter="universidades" onclick="setMobileQuickFilter('universidades')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Universidades</button>
+        <button type="button" data-mobile-filter="carreras" onclick="setMobileQuickFilter('carreras')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Carreras</button>
+        <button type="button" data-mobile-filter="materias" onclick="setMobileQuickFilter('materias')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Materias</button>
+        <button type="button" data-mobile-filter="resumenes" onclick="setMobileQuickFilter('resumenes')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Resúmenes</button>
+        <button type="button" data-mobile-filter="mas-vendidos" onclick="setMobileQuickFilter('mas-vendidos')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Más vendidos</button>
+        <button type="button" data-mobile-filter="mas-recientes" onclick="setMobileQuickFilter('mas-recientes')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Más recientes</button>
+      </div>
+    </div>
+  </header>
+
   <!-- BARRA SUPERIOR -->
-  <header class="bg-white shadow-sm border-b border-slate-100 sticky top-0 z-40">
+  <header class="hidden sm:block bg-white shadow-sm border-b border-slate-100 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
       
       <!-- Logo -->
       <div class="flex items-center gap-2 cursor-pointer" onclick="resetFilters()">
         <div class="bg-brand w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-white font-black text-lg">T</div>
-        <span class="text-base sm:text-2xl font-black tracking-tight text-brand">Tuapunte</span>
+        <span class="text-base sm:text-2xl font-black tracking-tight text-brand">Tu Apunte</span>
       </div>
 
       <!-- Buscador Principal -->
@@ -123,10 +165,10 @@
   </datalist>
 
   <!-- CONTENIDO PRINCIPAL -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+  <main class="mobile-safe-bottom flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 flex flex-col lg:flex-row gap-8">
     
     <!-- FILTROS MOVIL -->
-    <div class="lg:hidden bg-white rounded-3xl border border-slate-100 p-4 mb-6 shadow-sm">
+    <div class="hidden lg:hidden bg-white rounded-3xl border border-slate-100 p-4 mb-6 shadow-sm">
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-extrabold text-sm text-slate-800">Filtros</h3>
         <i class="fa-solid fa-sliders text-brand"></i>
@@ -291,6 +333,36 @@
       </div>
     </div>
   </div>
+
+  <div id="mobileSearchModal" class="hidden sm:hidden fixed inset-0 z-[70] bg-black/50">
+    <div class="absolute top-0 left-0 right-0 bg-white rounded-b-3xl p-4 shadow-xl">
+      <div class="flex items-center gap-2">
+        <button onclick="closeMobileSearch()" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600"><i class="fa-solid fa-arrow-left"></i></button>
+        <div class="flex-1 relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="mobileSearchInput" placeholder="Buscar publicaciones" class="w-full h-11 rounded-xl border border-slate-200 pl-10 pr-3 text-sm" oninput="syncMobileSearch(this.value)" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mobileProfileSheet" class="hidden sm:hidden fixed inset-0 z-[70] bg-black/50" onclick="closeMobileProfileSheet(event)">
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-5 space-y-3">
+      <button onclick="openProfilePage(); closeMobileProfileSheet();" class="w-full h-12 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm">Mi perfil</button>
+      <button onclick="openSettingsPlaceholder();" class="w-full h-12 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm">Configuración</button>
+      <button onclick="handleLogout(); closeMobileProfileSheet();" class="w-full h-12 rounded-xl bg-red-50 text-red-600 font-bold text-sm">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <nav class="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 px-2 py-2">
+    <div class="grid grid-cols-5 gap-1">
+      <button onclick="closeDetailModal(); closeProfilePage();" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-house text-base"></i><span>Inicio</span></button>
+      <button onclick="openMobileSearch()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-magnifying-glass text-base"></i><span>Buscar</span></button>
+      <button onclick="openVenderModal()" class="h-12 rounded-xl bg-brand text-white text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-plus text-base"></i><span>Publicar</span></button>
+      <button onclick="setMobileQuickFilter('mas-vendidos')" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-fire text-base"></i><span>Top</span></button>
+      <button onclick="openProfilePage()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-user text-base"></i><span>Perfil</span></button>
+    </div>
+  </nav>
 
   <!-- MODAL DE PUBLICACIÓN (FORMULARIO) -->
   <div id="venderModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -655,6 +727,7 @@
     let hasMorePublications = true;
     let currentCityFilter = '';
     let currentSubjectFilter = '';
+    let activeMobileQuickFilter = 'todos';
     const publicationsPageSize = 30;
     const defaultAvatar = 'https://via.placeholder.com/40?text=U';
 
@@ -716,6 +789,80 @@
           <button onclick="openAuthModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-xl font-bold text-xs">Ingresar</button>
         `;
       }
+
+      const mobileAvatar = document.getElementById('mobileHeaderAvatar');
+      if (mobileAvatar) {
+        mobileAvatar.src = currentUserData?.avatarUrl || defaultAvatar;
+      }
+    }
+
+    function isMobileLayout() {
+      return window.matchMedia('(max-width: 639px)').matches;
+    }
+
+    function openMobileProfileSheet() {
+      if (!currentUser) {
+        openAuthModal();
+        return;
+      }
+      const sheet = document.getElementById('mobileProfileSheet');
+      if (sheet) sheet.classList.remove('hidden');
+    }
+
+    function closeMobileProfileSheet(event = null) {
+      if (event && event.target && event.target.id !== 'mobileProfileSheet') return;
+      const sheet = document.getElementById('mobileProfileSheet');
+      if (sheet) sheet.classList.add('hidden');
+    }
+
+    function openSettingsPlaceholder() {
+      closeMobileProfileSheet();
+      alert('La sección de configuración estará disponible próximamente.');
+    }
+
+    function openMobileSearch() {
+      const modal = document.getElementById('mobileSearchModal');
+      const mobileInput = document.getElementById('mobileSearchInput');
+      const desktopInput = document.getElementById('searchInput');
+      if (modal) modal.classList.remove('hidden');
+      if (mobileInput && desktopInput) {
+        mobileInput.value = desktopInput.value;
+      }
+      if (mobileInput) mobileInput.focus();
+    }
+
+    function closeMobileSearch() {
+      const modal = document.getElementById('mobileSearchModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function syncMobileSearch(value) {
+      const desktopInput = document.getElementById('searchInput');
+      if (desktopInput) {
+        desktopInput.value = value;
+      }
+      filterItems();
+    }
+
+    function setMobileQuickFilter(filterKey) {
+      activeMobileQuickFilter = filterKey || 'todos';
+      document.querySelectorAll('.mobile-filter-chip').forEach(chip => {
+        const isActive = chip.dataset.mobileFilter === activeMobileQuickFilter;
+        chip.classList.toggle('bg-slate-900', isActive);
+        chip.classList.toggle('text-white', isActive);
+        chip.classList.toggle('bg-slate-100', !isActive);
+        chip.classList.toggle('text-slate-700', !isActive);
+      });
+      renderGrid(applyFilters(loadedPublications));
+    }
+
+    function getPublicationTimestamp(item) {
+      const raw = item?.createdAt;
+      if (!raw) return 0;
+      if (typeof raw.toDate === 'function') return raw.toDate().getTime();
+      if (raw instanceof Date) return raw.getTime();
+      const parsed = new Date(raw).getTime();
+      return Number.isFinite(parsed) ? parsed : 0;
     }
 
     const detailReviewForm = document.getElementById("detailReviewForm");
@@ -1177,7 +1324,7 @@
       const searchInput = document.getElementById('searchInput').value.trim().toLowerCase();
       const filterSubject = document.getElementById('filterSubject').value.trim().toLowerCase();
 
-      return items.filter(item => {
+      let filtered = items.filter(item => {
         const title = (item.title || '').toLowerCase();
         const desc = (item.description || '').toLowerCase();
         const city = (item.city || '').toLowerCase();
@@ -1191,50 +1338,111 @@
 
         return matchesSearch && matchesSubject;
       });
+
+      if (isMobileLayout()) {
+        if (activeMobileQuickFilter === 'resumenes') {
+          filtered = filtered.filter(item => String(item.type || '').toLowerCase().includes('resumen'));
+        }
+        if (activeMobileQuickFilter === 'universidades') {
+          filtered = filtered.filter(item => String(item.institution || '').trim());
+        }
+        if (activeMobileQuickFilter === 'materias') {
+          filtered = filtered.filter(item => String(item.subject || '').trim());
+        }
+        if (activeMobileQuickFilter === 'carreras') {
+          filtered = filtered.filter(item => {
+            const combined = `${item.subject || ''} ${item.description || ''}`.toLowerCase();
+            return /(ingenier|medicin|derecho|arquitect|contador|psicolog|econom|sistemas)/.test(combined);
+          });
+        }
+        if (activeMobileQuickFilter === 'mas-vendidos') {
+          filtered = [...filtered].sort((a, b) => (Number(b.publicationReviewCount || 0) - Number(a.publicationReviewCount || 0)));
+        }
+        if (activeMobileQuickFilter === 'mas-recientes') {
+          filtered = [...filtered].sort((a, b) => getPublicationTimestamp(b) - getPublicationTimestamp(a));
+        }
+      }
+
+      return filtered;
     }
 
     function renderGrid(items) {
       const grid = document.getElementById('publicationsGrid');
+      const mobileView = isMobileLayout();
+      if (mobileView) {
+        grid.className = 'grid grid-cols-1 gap-5';
+      } else {
+        grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4';
+      }
       grid.innerHTML = '';
       document.getElementById('resultsCount').innerText = `Mostrando ${items.length} apuntes`;
 
       items.forEach(item => {
+        const reviewCount = Number(item.publicationReviewCount || 0);
+        const createdAtMs = getPublicationTimestamp(item);
+        const isNew = createdAtMs ? (Date.now() - createdAtMs) < 1000 * 60 * 60 * 24 * 14 : false;
+        const isTopSeller = reviewCount >= 3;
+        const mobileTags = [
+          isNew ? '<span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">Nuevo</span>' : '',
+          isTopSeller ? '<span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-700">Más vendido</span>' : ''
+        ].filter(Boolean).join(' ');
+
         const card = document.createElement('div');
-        card.className = "bg-white rounded-2xl border border-slate-150 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer";
+        card.className = mobileView
+          ? 'bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm cursor-pointer active:scale-[0.99] transition-transform'
+          : 'bg-white rounded-2xl border border-slate-150 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer';
         card.setAttribute('onclick', `openDetailModal(${JSON.stringify(item.id)})`);
-        card.innerHTML = `
-          <div class="overflow-hidden h-48">
-            <img src="${item.portadaUrl || 'https://via.placeholder.com/400x320?text=Sin+portada'}" alt="${item.title}" class="w-full h-full object-cover" />
-          </div>
-          <div class="p-5 flex flex-col gap-3">
-            <div class="flex justify-between items-start gap-3">
-              <span class="bg-indigo-100 text-brand text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-md uppercase">${item.type}</span>
-              <div class="flex items-center gap-2">
-                <span id="pubRatingBadge-${item.id}" class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[10px] text-slate-700 cursor-pointer" onclick="openDetailModal(${JSON.stringify(item.id)}, true)">
-                  <i class="fa-solid fa-star text-amber-400"></i>
-                  ${item.publicationAverage || '0.0'}
-                </span>
-                <span id="pubReviewsBadge-${item.id}" class="text-[10px] text-slate-400">${item.publicationReviewCount ? item.publicationReviewCount + ' reseñas' : 'Sin reseñas'}</span>
-                <span class="text-brand font-black text-sm">$${item.price} ARS</span>
+        if (mobileView) {
+          card.innerHTML = `
+            <div class="overflow-hidden h-56 bg-slate-100 relative">
+              <img src="${item.portadaUrl || 'https://via.placeholder.com/400x320?text=Sin+portada'}" alt="${item.title}" class="w-full h-full object-cover" />
+              <div class="absolute top-3 left-3 flex items-center gap-2">${mobileTags}</div>
+            </div>
+            <div class="p-4 space-y-3">
+              <div class="space-y-1">
+                <p class="text-lg font-black text-slate-900 leading-tight">$${item.price} ARS</p>
+                <h4 class="font-extrabold text-base text-slate-900 leading-tight">${item.title}</h4>
+                <p class="text-sm text-slate-500">${item.institution || item.subject || 'Material educativo'}</p>
+                <p class="text-xs text-slate-400">${item.subject || ''}${item.subject && item.city ? ' · ' : ''}${item.city || ''}</p>
+              </div>
+              <button class="buy-publication-btn w-full bg-[#009EE3] text-white py-3 rounded-xl font-bold text-sm shadow-sm">Comprar</button>
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div class="overflow-hidden h-48">
+              <img src="${item.portadaUrl || 'https://via.placeholder.com/400x320?text=Sin+portada'}" alt="${item.title}" class="w-full h-full object-cover" />
+            </div>
+            <div class="p-5 flex flex-col gap-3">
+              <div class="flex justify-between items-start gap-3">
+                <span class="bg-indigo-100 text-brand text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-md uppercase">${item.type}</span>
+                <div class="flex items-center gap-2">
+                  <span id="pubRatingBadge-${item.id}" class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[10px] text-slate-700 cursor-pointer" onclick="openDetailModal(${JSON.stringify(item.id)}, true)">
+                    <i class="fa-solid fa-star text-amber-400"></i>
+                    ${item.publicationAverage || '0.0'}
+                  </span>
+                  <span id="pubReviewsBadge-${item.id}" class="text-[10px] text-slate-400">${item.publicationReviewCount ? item.publicationReviewCount + ' reseñas' : 'Sin reseñas'}</span>
+                  <span class="text-brand font-black text-sm">$${item.price} ARS</span>
+                </div>
+              </div>
+              <div>
+                <h4 class="font-extrabold text-sm text-slate-900 mb-1 leading-tight">${item.title}</h4>
+                <div class="flex items-center gap-2 text-[10px] text-slate-500 font-bold mb-2">
+                  <img src="${item.authorAvatar || defaultAvatar}" alt="Avatar" class="w-5 h-5 rounded-full object-cover" />
+                  <a href="javascript:void(0)" onclick="openUserProfile('${item.authorId}')" class="underline hover:text-brand">${item.authorNick || 'Anónimo'}</a>
+                </div>
+                <p class="text-xs text-slate-400 line-clamp-2">${item.description}</p>
+              </div>
+              <button class="buy-publication-btn w-full bg-[#009EE3] text-white py-2.5 rounded-xl font-bold text-xs shadow-sm">Comprar</button>
+              <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-500 font-bold border-t pt-3">
+                <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> ${item.city}</div>
+                <div class="flex items-center gap-2"><i class="fa-solid fa-building-columns"></i> ${item.institution}</div>
+                <div class="flex items-center gap-2"><i class="fa-solid fa-book-bookmark"></i> ${item.subject}</div>
+                <div class="flex items-center gap-2"><i class="fa-solid fa-chalkboard-user"></i> ${item.professor}</div>
               </div>
             </div>
-            <div>
-              <h4 class="font-extrabold text-sm text-slate-900 mb-1 leading-tight">${item.title}</h4>
-              <div class="flex items-center gap-2 text-[10px] text-slate-500 font-bold mb-2">
-                <img src="${item.authorAvatar || defaultAvatar}" alt="Avatar" class="w-5 h-5 rounded-full object-cover" />
-                <a href="javascript:void(0)" onclick="openUserProfile('${item.authorId}')" class="underline hover:text-brand">${item.authorNick || 'Anónimo'}</a>
-              </div>
-              <p class="text-xs text-slate-400 line-clamp-2">${item.description}</p>
-            </div>
-            <button class="buy-publication-btn w-full bg-[#009EE3] text-white py-2.5 rounded-xl font-bold text-xs shadow-sm">Comprar</button>
-            <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-500 font-bold border-t pt-3">
-              <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> ${item.city}</div>
-              <div class="flex items-center gap-2"><i class="fa-solid fa-building-columns"></i> ${item.institution}</div>
-              <div class="flex items-center gap-2"><i class="fa-solid fa-book-bookmark"></i> ${item.subject}</div>
-              <div class="flex items-center gap-2"><i class="fa-solid fa-chalkboard-user"></i> ${item.professor}</div>
-            </div>
-          </div>
-        `;
+          `;
+        }
 
         const buyButton = card.querySelector('.buy-publication-btn');
         if (buyButton) {
@@ -1309,6 +1517,8 @@
       if (filterSubjectMobile) filterSubjectMobile.value = '';
       currentCityFilter = '';
       currentSubjectFilter = '';
+      activeMobileQuickFilter = 'todos';
+      setMobileQuickFilter('todos');
       resetPublicationLoad();
     }
 
@@ -1592,15 +1802,49 @@
       }
       sellerAmountEl.innerText = `$${sellerAmount.toLocaleString('es-AR')}`;
     }
+    function openUserProfile(userId) {
+      if (!userId) {
+        alert('No se pudo abrir el perfil.');
+        return;
+      }
+      const encodedUserId = encodeURIComponent(String(userId));
+      window.location.hash = `perfil/${encodedUserId}`;
+    }
+
+    function getProfileUserIdFromHash() {
+      const hash = String(window.location.hash || '');
+      const prefix = '#perfil/';
+      if (!hash.startsWith(prefix)) return '';
+      return decodeURIComponent(hash.slice(prefix.length));
+    }
+
+    async function handleProfileRoute() {
+      const profileUserId = getProfileUserIdFromHash();
+      if (!profileUserId) {
+        closeProfilePage(false);
+        return;
+      }
+
+      const loaded = await loadProfileData(profileUserId);
+      if (loaded) {
+        document.getElementById('profilePage').classList.remove('hidden');
+      }
+    }
+
     function openProfilePage() {
       if (!currentUser) {
         alert('Debes iniciar sesión para ver tu perfil.');
         return;
       }
-      loadProfileData();
-      document.getElementById('profilePage').classList.remove('hidden');
+      openUserProfile(currentUser.uid);
     }
-    function closeProfilePage() { document.getElementById('profilePage').classList.add('hidden'); }
+
+    function closeProfilePage(updateUrl = true) {
+      document.getElementById('profilePage').classList.add('hidden');
+      if (updateUrl && window.location.hash.startsWith('#perfil/')) {
+        history.pushState(null, '', `${window.location.pathname}${window.location.search}`);
+      }
+    }
     function toggleNotifications() { document.getElementById('notificationsMenu').classList.toggle('hidden'); }
     function toggleProfileMenu() { document.getElementById('profileMenu').classList.toggle('hidden'); }
     function openAdminPanel() {
@@ -1776,35 +2020,62 @@
       }
     }
 
-    async function loadProfileData() {
-      if (!currentUser) return;
-      const userId = currentUser.uid;
-      const userDoc = currentUserData || (await dbRef.collection('users').doc(userId).get()).data();
-      currentUserData = userDoc;
+    async function loadProfileData(targetUserId = null) {
+      const userId = targetUserId || currentUser?.uid;
+      if (!userId) return false;
 
-      const publicationsSnapshot = await dbRef.collection('publications').where('authorId', '==', userId).get();
-      const publicationIds = [];
-      publicationsSnapshot.forEach(doc => publicationIds.push(doc.id));
-      const publicationCount = publicationsSnapshot.size;
+      let userDoc = null;
+      let publications = [];
+
+      if (isRealFirebase) {
+        const userSnapshot = await dbRef.collection('users').doc(userId).get();
+        userDoc = userSnapshot.exists ? (userSnapshot.data() || {}) : null;
+
+        const publicationsSnapshot = await dbRef.collection('publications').where('authorId', '==', userId).get();
+        publications = publicationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } else {
+        userDoc = localUsers.find(user => String(user.id) === String(userId)) || null;
+        publications = localDB.filter(item => String(item.authorId) === String(userId));
+      }
+
+      if (!userDoc) {
+        alert('No se encontró el perfil.');
+        return false;
+      }
+
+      const publicationIds = publications.map(pub => String(pub.id));
+      const publicationCount = publications.length;
 
       let reviewsCount = 0;
       let ratingSum = 0;
       if (publicationIds.length) {
-        const batches = [];
-        for (let i = 0; i < publicationIds.length; i += 10) {
-          batches.push(publicationIds.slice(i, i + 10));
-        }
-        for (const batch of batches) {
-          const reviewsSnapshot = await dbRef.collection('reseñas').where('publicationId', 'in', batch).get();
-          reviewsSnapshot.forEach(doc => {
-            const data = doc.data();
-            reviewsCount += 1;
-            ratingSum += (data.estrellas || 0);
-          });
+        if (isRealFirebase) {
+          const batches = [];
+          for (let i = 0; i < publicationIds.length; i += 10) {
+            batches.push(publicationIds.slice(i, i + 10));
+          }
+          for (const batch of batches) {
+            const reviewsSnapshot = await dbRef.collection('reseñas').where('publicationId', 'in', batch).get();
+            reviewsSnapshot.forEach(doc => {
+              const data = doc.data();
+              reviewsCount += 1;
+              ratingSum += (data.estrellas || 0);
+            });
+          }
+        } else {
+          localReviews
+            .filter(review => publicationIds.includes(String(review.publicationId)))
+            .forEach(review => {
+              reviewsCount += 1;
+              ratingSum += (review.estrellas || 0);
+            });
         }
       }
 
       const averageRating = reviewsCount ? (ratingSum / reviewsCount).toFixed(1) : '0.0';
+      const canEdit = !!(currentUser && String(currentUser.uid) === String(userId));
+      const editToggleButton = document.querySelector('button[onclick="toggleProfileEdit()"]');
+      const editSection = document.getElementById('profileEditSection');
 
       document.getElementById('profileAvatar').src = userDoc.avatarUrl || defaultAvatar;
       document.getElementById('profileUsername').innerText = userDoc.username || 'usuario';
@@ -1813,11 +2084,27 @@
       document.getElementById('profileReviewsCount').innerText = reviewsCount;
       document.getElementById('profileRating').innerText = averageRating;
       document.getElementById('profileInstitution').innerText = userDoc.institution || 'N/D';
-      document.getElementById('editUsername').value = userDoc.username || '';
-      document.getElementById('editCity').value = userDoc.city || '';
-      document.getElementById('editInstitution').value = userDoc.institution || '';
-      document.getElementById('editAvatarUrl').value = userDoc.avatarUrl || '';
-      renderProfilePublications(publicationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+      if (editToggleButton) {
+        editToggleButton.classList.toggle('hidden', !canEdit);
+      }
+      if (editSection && !canEdit) {
+        editSection.classList.add('hidden');
+      }
+
+      if (canEdit) {
+        document.getElementById('editUsername').value = userDoc.username || '';
+        document.getElementById('editCity').value = userDoc.city || '';
+        document.getElementById('editInstitution').value = userDoc.institution || '';
+        document.getElementById('editAvatarUrl').value = userDoc.avatarUrl || '';
+      }
+
+      if (currentUser && String(currentUser.uid) === String(userId)) {
+        currentUserData = userDoc;
+      }
+
+      renderProfilePublications(publications);
+      return true;
     }
 
     function toggleProfileEdit() {
@@ -1891,6 +2178,7 @@
     }
 
     window.onload = async () => {
+      updateAuthContainer();
       loadGrid();
       await loadCitySuggestions();
       const venderForm = document.getElementById("venderForm");
@@ -1912,6 +2200,13 @@
         if (pageHeight - scrollPosition < 300) {
           loadPublicationsPage();
         }
+      });
+
+      window.addEventListener('hashchange', handleProfileRoute);
+      await handleProfileRoute();
+
+      window.addEventListener('resize', () => {
+        renderGrid(applyFilters(loadedPublications));
       });
     };
   </script>
