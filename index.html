@@ -80,8 +80,8 @@
           <div class="bg-brand w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-lg">T</div>
           <span class="text-xl font-black tracking-tight text-slate-900">Tu Apunte</span>
         </div>
-        <button onclick="openMobileProfileSheet()" class="w-11 h-11 rounded-full border border-slate-200 overflow-hidden bg-slate-100 shrink-0">
-          <img id="mobileHeaderAvatar" src="https://via.placeholder.com/80?text=U" alt="Perfil" class="w-full h-full object-cover" />
+        <button onclick="openAppDrawer()" class="w-11 h-11 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 text-lg">
+          <i class="fa-solid fa-bars"></i>
         </button>
       </div>
       <button onclick="openMobileSearch()" class="w-full h-12 rounded-2xl bg-slate-100 border border-slate-200 px-4 flex items-center gap-3 text-slate-500 font-semibold text-sm">
@@ -131,6 +131,9 @@
             Ingresar / Registrarse
           </button>
         </div>
+        <button onclick="openAppDrawer()" class="w-11 h-11 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 text-lg">
+          <i class="fa-solid fa-bars"></i>
+        </button>
       </div>
     </div>
   </header>
@@ -353,22 +356,138 @@
     </div>
   </div>
 
-  <div id="mobileProfileSheet" class="hidden sm:hidden fixed inset-0 z-[70] bg-black/50" onclick="closeMobileProfileSheet(event)">
-    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-5 space-y-3">
-      <button onclick="openProfilePage(); closeMobileProfileSheet();" class="w-full h-12 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm">Mi perfil</button>
-      <button onclick="handleLogout(); closeMobileProfileSheet();" class="w-full h-12 rounded-xl bg-red-50 text-red-600 font-bold text-sm">Cerrar sesión</button>
+  <nav class="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 px-2 py-2">
+    <div class="grid grid-cols-5 gap-1">
+      <button onclick="window.location.reload()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-house text-base"></i><span>Inicio</span></button>
+      <button onclick="openMobileSearch()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-magnifying-glass text-base"></i><span>Buscar</span></button>
+      <button onclick="openVenderModal()" class="h-12 rounded-xl bg-brand text-white text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-plus text-base"></i><span>Publicar</span></button>
+      <button onclick="openTopRanking()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-fire text-base"></i><span>Top</span></button>
+      <button onclick="openAppDrawer()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-bars text-base"></i><span>Menú</span></button>
+    </div>
+  </nav>
+
+  <div id="appDrawer" class="hidden fixed inset-0 z-[80] bg-black/50" onclick="closeAppDrawer(event)">
+    <aside id="appDrawerPanel" class="absolute top-0 right-0 h-full w-[92vw] max-w-md bg-white shadow-2xl border-l border-slate-200 transform translate-x-full transition-transform duration-300 ease-out flex flex-col" onclick="event.stopPropagation()">
+      <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center gap-3 min-w-0">
+          <img id="drawerUserAvatar" src="https://via.placeholder.com/80?text=U" alt="Usuario" class="w-12 h-12 rounded-full object-cover border border-slate-200" />
+          <div class="min-w-0">
+            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-400">Cuenta</p>
+            <p id="drawerUserName" class="text-sm font-black text-slate-900 truncate">Invitado</p>
+          </div>
+        </div>
+        <button onclick="closeAppDrawer()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-5 space-y-6">
+        <section>
+          <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">Mi Cuenta</h4>
+          <div class="space-y-2 text-sm">
+            <button onclick="drawerGoToProfile();" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-user mr-2"></i>Mi perfil</button>
+            <button onclick="drawerGoToProfileSection('favorites');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-heart mr-2 text-rose-500"></i>Favoritos</button>
+            <button onclick="drawerGoToProfileSection('history');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-bag-shopping mr-2"></i>Historial de compras</button>
+            <button onclick="drawerGoToProfileSection('publications');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-file-lines mr-2"></i>Mis publicaciones</button>
+            <button onclick="openInfoModal('configuracion');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-gear mr-2"></i>Configuración</button>
+            <button onclick="drawerLogout();" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-red-50 text-red-600"><i class="fa-solid fa-right-from-bracket mr-2"></i>Cerrar sesión</button>
+            <button id="drawerAdminAccess" onclick="drawerOpenAdmin();" class="hidden drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-amber-50 text-amber-700"><i class="fa-solid fa-shield-halved mr-2"></i>Panel de Administración</button>
+          </div>
+        </section>
+
+        <section>
+          <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">Ayuda</h4>
+          <div class="space-y-2 text-sm">
+            <button onclick="openInfoModal('centro_ayuda');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-circle-question mr-2"></i>Centro de ayuda</button>
+            <button onclick="openInfoModal('faq');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-list-check mr-2"></i>Preguntas frecuentes (FAQ)</button>
+            <button onclick="openInfoModal('contacto');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-envelope mr-2"></i>Contacto</button>
+            <button onclick="openReportModal('problema');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-bug mr-2"></i>Reportar un problema</button>
+            <button onclick="openReportModal('compra');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-receipt mr-2"></i>Reportar una compra</button>
+            <button onclick="openReportModal('usuario');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-user-slash mr-2"></i>Reportar un usuario</button>
+            <button onclick="openReportModal('publicacion');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-flag mr-2"></i>Reportar una publicación</button>
+          </div>
+        </section>
+
+        <section>
+          <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">Legal</h4>
+          <div class="space-y-2 text-sm">
+            <button onclick="openLegalDocument('terminos');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-file-lines mr-2"></i>Términos y Condiciones</button>
+            <button onclick="openLegalDocument('privacidad');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-user-shield mr-2"></i>Política de Privacidad</button>
+            <button onclick="openLegalDocument('cookies');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-cookie-bite mr-2"></i>Política de Cookies</button>
+            <button onclick="openLegalDocument('reembolsos');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-rotate-left mr-2"></i>Política de Reembolsos</button>
+            <button onclick="openLegalDocument('normas_vendedores');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-store mr-2"></i>Normas para Vendedores</button>
+            <button onclick="openLegalDocument('normas_compradores');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-cart-shopping mr-2"></i>Normas para Compradores</button>
+            <button onclick="openLegalDocument('procedimiento_denuncias');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-scale-balanced mr-2"></i>Procedimiento de Denuncias</button>
+            <button onclick="openLegalDocument('propiedad_intelectual');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-copyright mr-2"></i>Propiedad Intelectual</button>
+          </div>
+        </section>
+
+        <section>
+          <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">Información</h4>
+          <div class="space-y-2 text-sm">
+            <button onclick="openInfoModal('como_funciona');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-circle-info mr-2"></i>Cómo funciona la plataforma</button>
+            <button onclick="openInfoModal('como_comprar');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-bag-shopping mr-2"></i>Cómo comprar</button>
+            <button onclick="openInfoModal('como_vender');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-store mr-2"></i>Cómo vender</button>
+            <button onclick="openInfoModal('como_cobrar');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-money-bill-wave mr-2"></i>Cómo cobrar las ventas</button>
+            <button onclick="openInfoModal('comisiones');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-percent mr-2"></i>Comisiones de la plataforma</button>
+            <button onclick="openInfoModal('metodos_pago');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-regular fa-credit-card mr-2"></i>Métodos de pago aceptados</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="border-t border-slate-200 p-4 text-xs text-slate-500">
+        <p>Versión 1.0.0</p>
+        <p class="mt-1">© Tu Apunte 2026</p>
+        <div class="mt-2 flex items-center gap-3 text-slate-600 text-sm">
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a>
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-facebook"></i></a>
+          <a href="https://x.com" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-x-twitter"></i></a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="reportModal" class="hidden fixed inset-0 z-[90] bg-black/60 p-4">
+    <div class="max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-black text-slate-900">Enviar reporte</h3>
+        <button onclick="closeReportModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="reportForm" onsubmit="submitReport(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Tipo de reporte</label>
+          <input id="reportTypeInput" type="text" readonly class="w-full p-2.5 border rounded-xl bg-slate-50 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Detalle</label>
+          <textarea id="reportDescriptionInput" required rows="4" class="w-full p-2.5 border rounded-xl text-sm" placeholder="Explica qué ocurrió..."></textarea>
+        </div>
+        <button type="submit" class="w-full h-11 rounded-xl bg-brand text-white font-bold text-sm">Enviar reporte</button>
+      </form>
     </div>
   </div>
 
-  <nav class="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 px-2 py-2">
-    <div class="grid grid-cols-5 gap-1">
-      <button onclick="closeDetailModal(); closeProfilePage();" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-house text-base"></i><span>Inicio</span></button>
-      <button onclick="openMobileSearch()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-magnifying-glass text-base"></i><span>Buscar</span></button>
-      <button onclick="openVenderModal()" class="h-12 rounded-xl bg-brand text-white text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-plus text-base"></i><span>Publicar</span></button>
-      <button onclick="setMobileQuickFilter('mas-vendidos')" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-fire text-base"></i><span>Top</span></button>
-      <button onclick="openProfilePage()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-user text-base"></i><span>Perfil</span></button>
+  <div id="legalViewerModal" class="hidden fixed inset-0 z-[90] bg-black/60 p-3 sm:p-6">
+    <div class="h-full max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+      <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+        <h3 id="legalViewerTitle" class="text-base font-black text-slate-900">Documento legal</h3>
+        <div class="flex items-center gap-2">
+          <input id="legalSearchInput" type="text" placeholder="Buscar en el PDF" class="h-10 px-3 border rounded-xl text-sm" oninput="updateLegalViewerSearch(this.value)" />
+          <a id="legalDownloadBtn" href="#" target="_blank" rel="noopener noreferrer" class="h-10 px-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm inline-flex items-center">Descargar</a>
+          <button onclick="closeLegalViewer()" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <iframe id="legalViewerFrame" class="flex-1 w-full" title="Documento legal"></iframe>
     </div>
-  </nav>
+  </div>
+
+  <div id="infoModal" class="hidden fixed inset-0 z-[90] bg-black/60 p-4">
+    <div class="max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl p-6">
+      <div class="flex items-center justify-between mb-3">
+        <h3 id="infoModalTitle" class="text-lg font-black text-slate-900">Información</h3>
+        <button onclick="closeInfoModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="infoModalContent" class="text-sm text-slate-600 leading-relaxed"></div>
+    </div>
+  </div>
 
   <!-- MODAL DE PUBLICACIÓN (FORMULARIO) -->
   <div id="venderModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -378,6 +497,11 @@
       <h2 class="text-xl font-black text-brand mb-4 flex items-center gap-2"><i class="fa-solid fa-file-circle-plus"></i> Publicar Material</h2>
       <p class="text-sm text-slate-500 mb-3">Todas las publicaciones pasan por moderación antes de aparecer en el marketplace. Esto ayuda a mantener la calidad, evitar duplicados y proteger a los estudiantes; puede tardar unos minutos mientras el equipo revisa el contenido.</p>
       <form id="venderForm" class="space-y-4 text-xs">
+        <div id="publishPayoutWarning" class="hidden rounded-2xl border border-rose-200 bg-rose-50 p-3 text-rose-700">
+          <p class="font-black mb-1">Antes de publicar debes completar tus datos de cobro.</p>
+          <p class="text-[11px] mb-2">Es obligatorio para vendedores cargar Alias o CBU, CBU y nombre del titular de la cuenta.</p>
+          <button type="button" onclick="goToPayoutSetupFromPublish()" class="h-9 px-3 rounded-xl bg-rose-600 text-white font-bold text-[11px]">Hacer clic aquí</button>
+        </div>
         <div>
           <label class="block font-bold text-slate-600 mb-1">Título *</label>
           <input type="text" id="formTitle" required placeholder="Ej: Resumen Química CBC" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
@@ -448,6 +572,11 @@
           <label class="block font-bold text-slate-600 mb-1">Materia *</label>
           <input type="text" id="formSubject" required placeholder="Ej: Química" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
         </div>
+        <label class="flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-700">
+          <input id="publishTermsAccepted" type="checkbox" class="mt-0.5" />
+          <span>Leí y acepto los <button type="button" onclick="openLegalDocument('terminos')" class="font-black underline">Términos y Condiciones</button> de la plataforma para publicar.</span>
+        </label>
+        <p class="text-[11px] text-emerald-700">Los pagos al vendedor se acreditan dentro de los primeros 3 días hábiles después de cada venta aprobada.</p>
         <button type="submit" class="w-full bg-brand text-white py-3 rounded-xl font-bold text-xs shadow-md">Publicar Ahora</button>
       </form>
     </div>
@@ -558,6 +687,25 @@
             <label class="block text-xs font-bold text-slate-600 mb-1">Institución</label>
             <input type="text" id="editInstitution" list="institutionSuggestions" required class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
           </div>
+          <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <h4 class="text-sm font-black text-emerald-800 mb-2">Datos de cobro para vender (obligatorio)</h4>
+            <p class="text-xs text-emerald-700 mb-3">Solo tú puedes ver y editar esta información desde tu perfil. Los cobros se envían a esta cuenta dentro de los primeros 3 días hábiles después de cada venta.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Alias de cuenta *</label>
+                <input type="text" id="editPayoutAlias" placeholder="Ej: nombre.apunte" class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">CBU (22 dígitos) *</label>
+                <input type="text" id="editPayoutCbu" inputmode="numeric" maxlength="22" placeholder="0000000000000000000000" class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Titular de la cuenta *</label>
+              <input type="text" id="editPayoutOwnerName" placeholder="Nombre y apellido del titular" class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+              <p class="text-[11px] text-slate-500 mt-1">Esta cuenta debe estar a nombre de la persona que recibe el dinero.</p>
+            </div>
+          </div>
           <div>
             <label class="block text-xs font-bold text-slate-600 mb-1">Foto de perfil</label>
             <input type="file" id="editAvatarFile" accept="image/*" class="w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-slate-100 file:text-slate-700" />
@@ -573,50 +721,43 @@
         </form>
       </div>
 
-      <div class="grid gap-6 lg:grid-cols-[320px,1fr]">
-        <aside class="space-y-6">
-          <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
-            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
-              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Publicaciones</p>
-              <p id="profilePublicationsCount" class="text-3xl font-black text-slate-900">0</p>
-            </div>
-            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
-              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Reseñas</p>
-              <p id="profileReviewsCount" class="text-3xl font-black text-slate-900">0</p>
-            </div>
-            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
-              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Valoración promedio</p>
-              <p id="profileRating" class="text-3xl font-black text-slate-900">0.0</p>
-              <p id="profileAverageStars" class="text-xs text-amber-500 font-bold mt-1">Sin valoraciones</p>
-            </div>
-            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
-              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Ciudad</p>
-              <p id="profileCity" class="text-lg font-black text-slate-900">N/D</p>
-            </div>
-            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
-              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Provincia</p>
-              <p id="profileProvince" class="text-lg font-black text-slate-900">N/D</p>
-            </div>
-            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
-              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">País</p>
-              <p id="profileCountry" class="text-lg font-black text-slate-900">N/D</p>
-            </div>
-            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center">
-              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Institución</p>
-              <p id="profileInstitution" class="text-lg font-black text-slate-900">N/D</p>
-            </div>
-          </div>
-        </aside>
-
+      <div class="space-y-6">
         <section class="space-y-6">
           <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
             <h3 class="text-lg font-black text-slate-900 mb-3">Publicaciones:</h3>
             <div id="profilePublicationsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
           </div>
 
+          <div id="profileFavoritesSection" class="hidden bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h3 class="text-lg font-black text-slate-900 mb-3">Favoritos:</h3>
+            <div id="profileFavoritesList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </div>
+
+          <div id="profilePurchaseHistorySection" class="hidden bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h3 class="text-lg font-black text-slate-900 mb-3">Historial de compras:</h3>
+            <div id="profilePurchaseHistoryList" class="space-y-3"></div>
+          </div>
+
           <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
-            <h3 class="text-lg font-black text-slate-900 mb-3">Reseñas:</h3>
+            <h3 id="profileReviewsHeading" class="text-lg font-black text-slate-900 mb-3">Reseñas:</h3>
             <div id="profileReviewsList" class="space-y-3"></div>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h3 class="text-lg font-black text-slate-900 mb-3">Info:</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <p><span class="font-black text-slate-700">Ciudad:</span> <span id="profileCity" class="text-slate-600">N/D</span></p>
+              <p><span class="font-black text-slate-700">Provincia:</span> <span id="profileProvince" class="text-slate-600">N/D</span></p>
+              <p><span class="font-black text-slate-700">Institución:</span> <span id="profileInstitution" class="text-slate-600">N/D</span></p>
+              <p><span class="font-black text-slate-700">País:</span> <span id="profileCountry" class="text-slate-600">N/D</span></p>
+            </div>
+            <div id="profilePayoutSection" class="hidden mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm">
+              <p class="text-xs uppercase tracking-[0.2em] text-emerald-700 font-black mb-2">Datos de cobro privados</p>
+              <p><span class="font-black text-slate-700">Alias:</span> <span id="profilePayoutAlias" class="text-slate-600">N/D</span></p>
+              <p><span class="font-black text-slate-700">CBU:</span> <span id="profilePayoutCbu" class="text-slate-600">N/D</span></p>
+              <p><span class="font-black text-slate-700">Titular:</span> <span id="profilePayoutOwnerName" class="text-slate-600">N/D</span></p>
+              <p class="mt-2 text-[11px] text-emerald-700">Las ventas se acreditan dentro de los primeros 3 días hábiles posteriores a cada venta.</p>
+            </div>
           </div>
         </section>
       </div>
@@ -653,6 +794,16 @@
           <div id="adminPublicationsGrid" class="grid gap-4"></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div id="topRankingModal" class="hidden fixed inset-0 bg-black/60 z-[70] p-4">
+    <div class="max-w-xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between border-b border-slate-200 p-4">
+        <h3 class="text-lg font-black text-slate-900">Top de ventas</h3>
+        <button onclick="closeTopRanking()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="topRankingList" class="max-h-[70vh] overflow-y-auto p-4 space-y-3"></div>
     </div>
   </div>
 
@@ -727,6 +878,9 @@
       { id: 'r2', publicationId: 1, reviewerId: 'user_2', reviewerName: 'Facu', reviewerAvatar: 'https://via.placeholder.com/40?text=F', estrellas: 4, comentario: 'Buen material, me ayudó mucho.' },
       { id: 'r3', publicationId: 2, reviewerId: 'user_1', reviewerName: 'María', reviewerAvatar: 'https://via.placeholder.com/40?text=M', estrellas: 4, comentario: 'Clara explicación y buenos ejemplos.' }
     ];
+    let localFavorites = [];
+    let localPurchaseHistory = [];
+    let localReports = [];
 
     // INICIALIZACIÓN
     const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
@@ -746,8 +900,119 @@
     let currentCityFilter = '';
     let currentSubjectFilter = '';
     let activeMobileQuickFilter = 'cerca';
+    let userLocationContext = { city: '', province: '', country: '', institution: '', latitude: null, longitude: null };
+    let nearbyPublicationIds = new Set();
+    let currentFavoriteIds = new Set();
+    let currentPurchaseHistory = [];
+    const cityCoordinatesCache = new Map();
     const publicationsPageSize = 30;
     const defaultAvatar = 'https://via.placeholder.com/40?text=U';
+    let legalDocumentsCache = null;
+    const legalDocumentDefaults = {
+      terminos: {
+        title: 'Términos y Condiciones',
+        contentHtml: `
+          <h1>Términos y Condiciones de Uso</h1>
+          <p>Este documento regula el acceso y uso de la plataforma digital, servicios y contenidos ofrecidos por el titular del sitio web.</p>
+          <ol>
+            <li><strong>Aceptación de los términos.</strong> Al acceder o utilizar este sitio web, el usuario acepta quedar vinculado por estos términos y condiciones. Si no está de acuerdo, debe abstenerse de utilizar los servicios.</li>
+            <li><strong>Descripción del servicio.</strong> La plataforma ofrece servicios digitales de publicación, visualización y gestión de contenidos generados por usuarios o administradores.</li>
+            <li><strong>Uso adecuado.</strong> El usuario se compromete a no utilizar el sitio para actividades ilícitas, fraudulentas o que puedan dañar la integridad del sistema o de terceros.</li>
+            <li><strong>Contenido del usuario.</strong> El usuario es responsable del contenido que publica, garantizando que no infringe derechos de terceros, incluyendo derechos de autor, marcas o privacidad.</li>
+            <li><strong>Propiedad intelectual.</strong> Todos los elementos del sitio web, diseño, estructura y código están protegidos por derechos de propiedad intelectual. Queda prohibida su reproducción sin autorización.</li>
+            <li><strong>Modificaciones.</strong> La plataforma se reserva el derecho de modificar estos términos en cualquier momento sin previo aviso.</li>
+            <li><strong>Limitación de responsabilidad.</strong> El titular no será responsable por daños directos o indirectos derivados del uso del servicio.</li>
+            <li><strong>Legislación aplicable.</strong> Estos términos se rigen por las leyes vigentes en la jurisdicción correspondiente.</li>
+          </ol>
+        `
+      },
+      privacidad: {
+        title: 'Política de Privacidad',
+        contentHtml: `
+          <h1>Política de Privacidad</h1>
+          <ol>
+            <li><strong>Recolección de datos.</strong> Se recopila información básica del usuario como nombre, correo electrónico y datos de uso para mejorar la experiencia del servicio.</li>
+            <li><strong>Uso de la información.</strong> La información recolectada se utiliza exclusivamente para el funcionamiento de la plataforma, mejora del servicio y personalización de la experiencia.</li>
+            <li><strong>Protección de datos.</strong> Se implementan medidas técnicas y organizativas para proteger la información personal contra accesos no autorizados.</li>
+            <li><strong>Compartición de datos.</strong> No se comparten datos personales con terceros, salvo obligación legal o requerimiento judicial.</li>
+            <li><strong>Derechos del usuario.</strong> El usuario puede solicitar acceso, modificación o eliminación de sus datos personales en cualquier momento.</li>
+            <li><strong>Protección de contenido.</strong> La plataforma procura evitar la publicación de contenido que infrinja derechos de autor o normativas vigentes, aplicando mecanismos de control razonables.</li>
+            <li><strong>Conservación de datos.</strong> Los datos se conservan durante el tiempo necesario para cumplir con los fines descritos.</li>
+          </ol>
+        `
+      },
+      cookies: {
+        title: 'Política de Cookies',
+        contentHtml: `
+          <h1>Política de Cookies</h1>
+          <ol>
+            <li><strong>Uso de cookies.</strong> Este sitio utiliza cookies para mejorar la experiencia del usuario, analizar el tráfico y personalizar contenido.</li>
+            <li><strong>Tipos de cookies.</strong> Se utilizan cookies esenciales, analíticas y de funcionalidad.</li>
+            <li><strong>Gestión de cookies.</strong> El usuario puede configurar su navegador para rechazar o eliminar cookies, aunque esto puede afectar el funcionamiento del sitio.</li>
+            <li><strong>Finalidad.</strong> Las cookies permiten recordar preferencias del usuario y mejorar la navegación.</li>
+            <li><strong>Cookies de terceros.</strong> En algunos casos se pueden utilizar servicios externos de análisis que también emplean cookies.</li>
+          </ol>
+        `
+      },
+      reembolsos: {
+        title: 'Política de Reembolso',
+        contentHtml: `
+          <h1>Política de Reembolso</h1>
+          <ol>
+            <li><strong>Condiciones generales.</strong> Debido a la naturaleza digital del servicio, no se realizan reembolsos una vez confirmado el pago.</li>
+            <li><strong>Excepciones.</strong> Solo se considerarán reembolsos en casos comprobados de fraude o errores técnicos atribuibles a la plataforma.</li>
+            <li><strong>Solicitudes.</strong> Cualquier solicitud de revisión deberá ser enviada al soporte oficial con evidencia correspondiente.</li>
+            <li><strong>Resolución.</strong> La plataforma evaluará cada caso de forma individual y se reserva el derecho de decisión final.</li>
+          </ol>
+        `
+      },
+      normas_vendedores: { title: 'Normas para Vendedores' },
+      normas_compradores: { title: 'Normas para Compradores' },
+      procedimiento_denuncias: { title: 'Procedimiento de Denuncias' },
+      propiedad_intelectual: { title: 'Propiedad Intelectual' }
+    };
+    const infoModalContent = {
+      configuracion: {
+        title: 'Configuración',
+        body: '<p>Desde tu perfil puedes editar nombre, ubicación, institución y foto. Pronto agregaremos preferencias avanzadas de notificaciones y privacidad.</p>'
+      },
+      centro_ayuda: {
+        title: 'Centro de ayuda',
+        body: '<p>Si tienes problemas con una compra, una publicación o tu cuenta, usa las opciones de reporte en el menú Ayuda. Nuestro equipo revisa cada caso.</p>'
+      },
+      faq: {
+        title: 'Preguntas frecuentes',
+        body: '<p><strong>¿Cómo compro?</strong> Abre una publicación y toca Comprar.</p><p><strong>¿Cuándo veo mi material?</strong> Tras el pago aprobado, el vendedor procesa tu compra.</p><p><strong>¿Cómo publico?</strong> Inicia sesión y usa el botón Publicar.</p>'
+      },
+      contacto: {
+        title: 'Contacto',
+        body: '<p>Correo de soporte: soporte@tuapunte.app</p><p>Horario de atención: lunes a viernes de 9:00 a 18:00.</p>'
+      },
+      como_funciona: {
+        title: 'Cómo funciona la plataforma',
+        body: '<p>Tu Apunte conecta estudiantes que venden y compran material académico. Publica tu contenido, recibe compras y construye reputación con reseñas.</p>'
+      },
+      como_comprar: {
+        title: 'Cómo comprar',
+        body: '<p>Busca un apunte, revisa el detalle y presiona Comprar. El pago se procesa con Mercado Pago y queda registrado en tu historial.</p>'
+      },
+      como_vender: {
+        title: 'Cómo vender',
+        body: '<p>Carga portada, contenido protegido, precio y datos académicos. Tu publicación puede quedar pendiente de revisión administrativa.</p>'
+      },
+      como_cobrar: {
+        title: 'Cómo cobrar las ventas',
+        body: '<p>Las ventas se registran y el cobro se gestiona por la integración activa de pagos. Revisa periódicamente tu actividad desde tu perfil.</p>'
+      },
+      comisiones: {
+        title: 'Comisiones de la plataforma',
+        body: '<p>La plataforma muestra la comisión estimada en el formulario de publicación para que sepas cuánto recibirás por cada venta.</p>'
+      },
+      metodos_pago: {
+        title: 'Métodos de pago aceptados',
+        body: '<p>Los pagos se procesan con Mercado Pago según los medios habilitados en tu país: saldo, tarjeta de débito, tarjeta de crédito y otros.</p>'
+      }
+    };
 
     if (firebaseConfig.apiKey !== "TU_API_KEY") {
       isRealFirebase = true;
@@ -777,12 +1042,16 @@
             currentUserData = data;
             currentUserIsAdmin = adminEmails.includes(user.email);
             updateAuthContainer();
+            refreshUserLocationContext();
+            loadUserCommerceState();
           });
         } else {
           currentUser = null;
           currentUserData = null;
           currentUserIsAdmin = false;
           updateAuthContainer();
+          refreshUserLocationContext();
+          loadUserCommerceState();
         }
       });
     }
@@ -793,13 +1062,9 @@
 
       if (currentUser) {
         authContainer.innerHTML = `
-          <div class="flex items-center gap-2">
-            <button onclick="openProfilePage()" class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 hover:bg-slate-50 transition-all">
-              <img src="${currentUserData?.avatarUrl || defaultAvatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover" />
-              <span class="text-xs font-bold text-slate-700">${currentUserData?.username || 'Usuario'}</span>
-            </button>
-            ${currentUserIsAdmin ? `<button onclick="openAdminPanel()" class="bg-amber-100 text-amber-700 px-3 py-2 rounded-xl text-xs font-bold hover:bg-amber-200 transition-all">Admin</button>` : ''}
-            <button onclick="handleLogout()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold">Salir</button>
+          <div class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 bg-slate-50">
+            <img src="${currentUserData?.avatarUrl || defaultAvatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover" />
+            <span class="text-xs font-bold text-slate-700">${currentUserData?.username || 'Usuario'}</span>
           </div>
         `;
       } else {
@@ -808,29 +1073,645 @@
         `;
       }
 
-      const mobileAvatar = document.getElementById('mobileHeaderAvatar');
-      if (mobileAvatar) {
-        mobileAvatar.src = currentUserData?.avatarUrl || defaultAvatar;
+      updateDrawerUserSummary();
+    }
+
+    function normalizeText(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function normalizeCbu(value) {
+      return String(value || '').replace(/\D/g, '');
+    }
+
+    function formatMaskedCbu(cbuValue) {
+      const cbu = normalizeCbu(cbuValue);
+      if (!cbu) return 'N/D';
+      if (cbu.length < 8) return cbu;
+      const last = cbu.slice(-4);
+      return `${'*'.repeat(Math.max(0, cbu.length - 4))}${last}`;
+    }
+
+    function hasValidSellerPayoutData(userData = currentUserData) {
+      const alias = String(userData?.payoutAlias || '').trim();
+      const ownerName = String(userData?.payoutOwnerName || '').trim();
+      const cbu = normalizeCbu(userData?.payoutCbu || '');
+      return Boolean(alias && ownerName && cbu.length === 22);
+    }
+
+    function updatePublishPayoutWarning() {
+      const warning = document.getElementById('publishPayoutWarning');
+      const submitButton = document.querySelector('#venderForm button[type="submit"]');
+      const hasPayoutData = hasValidSellerPayoutData();
+      if (warning) warning.classList.toggle('hidden', hasPayoutData);
+      if (submitButton) submitButton.disabled = !hasPayoutData;
+      if (submitButton) {
+        submitButton.classList.toggle('opacity-60', !hasPayoutData);
+        submitButton.classList.toggle('cursor-not-allowed', !hasPayoutData);
       }
+      return hasPayoutData;
+    }
+
+    function goToPayoutSetupFromPublish() {
+      closeVenderModal();
+      closeAppDrawer();
+      if (!currentUser) {
+        openAuthModal();
+        return;
+      }
+      openProfilePage();
+      setTimeout(() => {
+        const editSection = document.getElementById('profileEditSection');
+        const cbuInput = document.getElementById('editPayoutCbu');
+        if (editSection) editSection.classList.remove('hidden');
+        if (cbuInput) {
+          cbuInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          cbuInput.focus();
+        }
+      }, 240);
+    }
+
+    function getCurrentUserId() {
+      return currentUser?.uid || '';
+    }
+
+    function getUserScopedStorageKey(baseKey, userId) {
+      return `${baseKey}:${userId || 'anon'}`;
+    }
+
+    function readLocalStorageArray(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function writeLocalStorageArray(key, value) {
+      localStorage.setItem(key, JSON.stringify(Array.isArray(value) ? value : []));
+    }
+
+    async function loadUserCommerceState() {
+      const userId = getCurrentUserId();
+      if (!userId) {
+        currentFavoriteIds = new Set();
+        currentPurchaseHistory = [];
+        renderGrid(applyFilters(loadedPublications));
+        return;
+      }
+
+      if (isRealFirebase) {
+        const [favoritesSnapshot, purchasesSnapshot] = await Promise.all([
+          dbRef.collection('favorites').where('userId', '==', userId).get(),
+          dbRef.collection('purchases').where('buyerId', '==', userId).get()
+        ]);
+
+        currentFavoriteIds = new Set(favoritesSnapshot.docs.map(doc => String(doc.data().publicationId || '')));
+        currentPurchaseHistory = purchasesSnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .sort((a, b) => getPublicationTimestamp(b) - getPublicationTimestamp(a));
+      } else {
+        const favoritesKey = getUserScopedStorageKey('tuapunte:favorites', userId);
+        const historyKey = getUserScopedStorageKey('tuapunte:purchaseHistory', userId);
+        currentFavoriteIds = new Set(readLocalStorageArray(favoritesKey).map(id => String(id)));
+        currentPurchaseHistory = readLocalStorageArray(historyKey);
+      }
+
+      renderGrid(applyFilters(loadedPublications));
+    }
+
+    function getPublicationById(publicationId) {
+      const targetId = String(publicationId || '');
+      return allPublications.find(item => String(item.id) === targetId)
+        || loadedPublications.find(item => String(item.id) === targetId)
+        || localDB.find(item => String(item.id) === targetId)
+        || null;
+    }
+
+    async function toggleFavorite(publicationId, event = null) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+
+      const userId = getCurrentUserId();
+      if (!userId) {
+        alert('Debes iniciar sesión para usar favoritos.');
+        openAuthModal();
+        return;
+      }
+
+      const publicationKey = String(publicationId || '');
+      const isFavorite = currentFavoriteIds.has(publicationKey);
+
+      if (isRealFirebase) {
+        const docId = `${userId}_${publicationKey}`;
+        const docRef = dbRef.collection('favorites').doc(docId);
+        if (isFavorite) {
+          await docRef.delete();
+          currentFavoriteIds.delete(publicationKey);
+        } else {
+          await docRef.set({ userId, publicationId: publicationKey, createdAt: new Date() });
+          currentFavoriteIds.add(publicationKey);
+        }
+      } else {
+        const storageKey = getUserScopedStorageKey('tuapunte:favorites', userId);
+        const favorites = new Set(readLocalStorageArray(storageKey).map(id => String(id)));
+        if (favorites.has(publicationKey)) {
+          favorites.delete(publicationKey);
+          currentFavoriteIds.delete(publicationKey);
+        } else {
+          favorites.add(publicationKey);
+          currentFavoriteIds.add(publicationKey);
+        }
+        writeLocalStorageArray(storageKey, Array.from(favorites));
+      }
+
+      renderGrid(applyFilters(loadedPublications));
+      const profileUserId = getProfileUserIdFromHash();
+      if (profileUserId && profileUserId === userId) {
+        loadProfileData(profileUserId);
+      }
+    }
+
+    async function addPurchaseHistoryEntry(publication, quantity = 1) {
+      const userId = getCurrentUserId();
+      if (!userId || !publication) return;
+
+      const entry = {
+        buyerId: userId,
+        publicationId: String(publication.id || ''),
+        title: publication.title || 'Publicación',
+        price: Number(publication.price || 0),
+        quantity: Number(quantity || 1),
+        authorId: publication.authorId || '',
+        authorNick: publication.authorNick || 'Anónimo',
+        createdAt: new Date(),
+        status: 'pendiente'
+      };
+
+      if (isRealFirebase) {
+        const added = await dbRef.collection('purchases').add(entry);
+        currentPurchaseHistory.unshift({ id: added.id, ...entry });
+      } else {
+        const storageKey = getUserScopedStorageKey('tuapunte:purchaseHistory', userId);
+        const stored = readLocalStorageArray(storageKey);
+        const globalHistoryKey = 'tuapunte:allPurchases';
+        const globalStored = readLocalStorageArray(globalHistoryKey);
+        const finalEntry = { id: `p_${Date.now()}`, ...entry };
+        stored.unshift(finalEntry);
+        globalStored.unshift(finalEntry);
+        writeLocalStorageArray(storageKey, stored);
+        writeLocalStorageArray(globalHistoryKey, globalStored);
+        currentPurchaseHistory = stored;
+        localPurchaseHistory = globalStored;
+      }
+    }
+
+    async function reportPublicationFromHistory(publicationId) {
+      const userId = getCurrentUserId();
+      if (!userId) {
+        alert('Debes iniciar sesión para reportar una publicación.');
+        return;
+      }
+
+      const reason = prompt('Describe brevemente el motivo del reporte:');
+      if (!reason) return;
+
+      const reportData = {
+        reporterId: userId,
+        publicationId: String(publicationId || ''),
+        reason: String(reason).trim(),
+        createdAt: new Date()
+      };
+
+      if (isRealFirebase) {
+        await dbRef.collection('reports').add(reportData);
+      } else {
+        localReports.unshift({ id: `r_${Date.now()}`, ...reportData });
+      }
+
+      alert('Reporte enviado. Gracias por avisar.');
+    }
+
+    async function detectIpLocation() {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        if (!response.ok) return null;
+        const data = await response.json();
+        return {
+          city: data?.city || '',
+          province: data?.region || '',
+          country: data?.country_name || '',
+          latitude: Number(data?.latitude),
+          longitude: Number(data?.longitude)
+        };
+      } catch (error) {
+        console.warn('No se pudo obtener ubicación por IP', error);
+        return null;
+      }
+    }
+
+    async function refreshUserLocationContext() {
+      const profileCity = currentUserData?.city || '';
+      const profileProvince = currentUserData?.province || '';
+      const profileCountry = currentUserData?.country || 'Argentina';
+      const profileInstitution = currentUserData?.institution || '';
+
+      userLocationContext = {
+        city: profileCity,
+        province: profileProvince,
+        country: profileCountry,
+        institution: profileInstitution,
+        latitude: null,
+        longitude: null
+      };
+
+      const ipLocation = await detectIpLocation();
+      if (ipLocation) {
+        userLocationContext = {
+          city: ipLocation.city || profileCity,
+          province: ipLocation.province || profileProvince,
+          country: ipLocation.country || profileCountry,
+          institution: profileInstitution,
+          latitude: Number.isFinite(ipLocation.latitude) ? ipLocation.latitude : null,
+          longitude: Number.isFinite(ipLocation.longitude) ? ipLocation.longitude : null
+        };
+      }
+
+      await refreshNearbyPublicationsCache(loadedPublications);
+    }
+
+    function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+      const toRadians = degrees => degrees * (Math.PI / 180);
+      const earthRadius = 6371;
+      const dLat = toRadians(lat2 - lat1);
+      const dLon = toRadians(lon2 - lon1);
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return earthRadius * c;
+    }
+
+    async function resolveCityCoordinates(city, province = '', country = 'Argentina') {
+      const normalizedCity = normalizeText(city);
+      if (!normalizedCity) return null;
+
+      const key = `${normalizedCity}|${normalizeText(province)}|${normalizeText(country)}`;
+      if (cityCoordinatesCache.has(key)) return cityCoordinatesCache.get(key);
+
+      try {
+        const url = `https://apis.datos.gob.ar/georef/api/localidades?nombre=${encodeURIComponent(city)}&provincia=${encodeURIComponent(province || '')}&campos=nombre,centroide&max=1`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          cityCoordinatesCache.set(key, null);
+          return null;
+        }
+        const data = await response.json();
+        const loc = (data.localidades || [])[0];
+        const point = loc?.centroide;
+        const coords = point && Number.isFinite(point.lat) && Number.isFinite(point.lon)
+          ? { lat: point.lat, lon: point.lon }
+          : null;
+        cityCoordinatesCache.set(key, coords);
+        return coords;
+      } catch (error) {
+        cityCoordinatesCache.set(key, null);
+        return null;
+      }
+    }
+
+    async function refreshNearbyPublicationsCache(items = []) {
+      const publicationList = Array.isArray(items) ? items : [];
+      const nearbySet = new Set();
+      const myInstitution = normalizeText(userLocationContext.institution);
+      const myCity = normalizeText(userLocationContext.city);
+
+      publicationList.forEach(item => {
+        const itemInstitution = normalizeText(item?.institution);
+        if (myInstitution && itemInstitution && (itemInstitution.includes(myInstitution) || myInstitution.includes(itemInstitution))) {
+          nearbySet.add(String(item.id));
+        }
+      });
+
+      publicationList.forEach(item => {
+        if (nearbySet.has(String(item.id))) return;
+        const itemCity = normalizeText(item?.city);
+        if (myCity && itemCity && (itemCity.includes(myCity) || myCity.includes(itemCity))) {
+          nearbySet.add(String(item.id));
+        }
+      });
+
+      if (Number.isFinite(userLocationContext.latitude) && Number.isFinite(userLocationContext.longitude)) {
+        const checks = publicationList.map(async item => {
+          if (nearbySet.has(String(item.id))) return;
+          const coords = await resolveCityCoordinates(item?.city, item?.province || '', item?.country || 'Argentina');
+          if (!coords) return;
+          const distance = calculateDistanceKm(userLocationContext.latitude, userLocationContext.longitude, coords.lat, coords.lon);
+          if (distance <= 100) {
+            nearbySet.add(String(item.id));
+          }
+        });
+        await Promise.all(checks);
+      }
+
+      nearbyPublicationIds = nearbySet;
     }
 
     function isMobileLayout() {
       return window.matchMedia('(max-width: 639px)').matches;
     }
 
-    function openMobileProfileSheet() {
-      if (!currentUser) {
-        openAuthModal();
-        return;
-      }
-      const sheet = document.getElementById('mobileProfileSheet');
-      if (sheet) sheet.classList.remove('hidden');
+    function updateDrawerUserSummary() {
+      const avatar = document.getElementById('drawerUserAvatar');
+      const name = document.getElementById('drawerUserName');
+      const adminAccess = document.getElementById('drawerAdminAccess');
+      if (avatar) avatar.src = currentUserData?.avatarUrl || defaultAvatar;
+      if (name) name.innerText = currentUserData?.username || 'Invitado';
+      if (adminAccess) adminAccess.classList.toggle('hidden', !currentUserIsAdmin);
     }
 
-    function closeMobileProfileSheet(event = null) {
-      if (event && event.target && event.target.id !== 'mobileProfileSheet') return;
-      const sheet = document.getElementById('mobileProfileSheet');
-      if (sheet) sheet.classList.add('hidden');
+    function openAppDrawer() {
+      updateDrawerUserSummary();
+      const drawer = document.getElementById('appDrawer');
+      const panel = document.getElementById('appDrawerPanel');
+      if (!drawer || !panel) return;
+      drawer.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      requestAnimationFrame(() => {
+        panel.classList.remove('translate-x-full');
+      });
+    }
+
+    function closeAppDrawer(event = null) {
+      if (event && event.target && event.target.id !== 'appDrawer') return;
+      const drawer = document.getElementById('appDrawer');
+      const panel = document.getElementById('appDrawerPanel');
+      if (!drawer || !panel) return;
+      panel.classList.add('translate-x-full');
+      setTimeout(() => {
+        drawer.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      }, 220);
+    }
+
+    function requireDrawerAuth() {
+      if (currentUser) return true;
+      closeAppDrawer();
+      openAuthModal();
+      return false;
+    }
+
+    function drawerGoToProfile() {
+      if (!requireDrawerAuth()) return;
+      closeAppDrawer();
+      openProfilePage();
+    }
+
+    function getProfileSectionElement(sectionKey) {
+      if (sectionKey === 'favorites') return document.getElementById('profileFavoritesSection');
+      if (sectionKey === 'history') return document.getElementById('profilePurchaseHistorySection');
+      if (sectionKey === 'publications') return document.getElementById('profilePublicationsGrid')?.closest('.bg-slate-50');
+      return document.getElementById('profilePage');
+    }
+
+    function drawerGoToProfileSection(sectionKey) {
+      if (!requireDrawerAuth()) return;
+      closeAppDrawer();
+      openProfilePage();
+      setTimeout(() => {
+        const section = getProfileSectionElement(sectionKey);
+        if (section && typeof section.scrollIntoView === 'function') {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 220);
+    }
+
+    function drawerLogout() {
+      closeAppDrawer();
+      handleLogout();
+    }
+
+    function drawerOpenAdmin() {
+      closeAppDrawer();
+      openAdminPanel();
+    }
+
+    function getReportTypeLabel(typeKey) {
+      const labels = {
+        problema: 'Problema técnico',
+        compra: 'Problema con una compra',
+        usuario: 'Reporte de usuario',
+        publicacion: 'Reporte de publicación'
+      };
+      return labels[typeKey] || 'Reporte general';
+    }
+
+    function openReportModal(typeKey) {
+      closeAppDrawer();
+      const modal = document.getElementById('reportModal');
+      const reportTypeInput = document.getElementById('reportTypeInput');
+      const descriptionInput = document.getElementById('reportDescriptionInput');
+      if (!modal || !reportTypeInput || !descriptionInput) return;
+      reportTypeInput.value = getReportTypeLabel(typeKey);
+      reportTypeInput.dataset.typeKey = String(typeKey || 'general');
+      descriptionInput.value = '';
+      modal.classList.remove('hidden');
+    }
+
+    function closeReportModal(event = null) {
+      if (event && event.target && event.target.id !== 'reportModal') return;
+      const modal = document.getElementById('reportModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function submitReport(event) {
+      event.preventDefault();
+      const reportTypeInput = document.getElementById('reportTypeInput');
+      const descriptionInput = document.getElementById('reportDescriptionInput');
+      if (!reportTypeInput || !descriptionInput) return;
+
+      const description = String(descriptionInput.value || '').trim();
+      if (!description) {
+        alert('Debes completar el detalle del reporte.');
+        return;
+      }
+
+      const payload = {
+        type: reportTypeInput.dataset.typeKey || 'general',
+        typeLabel: reportTypeInput.value || 'Reporte general',
+        description,
+        reporterId: currentUser?.uid || '',
+        reporterEmail: currentUser?.email || '',
+        createdAt: new Date()
+      };
+
+      try {
+        if (isRealFirebase) {
+          await dbRef.collection('reports').add(payload);
+        } else {
+          localReports.unshift({ id: `rep_${Date.now()}`, ...payload });
+        }
+        alert('Reporte enviado. Gracias por ayudarnos a mejorar la plataforma.');
+        closeReportModal();
+      } catch (error) {
+        console.error('Error al enviar reporte', error);
+        alert('No se pudo enviar el reporte. Intenta nuevamente.');
+      }
+    }
+
+    async function loadLegalDocumentsMap() {
+      if (legalDocumentsCache) return legalDocumentsCache;
+      const resolved = { ...legalDocumentDefaults };
+
+      if (isRealFirebase) {
+        try {
+          const snapshot = await dbRef.collection('legal_documents').get();
+          for (const doc of snapshot.docs) {
+            const data = doc.data() || {};
+            const key = String(data.key || doc.id || '').trim();
+            if (!key) continue;
+            let url = String(data.url || '').trim();
+            const contentHtml = String(data.contentHtml || '').trim();
+            if (!url && data.storagePath) {
+              try {
+                url = await storage.ref(String(data.storagePath)).getDownloadURL();
+              } catch (storageError) {
+                console.warn('No se pudo resolver storagePath legal', storageError);
+              }
+            }
+            if (!url && !contentHtml) continue;
+            resolved[key] = {
+              title: data.title || resolved[key]?.title || key,
+              url,
+              contentHtml: contentHtml || resolved[key]?.contentHtml || ''
+            };
+          }
+        } catch (error) {
+          console.warn('No se pudieron cargar documentos legales desde Firestore', error);
+        }
+      }
+
+      legalDocumentsCache = resolved;
+      return resolved;
+    }
+
+    function buildPdfViewerUrl(baseUrl, searchQuery = '') {
+      if (!baseUrl) return '';
+      if (!searchQuery) return baseUrl;
+      const clean = String(baseUrl).split('#')[0];
+      return `${clean}#search=${encodeURIComponent(searchQuery)}`;
+    }
+
+    function wrapLegalHtmlDocument(title, bodyHtml) {
+      return `
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>${title}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 0; padding: 28px; color: #0f172a; line-height: 1.6; }
+              h1 { font-size: 22px; margin: 0 0 12px; }
+              p { margin: 0 0 14px; }
+              ol { padding-left: 20px; margin: 0; }
+              li { margin-bottom: 10px; }
+            </style>
+          </head>
+          <body>
+            ${bodyHtml}
+          </body>
+        </html>
+      `;
+    }
+
+    async function openLegalDocument(documentKey) {
+      closeAppDrawer();
+      const modal = document.getElementById('legalViewerModal');
+      const title = document.getElementById('legalViewerTitle');
+      const frame = document.getElementById('legalViewerFrame');
+      const downloadBtn = document.getElementById('legalDownloadBtn');
+      const searchInput = document.getElementById('legalSearchInput');
+      if (!modal || !title || !frame || !downloadBtn || !searchInput) return;
+
+      modal.classList.remove('hidden');
+      title.innerText = 'Cargando documento...';
+      frame.src = 'about:blank';
+
+      const docs = await loadLegalDocumentsMap();
+      const legalDoc = docs[documentKey];
+
+      if (!legalDoc?.url) {
+        if (!legalDoc?.contentHtml) {
+          title.innerText = 'Documento no disponible';
+          frame.srcdoc = '<div style="font-family: sans-serif; padding: 24px; color: #475569;">Este documento aún no fue cargado.</div>';
+          downloadBtn.href = '#';
+          downloadBtn.classList.add('pointer-events-none', 'opacity-50');
+          searchInput.value = '';
+          searchInput.disabled = true;
+          return;
+        }
+
+        title.innerText = legalDoc.title || 'Documento legal';
+        frame.dataset.baseUrl = '';
+        frame.srcdoc = wrapLegalHtmlDocument(legalDoc.title || 'Documento legal', legalDoc.contentHtml || '');
+        downloadBtn.href = '#';
+        downloadBtn.classList.add('pointer-events-none', 'opacity-50');
+        searchInput.value = '';
+        searchInput.disabled = true;
+        return;
+      }
+
+      title.innerText = legalDoc.title || 'Documento legal';
+      frame.dataset.baseUrl = legalDoc.url;
+      frame.src = legalDoc.url;
+      downloadBtn.href = legalDoc.url;
+      downloadBtn.classList.remove('pointer-events-none', 'opacity-50');
+      searchInput.value = '';
+      searchInput.disabled = false;
+    }
+
+    function updateLegalViewerSearch(value) {
+      const frame = document.getElementById('legalViewerFrame');
+      if (!frame) return;
+      const baseUrl = frame.dataset.baseUrl || '';
+      if (!baseUrl) return;
+      frame.src = buildPdfViewerUrl(baseUrl, value || '');
+    }
+
+    function closeLegalViewer(event = null) {
+      if (event && event.target && event.target.id !== 'legalViewerModal') return;
+      const modal = document.getElementById('legalViewerModal');
+      const frame = document.getElementById('legalViewerFrame');
+      const searchInput = document.getElementById('legalSearchInput');
+      if (modal) modal.classList.add('hidden');
+      if (frame) {
+        frame.src = 'about:blank';
+        frame.dataset.baseUrl = '';
+      }
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.disabled = false;
+      }
+    }
+
+    function openInfoModal(infoKey) {
+      closeAppDrawer();
+      const modal = document.getElementById('infoModal');
+      const title = document.getElementById('infoModalTitle');
+      const content = document.getElementById('infoModalContent');
+      if (!modal || !title || !content) return;
+      const data = infoModalContent[infoKey] || { title: 'Información', body: '<p>Contenido no disponible por el momento.</p>' };
+      title.innerText = data.title;
+      content.innerHTML = data.body;
+      modal.classList.remove('hidden');
+    }
+
+    function closeInfoModal(event = null) {
+      if (event && event.target && event.target.id !== 'infoModal') return;
+      const modal = document.getElementById('infoModal');
+      if (modal) modal.classList.add('hidden');
     }
 
     function openMobileSearch() {
@@ -858,8 +1739,8 @@
       filterItems();
     }
 
-    function setMobileQuickFilter(filterKey) {
-      activeMobileQuickFilter = filterKey || 'todos';
+    async function setMobileQuickFilter(filterKey) {
+      activeMobileQuickFilter = filterKey || 'cerca';
       document.querySelectorAll('.mobile-filter-chip').forEach(chip => {
         const isActive = chip.dataset.mobileFilter === activeMobileQuickFilter;
         chip.classList.toggle('bg-slate-900', isActive);
@@ -867,6 +1748,9 @@
         chip.classList.toggle('bg-slate-100', !isActive);
         chip.classList.toggle('text-slate-700', !isActive);
       });
+      if (activeMobileQuickFilter === 'cerca') {
+        await refreshNearbyPublicationsCache(loadedPublications);
+      }
       renderGrid(applyFilters(loadedPublications));
     }
 
@@ -1046,6 +1930,9 @@
           country: country,
           institution: inst,
           avatarUrl: avatarUrl || '',
+          payoutAlias: '',
+          payoutCbu: '',
+          payoutOwnerName: '',
           isAdmin: adminEmails.includes(email),
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -1066,14 +1953,23 @@
       const pass = document.getElementById('loginPass').value;
 
       if (!isRealFirebase) {
-        currentUser = { email };
+        currentUser = { uid: `local_${btoa(email).replace(/=+$/g, '')}`, email };
         currentUserData = {
           username: email === adminEmails[0] ? 'Administrador' : email.split('@')[0],
           avatarUrl: defaultAvatar,
-          email
+          email,
+          city: 'CABA',
+          province: 'Buenos Aires',
+          country: 'Argentina',
+          institution: 'N/D',
+          payoutAlias: '',
+          payoutCbu: '',
+          payoutOwnerName: ''
         };
         currentUserIsAdmin = adminEmails.includes(email);
         updateAuthContainer();
+        refreshUserLocationContext();
+        loadUserCommerceState();
         alert("Modo local: Ingreso simulado con éxito.");
         closeAuthModal();
         return;
@@ -1108,7 +2004,10 @@
             province: "Buenos Aires",
             country: "Argentina",
             institution: "UBA",
-            avatarUrl: user.photoURL || ''
+            avatarUrl: user.photoURL || '',
+            payoutAlias: '',
+            payoutCbu: '',
+            payoutOwnerName: ''
           }, { merge: true });
           closeAuthModal();
         })
@@ -1119,6 +2018,12 @@
       if (isRealFirebase) {
         authRef.signOut();
       } else {
+        currentUser = null;
+        currentUserData = null;
+        currentUserIsAdmin = false;
+        updateAuthContainer();
+        refreshUserLocationContext();
+        loadUserCommerceState();
         alert("Sesión cerrada.");
       }
     }
@@ -1134,12 +2039,14 @@
 
       const form = e.target;
       const submitButton = form.querySelector('button[type="submit"]');
+      const termsCheckbox = document.getElementById('publishTermsAccepted');
       const resetSubmitState = () => {
         isPublishing = false;
         if (submitButton) {
           submitButton.disabled = false;
           submitButton.innerText = 'Publicar Ahora';
         }
+        updatePublishPayoutWarning();
       };
 
       if (submitButton) {
@@ -1174,6 +2081,19 @@
       if (isRealFirebase && !activeUser?.uid) {
         alert(PUBLISH_LOGIN_REQUIRED_MESSAGE);
         openAuthModal();
+        resetSubmitState();
+        return;
+      }
+
+      if (!hasValidSellerPayoutData(currentUserData)) {
+        alert('Antes de publicar debes completar Alias, CBU y titular en tu perfil.');
+        goToPayoutSetupFromPublish();
+        resetSubmitState();
+        return;
+      }
+
+      if (!termsCheckbox?.checked) {
+        alert('Debes aceptar los Términos y Condiciones para publicar.');
         resetSubmitState();
         return;
       }
@@ -1319,6 +2239,7 @@
             }
             loadedPublications = [...loadedPublications, ...visibleItems];
             allPublications = loadedPublications;
+            await refreshNearbyPublicationsCache(loadedPublications);
             renderGrid(applyFilters(loadedPublications));
           }
         } catch (error) {
@@ -1341,6 +2262,7 @@
         loadedPublications = page;
         allPublications = page;
         hasMorePublications = filteredLocal.length > publicationsPageSize;
+        await refreshNearbyPublicationsCache(loadedPublications);
         renderGrid(loadedPublications);
       }
 
@@ -1393,10 +2315,7 @@
           });
         }
         if (activeMobileQuickFilter === 'cerca') {
-          const myCity = String(currentUserData?.city || '').toLowerCase();
-          if (myCity) {
-            filtered = filtered.filter(item => String(item.city || '').toLowerCase().includes(myCity));
-          }
+          filtered = filtered.filter(item => nearbyPublicationIds.has(String(item.id)));
         }
         if (activeMobileQuickFilter === 'mas-vendidos') {
           filtered = [...filtered].sort((a, b) => (Number(b.publicationReviewCount || 0) - Number(a.publicationReviewCount || 0)));
@@ -1431,6 +2350,7 @@
         ].filter(Boolean).join(' ');
 
         const card = document.createElement('div');
+        const isFavorite = currentFavoriteIds.has(String(item.id));
         card.className = mobileView
           ? 'bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm cursor-pointer active:scale-[0.99] transition-transform'
           : 'bg-white rounded-2xl border border-slate-150 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer';
@@ -1440,21 +2360,24 @@
             <div class="overflow-hidden h-56 bg-slate-100 relative">
               <img src="${item.portadaUrl || 'https://via.placeholder.com/400x320?text=Sin+portada'}" alt="${item.title}" class="w-full h-full object-cover" />
               <div class="absolute top-3 left-3 flex items-center gap-2">${mobileTags}</div>
+              <button class="favorite-toggle absolute top-3 right-3 w-9 h-9 rounded-full ${isFavorite ? 'bg-rose-500 text-white' : 'bg-white/90 text-slate-600'} flex items-center justify-center shadow" title="Favorito"><i class="fa-solid fa-heart"></i></button>
             </div>
             <div class="p-4 space-y-3">
               <div class="space-y-1">
                 <p class="text-lg font-black text-slate-900 leading-tight">$${item.price} ARS</p>
                 <h4 class="font-extrabold text-base text-slate-900 leading-tight">${item.title}</h4>
-                <p class="text-sm text-slate-500">${item.institution || item.subject || 'Material educativo'}</p>
-                <p class="text-xs text-slate-400">${item.subject || ''}${item.subject && item.city ? ' · ' : ''}${item.city || ''}</p>
+                <p class="text-sm font-extrabold text-slate-800">Institución: ${item.institution || 'No indicada'}</p>
+                <p class="text-sm font-extrabold text-slate-800">Materia: ${item.subject || 'No indicada'}</p>
+                <p class="text-sm font-extrabold text-slate-800">Ciudad: ${item.city || 'No indicada'}</p>
               </div>
               <button class="buy-publication-btn w-full bg-[#009EE3] text-white py-3 rounded-xl font-bold text-sm shadow-sm">Comprar</button>
             </div>
           `;
         } else {
           card.innerHTML = `
-            <div class="overflow-hidden h-48">
+            <div class="overflow-hidden h-48 relative">
               <img src="${item.portadaUrl || 'https://via.placeholder.com/400x320?text=Sin+portada'}" alt="${item.title}" class="w-full h-full object-cover" />
+              <button class="favorite-toggle absolute top-3 right-3 w-9 h-9 rounded-full ${isFavorite ? 'bg-rose-500 text-white' : 'bg-white/90 text-slate-600'} flex items-center justify-center shadow" title="Favorito"><i class="fa-solid fa-heart"></i></button>
             </div>
             <div class="p-5 flex flex-col gap-3">
               <div class="flex justify-between items-start gap-3">
@@ -1477,7 +2400,7 @@
                 <p class="text-xs text-slate-400 line-clamp-2">${item.description}</p>
               </div>
               <button class="buy-publication-btn w-full bg-[#009EE3] text-white py-2.5 rounded-xl font-bold text-xs shadow-sm">Comprar</button>
-              <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-500 font-bold border-t pt-3">
+              <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-700 font-extrabold border-t pt-3">
                 <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> ${item.city}</div>
                 <div class="flex items-center gap-2"><i class="fa-solid fa-building-columns"></i> ${item.institution}</div>
                 <div class="flex items-center gap-2"><i class="fa-solid fa-book-bookmark"></i> ${item.subject}</div>
@@ -1492,6 +2415,13 @@
           buyButton.addEventListener('click', event => {
             event.stopPropagation();
             iniciarPago(item);
+          });
+        }
+
+        const favoriteButton = card.querySelector('.favorite-toggle');
+        if (favoriteButton) {
+          favoriteButton.addEventListener('click', event => {
+            toggleFavorite(item.id, event);
           });
         }
 
@@ -1559,6 +2489,65 @@
           <p class="text-sm text-slate-600">${comment}</p>
         `;
         reviewsList.appendChild(card);
+      });
+    }
+
+    function renderProfileFavorites(favoritePublications) {
+      const container = document.getElementById('profileFavoritesList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (!favoritePublications.length) {
+        container.innerHTML = '<div class="col-span-full bg-white border border-slate-200 rounded-2xl p-4 text-sm text-slate-500">Todavía no tienes publicaciones en favoritos.</div>';
+        return;
+      }
+
+      favoritePublications.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'bg-white border border-slate-200 rounded-2xl overflow-hidden cursor-pointer';
+        card.setAttribute('onclick', `openDetailModal(${JSON.stringify(item.id)})`);
+        card.innerHTML = `
+          <div class="h-32 overflow-hidden">
+            <img src="${item.portadaUrl || 'https://via.placeholder.com/400x320?text=Sin+portada'}" alt="${item.title}" class="w-full h-full object-cover" />
+          </div>
+          <div class="p-3">
+            <p class="text-sm font-black text-slate-900 line-clamp-2">${item.title}</p>
+            <p class="text-xs font-bold text-brand mt-1">$${item.price} ARS</p>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderPurchaseHistory(historyItems) {
+      const container = document.getElementById('profilePurchaseHistoryList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (!historyItems.length) {
+        container.innerHTML = '<div class="bg-white border border-slate-200 rounded-2xl p-4 text-sm text-slate-500">Aún no tienes compras registradas.</div>';
+        return;
+      }
+
+      historyItems.forEach(entry => {
+        const card = document.createElement('div');
+        card.className = 'bg-white border border-slate-200 rounded-2xl p-4';
+        const status = entry.status || 'pendiente';
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-sm font-black text-slate-900">${entry.title || 'Publicación'}</p>
+              <p class="text-xs text-slate-500">Vendedor: ${entry.authorNick || 'Anónimo'}</p>
+              <p class="text-xs text-slate-500">Cantidad: ${entry.quantity || 1}</p>
+              <p class="text-xs text-slate-500">Estado: ${status}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-black text-brand">$${Number(entry.price || 0)} ARS</p>
+              <button onclick="reportPublicationFromHistory('${entry.publicationId}')" class="mt-2 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-bold">Reportar</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
       });
     }
 
@@ -1795,6 +2784,7 @@
           return false;
         }
 
+        await addPurchaseHistoryEntry(publicacion, safeQuantity);
         window.location.href = data.init_point;
         return true;
       } catch (error) {
@@ -1831,7 +2821,13 @@
         buyButton.innerHTML = '<button disabled class="w-full bg-slate-400 text-white py-3.5 rounded-xl font-bold text-xs shadow-md">Creando pago...</button>';
       }
 
-      const success = await iniciarPago({ title, price }, quantity);
+      const success = await iniciarPago({
+        id: publicationId,
+        title,
+        price,
+        authorId: modal.dataset.authorId || selectedItem?.authorId || '',
+        authorNick: selectedItem?.authorNick || document.getElementById('modalAuthor')?.innerText || 'Anónimo'
+      }, quantity);
       if (!success && buyButton) {
         buyButton.innerHTML = '<button onclick="simulatePurchase()" class="w-full bg-[#009EE3] text-white py-3.5 rounded-xl font-bold text-xs shadow-md">Reintentar pago</button>';
       }
@@ -1864,7 +2860,13 @@
         return;
       }
       document.getElementById('venderModal').classList.remove('hidden');
+      const termsCheckbox = document.getElementById('publishTermsAccepted');
+      if (termsCheckbox) termsCheckbox.checked = false;
       updateCommissionSummary();
+      const hasPayoutData = updatePublishPayoutWarning();
+      if (!hasPayoutData) {
+        alert('Para publicar primero completa tus datos de cobro en tu perfil.');
+      }
     }
     function closeVenderModal() { document.getElementById('venderModal').classList.add('hidden'); }
     function closeDetailModal() { document.getElementById('detailModal').classList.add('hidden'); }
@@ -1933,6 +2935,136 @@
         history.pushState(null, '', `${window.location.pathname}${window.location.search}`);
       }
     }
+
+    function getTopBorderClass(rank) {
+      if (rank === 1) return 'border-2 border-amber-400';
+      if (rank === 2) return 'border-2 border-slate-400';
+      if (rank === 3) return 'border-2 border-orange-400';
+      return 'border border-slate-200';
+    }
+
+    async function getTopRankingRows() {
+      const userMap = new Map();
+      const salesMap = new Map();
+
+      if (isRealFirebase) {
+        const [usersSnapshot, purchasesSnapshot] = await Promise.all([
+          dbRef.collection('users').get(),
+          dbRef.collection('purchases').get()
+        ]);
+
+        usersSnapshot.forEach(doc => {
+          const data = doc.data() || {};
+          userMap.set(doc.id, {
+            userId: doc.id,
+            username: data.username || 'Usuario',
+            avatarUrl: data.avatarUrl || defaultAvatar
+          });
+        });
+
+        purchasesSnapshot.forEach(doc => {
+          const data = doc.data() || {};
+          const sellerId = String(data.authorId || '');
+          if (!sellerId) return;
+          salesMap.set(sellerId, Number(salesMap.get(sellerId) || 0) + Number(data.quantity || 1));
+        });
+      } else {
+        localUsers.forEach(user => {
+          userMap.set(String(user.id), {
+            userId: String(user.id),
+            username: user.username || 'Usuario',
+            avatarUrl: user.avatarUrl || defaultAvatar
+          });
+        });
+
+        localPurchaseHistory.forEach(entry => {
+          const sellerId = String(entry.authorId || '');
+          if (!sellerId) return;
+          salesMap.set(sellerId, Number(salesMap.get(sellerId) || 0) + Number(entry.quantity || 1));
+        });
+      }
+
+      localDB.forEach(pub => {
+        const sellerId = String(pub.authorId || '');
+        if (!sellerId) return;
+        if (!userMap.has(sellerId)) {
+          userMap.set(sellerId, {
+            userId: sellerId,
+            username: pub.authorNick || 'Usuario',
+            avatarUrl: pub.authorAvatar || defaultAvatar
+          });
+        }
+        if (!salesMap.has(sellerId)) salesMap.set(sellerId, 0);
+      });
+
+      const currentId = getCurrentUserId();
+      if (currentId && !userMap.has(currentId)) {
+        userMap.set(currentId, {
+          userId: currentId,
+          username: currentUserData?.username || 'Tú',
+          avatarUrl: currentUserData?.avatarUrl || defaultAvatar
+        });
+      }
+      if (currentId && !salesMap.has(currentId)) {
+        salesMap.set(currentId, 0);
+      }
+
+      const ranking = Array.from(userMap.values()).map(user => ({
+        ...user,
+        soldCount: Number(salesMap.get(user.userId) || 0)
+      }));
+
+      ranking.sort((a, b) => {
+        if (b.soldCount !== a.soldCount) return b.soldCount - a.soldCount;
+        return String(a.username).localeCompare(String(b.username), 'es', { sensitivity: 'base' });
+      });
+
+      return ranking;
+    }
+
+    async function openTopRanking() {
+      const modal = document.getElementById('topRankingModal');
+      const list = document.getElementById('topRankingList');
+      if (!modal || !list) return;
+
+      modal.classList.remove('hidden');
+      list.innerHTML = '<p class="text-sm text-slate-500">Cargando ranking...</p>';
+
+      try {
+        const ranking = await getTopRankingRows();
+        if (!ranking.length) {
+          list.innerHTML = '<p class="text-sm text-slate-500">Aún no hay datos para mostrar el top.</p>';
+          return;
+        }
+
+        list.innerHTML = '';
+        ranking.forEach((entry, index) => {
+          const rank = index + 1;
+          const row = document.createElement('div');
+          row.className = `${getTopBorderClass(rank)} rounded-2xl p-3 bg-white flex items-center justify-between gap-3`;
+          row.innerHTML = `
+            <div class="flex items-center gap-3 min-w-0">
+              <p class="text-xs font-black text-slate-500 w-14">Top ${rank}</p>
+              <img src="${entry.avatarUrl || defaultAvatar}" alt="${entry.username}" class="w-10 h-10 rounded-full object-cover" />
+              <button class="text-left min-w-0" onclick="openUserProfile('${entry.userId}')">
+                <p class="text-sm font-black text-slate-900 truncate">${entry.username}</p>
+              </button>
+            </div>
+            <p class="text-xs font-bold text-slate-600">${entry.soldCount} ventas</p>
+          `;
+          list.appendChild(row);
+        });
+      } catch (error) {
+        console.error('No se pudo cargar el ranking', error);
+        list.innerHTML = '<p class="text-sm text-slate-500">No se pudo cargar el ranking.</p>';
+      }
+    }
+
+    function closeTopRanking() {
+      const modal = document.getElementById('topRankingModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
     function toggleNotifications() { document.getElementById('notificationsMenu').classList.toggle('hidden'); }
     function toggleProfileMenu() { document.getElementById('profileMenu').classList.toggle('hidden'); }
     function openAdminPanel() {
@@ -2167,17 +3299,20 @@
       const canEdit = !!(currentUser && String(currentUser.uid) === String(userId));
       const editToggleButton = document.querySelector('button[onclick="toggleProfileEdit()"]');
       const editSection = document.getElementById('profileEditSection');
+      const reviewsHeading = document.getElementById('profileReviewsHeading');
+      const favoritesSection = document.getElementById('profileFavoritesSection');
+      const historySection = document.getElementById('profilePurchaseHistorySection');
+      const payoutSection = document.getElementById('profilePayoutSection');
 
       document.getElementById('profileAvatar').src = userDoc.avatarUrl || defaultAvatar;
       document.getElementById('profileUsername').innerText = userDoc.username || 'usuario';
       document.getElementById('profileCity').innerText = userDoc.city || 'N/D';
       document.getElementById('profileProvince').innerText = userDoc.province || 'N/D';
       document.getElementById('profileCountry').innerText = userDoc.country || 'N/D';
-      document.getElementById('profilePublicationsCount').innerText = publicationCount;
-      document.getElementById('profileReviewsCount').innerText = reviewsCount;
-      document.getElementById('profileRating').innerText = averageRating;
-      document.getElementById('profileAverageStars').innerText = reviewsCount ? `${averageRating} de promedio (${reviewsCount} reseñas)` : 'Sin valoraciones';
       document.getElementById('profileInstitution').innerText = userDoc.institution || 'N/D';
+      if (reviewsHeading) {
+        reviewsHeading.innerText = `Reseñas: (valoración promedio ${averageRating} entre ${reviewsCount} reseñas)`;
+      }
 
       if (editToggleButton) {
         editToggleButton.classList.toggle('hidden', !canEdit);
@@ -2193,6 +3328,18 @@
         document.getElementById('editCountry').value = userDoc.country || 'Argentina';
         document.getElementById('editInstitution').value = userDoc.institution || '';
         document.getElementById('editAvatarUrl').value = userDoc.avatarUrl || '';
+        document.getElementById('editPayoutAlias').value = userDoc.payoutAlias || '';
+        document.getElementById('editPayoutCbu').value = normalizeCbu(userDoc.payoutCbu || '');
+        document.getElementById('editPayoutOwnerName').value = userDoc.payoutOwnerName || '';
+      }
+
+      if (payoutSection) {
+        payoutSection.classList.toggle('hidden', !canEdit);
+        if (canEdit) {
+          document.getElementById('profilePayoutAlias').innerText = userDoc.payoutAlias || 'Pendiente de completar';
+          document.getElementById('profilePayoutCbu').innerText = formatMaskedCbu(userDoc.payoutCbu || '');
+          document.getElementById('profilePayoutOwnerName').innerText = userDoc.payoutOwnerName || 'Pendiente de completar';
+        }
       }
 
       if (currentUser && String(currentUser.uid) === String(userId)) {
@@ -2201,6 +3348,22 @@
 
       renderProfilePublications(publications);
       renderProfileReviews(receivedReviews);
+
+      if (favoritesSection) {
+        favoritesSection.classList.toggle('hidden', !canEdit);
+      }
+      if (historySection) {
+        historySection.classList.toggle('hidden', !canEdit);
+      }
+
+      if (canEdit) {
+        const favoritePublications = Array.from(currentFavoriteIds)
+          .map(pubId => getPublicationById(pubId))
+          .filter(Boolean);
+        renderProfileFavorites(favoritePublications);
+        renderPurchaseHistory(currentPurchaseHistory);
+      }
+
       return true;
     }
 
@@ -2221,6 +3384,9 @@
       const institution = document.getElementById('editInstitution').value.trim();
       const avatarUrl = document.getElementById('editAvatarUrl').value.trim();
       const avatarFile = document.getElementById('editAvatarFile').files[0];
+      const payoutAlias = document.getElementById('editPayoutAlias').value.trim();
+      const payoutCbu = normalizeCbu(document.getElementById('editPayoutCbu').value);
+      const payoutOwnerName = document.getElementById('editPayoutOwnerName').value.trim();
 
       if (!username || !city || !province || !country || !institution) {
         alert('Completa nombre, ciudad, provincia, país e institución.');
@@ -2232,6 +3398,14 @@
       if (usernameTaken) {
         alert('Ese nombre de usuario ya existe. Elige otro.');
         return;
+      }
+
+      const hasAnyPayoutField = Boolean(payoutAlias || payoutCbu || payoutOwnerName);
+      if (hasAnyPayoutField) {
+        if (!payoutAlias || !payoutOwnerName || payoutCbu.length !== 22) {
+          alert('Para guardar datos de cobro debes completar Alias, CBU de 22 dígitos y titular.');
+          return;
+        }
       }
 
       try {
@@ -2253,7 +3427,10 @@
           province,
           country,
           institution,
-          avatarUrl: finalAvatarUrl || currentUserData?.avatarUrl || ''
+          avatarUrl: finalAvatarUrl || currentUserData?.avatarUrl || '',
+          payoutAlias,
+          payoutCbu,
+          payoutOwnerName
         };
 
         if (isRealFirebase) {
@@ -2262,6 +3439,7 @@
 
         currentUserData = { ...currentUserData, ...updateData };
         updateAuthContainer();
+        updatePublishPayoutWarning();
 
         alert('Perfil actualizado con éxito.');
         toggleProfileEdit();
@@ -2288,6 +3466,11 @@
 
     window.onload = async () => {
       updateAuthContainer();
+      if (!isRealFirebase) {
+        localPurchaseHistory = readLocalStorageArray('tuapunte:allPurchases');
+      }
+      await refreshUserLocationContext();
+      await loadUserCommerceState();
       loadGrid();
       await loadCitySuggestions();
       const venderForm = document.getElementById("venderForm");
@@ -2316,6 +3499,28 @@
 
       window.addEventListener('resize', () => {
         renderGrid(applyFilters(loadedPublications));
+      });
+
+      const reportModal = document.getElementById('reportModal');
+      const legalModal = document.getElementById('legalViewerModal');
+      const infoModal = document.getElementById('infoModal');
+      if (reportModal) {
+        reportModal.addEventListener('click', closeReportModal);
+      }
+      if (legalModal) {
+        legalModal.addEventListener('click', closeLegalViewer);
+      }
+      if (infoModal) {
+        infoModal.addEventListener('click', closeInfoModal);
+      }
+
+      window.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        closeAppDrawer();
+        closeReportModal();
+        closeLegalViewer();
+        closeInfoModal();
+        closeTopRanking();
       });
     };
   </script>
