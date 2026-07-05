@@ -119,9 +119,14 @@
   <header class="sm:hidden sticky top-0 z-50 bg-white border-b border-slate-200">
     <div class="px-4 pt-3 pb-2">
       <div class="flex items-center justify-between gap-3 mb-3">
-        <div class="flex items-center gap-2 cursor-pointer" onclick="resetFilters()">
-          <div class="bg-brand w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-lg">T</div>
-          <span class="text-xl font-black tracking-tight text-brand">Tu Apunte</span>
+        <div class="flex items-center gap-3 cursor-pointer shrink-0" onclick="resetFilters()">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand to-brand-dark text-white flex items-center justify-center shadow-lg shadow-violet-500/25 ring-1 ring-white/40">
+            <i class="fa-solid fa-book-open-reader text-lg"></i>
+          </div>
+          <div class="leading-none">
+            <p class="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Marketplace</p>
+            <span class="block text-xl font-black tracking-tight text-brand">Tu Apunte</span>
+          </div>
         </div>
         <button onclick="openAppDrawer()" class="w-11 h-11 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 text-lg">
           <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -149,9 +154,14 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
       
       <!-- Logo -->
-      <div class="flex items-center gap-2 cursor-pointer" onclick="resetFilters()">
-        <div class="bg-brand w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-white font-black text-lg">T</div>
-        <span class="text-base sm:text-2xl font-black tracking-tight text-brand">Tu Apunte</span>
+      <div class="flex items-center gap-3 cursor-pointer shrink-0" onclick="resetFilters()">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-brand to-brand-dark text-white flex items-center justify-center shadow-lg shadow-violet-500/25 ring-1 ring-white/40">
+          <i class="fa-solid fa-book-open-reader text-base sm:text-lg"></i>
+        </div>
+        <div class="leading-none">
+          <p class="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Marketplace</p>
+          <span class="block text-base sm:text-2xl font-black tracking-tight text-brand">Tu Apunte</span>
+        </div>
       </div>
 
       <!-- Buscador Principal -->
@@ -164,7 +174,7 @@
 
       <!-- Acciones de Usuario -->
       <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto">
-        <button onclick="openVenderModal()" class="bg-brand hover:bg-brand-dark text-white px-4 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md text-xs sm:text-sm">
+        <button onclick="openVenderModal()" class="bg-gradient-to-r from-brand to-brand-dark hover:from-brand-dark hover:to-brand-dark text-white px-4 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-violet-500/20 text-xs sm:text-sm border border-white/20">
           <i class="fa-solid fa-file-circle-plus"></i>
           <span>Publicar</span>
         </button>
@@ -403,7 +413,7 @@
     <div class="grid grid-cols-5 gap-1">
       <button onclick="window.location.reload()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-house text-base"></i><span>Inicio</span></button>
       <button onclick="openMobileSearch()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-magnifying-glass text-base"></i><span>Buscar</span></button>
-      <button onclick="openVenderModal()" class="h-12 rounded-xl bg-brand text-white text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-plus text-base"></i><span>Publicar</span></button>
+      <button onclick="openVenderModal()" class="h-12 rounded-xl bg-gradient-to-br from-brand to-brand-dark text-white text-xs font-bold flex flex-col items-center justify-center gap-1 shadow-lg shadow-violet-500/20 border border-white/20"><i class="fa-solid fa-plus text-base"></i><span>Publicar</span></button>
       <button onclick="openTopRanking()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-fire text-base"></i><span>Top</span></button>
       <button onclick="openProfilePage()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-regular fa-user text-base"></i><span>Perfil</span></button>
     </div>
