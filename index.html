@@ -546,8 +546,9 @@
           <input type="file" id="formCover" accept="image/*" required class="block w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-brand file:text-white">
         </div>
         <div>
-          <label class="block font-bold text-slate-600 mb-1">Contenido protegido (imágenes)</label>
+          <label id="formProtectedLabel" class="block font-bold text-slate-600 mb-1">Contenido protegido (imágenes) *</label>
           <input type="file" id="formProtectedImages" accept="image/*" multiple required class="block w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-slate-100 file:text-slate-700">
+          <p id="formProtectedHint" class="text-[11px] text-slate-500 mt-1">Sube una o más imágenes del material restringido.</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -559,9 +560,15 @@
             <select id="formType" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
               <option value="Resumen">Resumen</option>
               <option value="Examen">Examen</option>
+              <option value="Clase">Clase</option>
               <option value="Trabajo práctico">Trabajo práctico</option>
+              <option value="Otra">Otra</option>
             </select>
           </div>
+        </div>
+        <div id="otherTypeDetailWrapper" class="hidden">
+          <label class="block font-bold text-slate-600 mb-1">¿Qué vendes en "Otra"? *</label>
+          <textarea id="formOtherTypeDetail" rows="2" placeholder="Ej: Guía de ejercicios resueltos, mapa conceptual, etc." class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand"></textarea>
         </div>
         <div id="commissionSummary" class="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
           <div class="flex items-center justify-between mb-2">
@@ -1184,6 +1191,47 @@
         submitButton.classList.toggle('cursor-not-allowed', !hasPayoutData);
       }
       return hasPayoutData;
+    }
+
+    function updatePublicationTypeUI() {
+      const typeSelect = document.getElementById('formType');
+      const protectedInput = document.getElementById('formProtectedImages');
+      const protectedLabel = document.getElementById('formProtectedLabel');
+      const protectedHint = document.getElementById('formProtectedHint');
+      const otherTypeDetailWrapper = document.getElementById('otherTypeDetailWrapper');
+      const otherTypeDetailInput = document.getElementById('formOtherTypeDetail');
+      if (!typeSelect || !protectedInput) return;
+
+      const selectedType = String(typeSelect.value || '').trim();
+      const isClassType = selectedType === 'Clase';
+      const isOtherType = selectedType === 'Otra';
+
+      if (protectedLabel) {
+        protectedLabel.innerText = isClassType ? 'Material restringido (video de la clase) *' : 'Contenido protegido (imágenes) *';
+      }
+      if (protectedHint) {
+        protectedHint.innerText = isClassType
+          ? 'Para tipo Clase, sube un video de la clase (mp4, webm, etc.).'
+          : 'Sube una o más imágenes del material restringido.';
+      }
+
+      protectedInput.accept = isClassType ? 'video/*' : 'image/*';
+      if (isClassType) {
+        protectedInput.removeAttribute('multiple');
+      } else {
+        protectedInput.setAttribute('multiple', 'multiple');
+      }
+      protectedInput.value = '';
+
+      if (otherTypeDetailWrapper) {
+        otherTypeDetailWrapper.classList.toggle('hidden', !isOtherType);
+      }
+      if (otherTypeDetailInput) {
+        otherTypeDetailInput.required = isOtherType;
+        if (!isOtherType) {
+          otherTypeDetailInput.value = '';
+        }
+      }
     }
 
     function goToPayoutSetupFromPublish() {
@@ -2632,10 +2680,14 @@
                     <p class="mt-1 font-black text-slate-900">${institution}</p>
                   </div>
                 </div>
-                <div class="flex">
+                <div class="flex flex-wrap gap-3">
                   <button type="button" onclick='openPurchaseDetailPage(${JSON.stringify(String(currentUser?.uid || entry.buyerId || ''))}, ${JSON.stringify(detailPurchaseId)})' class="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-white shadow-sm ${canOpen ? '' : 'opacity-60 cursor-not-allowed pointer-events-none'}">
                     <i class="fa-solid fa-images"></i>
                     Ver detalles
+                  </button>
+                  <button type="button" onclick='openPurchaseDetailPage(${JSON.stringify(String(currentUser?.uid || entry.buyerId || ''))}, ${JSON.stringify(detailPurchaseId)})' class="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-slate-100 border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-700 ${canOpen ? '' : 'opacity-60 cursor-not-allowed pointer-events-none'}">
+                    <i class="fa-solid fa-eye"></i>
+                    Ver detalle
                   </button>
                 </div>
               </div>
@@ -3129,18 +3181,39 @@
       const protectedFiles = document.getElementById('formProtectedImages').files;
       const price = parseFloat(document.getElementById('formPrice').value);
       const type = document.getElementById('formType').value;
+      const otherTypeDetail = String(document.getElementById('formOtherTypeDetail')?.value || '').trim();
       const city = document.getElementById('formCity').value;
       const inst = document.getElementById('formInst').value;
       const professor = document.getElementById('formProfessor').value;
       const subject = document.getElementById('formSubject').value;
+      const protectedFilesArray = Array.from(protectedFiles || []);
+      const isClassType = String(type || '').trim() === 'Clase';
 
       if (!coverFile) {
         alert('Debes elegir una foto de portada.');
         resetSubmitState();
         return;
       }
-      if (!protectedFiles.length) {
-        alert('Debes elegir al menos una imagen protegida.');
+      if (!protectedFilesArray.length) {
+        alert(isClassType ? 'Debes elegir un video para la publicación de clase.' : 'Debes elegir al menos una imagen protegida.');
+        resetSubmitState();
+        return;
+      }
+
+      if (isClassType && protectedFilesArray.some(file => !String(file.type || '').startsWith('video/'))) {
+        alert('Para el tipo Clase solo puedes subir videos en el material restringido.');
+        resetSubmitState();
+        return;
+      }
+
+      if (!isClassType && protectedFilesArray.some(file => !String(file.type || '').startsWith('image/'))) {
+        alert('Para este tipo de publicación, el material restringido debe ser en imágenes.');
+        resetSubmitState();
+        return;
+      }
+
+      if (String(type || '').trim() === 'Otra' && !otherTypeDetail) {
+        alert('Debes explicar qué vendes cuando eliges el tipo Otra.');
         resetSubmitState();
         return;
       }
@@ -3173,7 +3246,9 @@
         title,
         description: desc,
         price,
-        type,
+        type: (String(type || '').trim() === 'Otra' && otherTypeDetail) ? `Otra: ${otherTypeDetail}` : type,
+        typeBase: type,
+        otherTypeDetail,
         city,
         institution: inst,
         professor,
@@ -3197,6 +3272,7 @@
           localDB.unshift({ id: localDB.length + 1, ...finalData });
           renderGrid(localDB);
           form.reset();
+          updatePublicationTypeUI();
           closeVenderModal();
           alert('Tu publicación fue creada con éxito.');
           resetSubmitState();
@@ -3207,6 +3283,7 @@
           await dbRef.collection('publications').add(finalData);
           alert('¡Publicación creada con éxito!');
           form.reset();
+          updatePublicationTypeUI();
           closeVenderModal();
           resetPublicationLoad();
         } catch (err) {
@@ -3437,7 +3514,9 @@
 
       items.forEach(item => {
         const reviewCount = Number(item.publicationReviewCount || 0);
-        const protectedImagesCount = Array.isArray(item.protectedUrls) ? item.protectedUrls.length : 0;
+        const protectedFilesCount = Array.isArray(item.contentAssets) && item.contentAssets.length
+          ? item.contentAssets.length
+          : (Array.isArray(item.protectedUrls) ? item.protectedUrls.length : 0);
         const createdAtMs = getPublicationTimestamp(item);
         const isNew = createdAtMs ? (Date.now() - createdAtMs) < 1000 * 60 * 60 * 24 * 14 : false;
         const isTopSeller = reviewCount >= 3;
@@ -3466,7 +3545,7 @@
                 <p class="text-sm font-extrabold text-slate-800">Institución: ${item.institution || 'No indicada'}</p>
                 <p class="text-sm font-extrabold text-slate-800">Materia: ${item.subject || 'No indicada'}</p>
                 <p class="text-sm font-extrabold text-slate-800">Ciudad: ${item.city || 'No indicada'}</p>
-                <p class="text-xs font-black text-emerald-700">Contiene ${protectedImagesCount} imagen${protectedImagesCount === 1 ? '' : 'es'} protegida${protectedImagesCount === 1 ? '' : 's'}</p>
+                <p class="text-xs font-black text-emerald-700">Contiene ${protectedFilesCount} archivo${protectedFilesCount === 1 ? '' : 's'} protegido${protectedFilesCount === 1 ? '' : 's'}</p>
               </div>
               <button class="buy-publication-btn w-full bg-[#009EE3] text-white py-3 rounded-xl font-bold text-sm shadow-sm">Comprar</button>
             </div>
@@ -3504,7 +3583,7 @@
                 <div class="flex items-center gap-2"><i class="fa-solid fa-book-bookmark"></i> ${item.subject}</div>
                 <div class="flex items-center gap-2"><i class="fa-solid fa-chalkboard-user"></i> ${item.professor}</div>
               </div>
-              <p class="text-[11px] font-black text-emerald-700">${protectedImagesCount} imagen${protectedImagesCount === 1 ? '' : 'es'} protegida${protectedImagesCount === 1 ? '' : 's'}</p>
+              <p class="text-[11px] font-black text-emerald-700">${protectedFilesCount} archivo${protectedFilesCount === 1 ? '' : 's'} protegido${protectedFilesCount === 1 ? '' : 's'}</p>
             </div>
           `;
         }
@@ -4098,6 +4177,11 @@
       document.getElementById('venderModal').classList.remove('hidden');
       const termsCheckbox = document.getElementById('publishTermsAccepted');
       if (termsCheckbox) termsCheckbox.checked = false;
+      const typeSelect = document.getElementById('formType');
+      if (typeSelect && !typeSelect.value) {
+        typeSelect.value = 'Resumen';
+      }
+      updatePublicationTypeUI();
       updateCommissionSummary();
       updatePublishPayoutWarning();
     }
@@ -4708,6 +4792,7 @@
       await loadCitySuggestions();
       const venderForm = document.getElementById("venderForm");
       const priceInput = document.getElementById('formPrice');
+      const formTypeSelect = document.getElementById('formType');
       if (venderForm) {
         venderForm.addEventListener("submit", handlePublish);
       } else {
@@ -4718,6 +4803,11 @@
         priceInput.addEventListener('input', updateCommissionSummary);
         updateCommissionSummary();
       }
+
+      if (formTypeSelect) {
+        formTypeSelect.addEventListener('change', updatePublicationTypeUI);
+      }
+      updatePublicationTypeUI();
 
       window.addEventListener('scroll', () => {
         const scrollPosition = window.scrollY + window.innerHeight;
