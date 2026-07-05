@@ -1,8 +1,0 @@
-{
-  "name": "netlify-functions",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "mercadopago": "^2.13.0"
-  }
-}
