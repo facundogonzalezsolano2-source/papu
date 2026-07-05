@@ -61,6 +61,14 @@
     .mobile-safe-bottom {
       padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
     }
+
+    @media (max-width: 639px) {
+      input,
+      select,
+      textarea {
+        font-size: 16px !important;
+      }
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans">
@@ -83,13 +91,12 @@
     </div>
     <div class="px-4 pb-3">
       <div id="mobileQuickFilters" class="mobile-chip-scroll flex items-center gap-2 overflow-x-auto whitespace-nowrap">
-        <button type="button" data-mobile-filter="todos" onclick="setMobileQuickFilter('todos')" class="mobile-filter-chip bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold">Todos</button>
-        <button type="button" data-mobile-filter="universidades" onclick="setMobileQuickFilter('universidades')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Universidades</button>
-        <button type="button" data-mobile-filter="carreras" onclick="setMobileQuickFilter('carreras')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Carreras</button>
-        <button type="button" data-mobile-filter="materias" onclick="setMobileQuickFilter('materias')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Materias</button>
-        <button type="button" data-mobile-filter="resumenes" onclick="setMobileQuickFilter('resumenes')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Resúmenes</button>
-        <button type="button" data-mobile-filter="mas-vendidos" onclick="setMobileQuickFilter('mas-vendidos')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Más vendidos</button>
+        <button type="button" data-mobile-filter="cerca" onclick="setMobileQuickFilter('cerca')" class="mobile-filter-chip bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold">Cerca tuyo</button>
+        <button type="button" data-mobile-filter="materia" onclick="setMobileQuickFilter('materia')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Por materia</button>
+        <button type="button" data-mobile-filter="universidad" onclick="setMobileQuickFilter('universidad')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Universidad</button>
+        <button type="button" data-mobile-filter="escuela" onclick="setMobileQuickFilter('escuela')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Escuela</button>
         <button type="button" data-mobile-filter="mas-recientes" onclick="setMobileQuickFilter('mas-recientes')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Más recientes</button>
+        <button type="button" data-mobile-filter="mas-vendidos" onclick="setMobileQuickFilter('mas-vendidos')" class="mobile-filter-chip bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-xs font-bold">Más vendidos</button>
       </div>
     </div>
   </header>
@@ -334,8 +341,8 @@
     </div>
   </div>
 
-  <div id="mobileSearchModal" class="hidden sm:hidden fixed inset-0 z-[70] bg-black/50">
-    <div class="absolute top-0 left-0 right-0 bg-white rounded-b-3xl p-4 shadow-xl">
+  <div id="mobileSearchModal" class="hidden sm:hidden fixed inset-0 z-[70] bg-black/50" onclick="closeMobileSearch(event)">
+    <div class="absolute top-0 left-0 right-0 bg-white rounded-b-3xl p-4 shadow-xl" onclick="event.stopPropagation()">
       <div class="flex items-center gap-2">
         <button onclick="closeMobileSearch()" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600"><i class="fa-solid fa-arrow-left"></i></button>
         <div class="flex-1 relative">
@@ -349,7 +356,6 @@
   <div id="mobileProfileSheet" class="hidden sm:hidden fixed inset-0 z-[70] bg-black/50" onclick="closeMobileProfileSheet(event)">
     <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-5 space-y-3">
       <button onclick="openProfilePage(); closeMobileProfileSheet();" class="w-full h-12 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm">Mi perfil</button>
-      <button onclick="openSettingsPlaceholder();" class="w-full h-12 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm">Configuración</button>
       <button onclick="handleLogout(); closeMobileProfileSheet();" class="w-full h-12 rounded-xl bg-red-50 text-red-600 font-bold text-sm">Cerrar sesión</button>
     </div>
   </div>
@@ -524,7 +530,6 @@
         </div>
         <div class="flex flex-col gap-2">
           <button onclick="toggleProfileEdit()" class="bg-brand text-white px-4 py-3 rounded-2xl font-bold">Editar perfil</button>
-          <button onclick="closeProfilePage()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-2xl font-bold">Cerrar perfil</button>
         </div>
       </div>
 
@@ -535,9 +540,19 @@
             <label class="block text-xs font-bold text-slate-600 mb-1">Nombre de usuario</label>
             <input type="text" id="editUsername" required class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
           </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1">Ciudad</label>
-            <input type="text" id="editCity" list="citySuggestions" required class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Ciudad</label>
+              <input type="text" id="editCity" list="citySuggestions" required class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Provincia</label>
+              <input type="text" id="editProvince" required class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">País</label>
+              <input type="text" id="editCountry" required class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+            </div>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-600 mb-1">Institución</label>
@@ -561,44 +576,47 @@
       <div class="grid gap-6 lg:grid-cols-[320px,1fr]">
         <aside class="space-y-6">
           <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
-                  <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center">
+            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
               <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Publicaciones</p>
               <p id="profilePublicationsCount" class="text-3xl font-black text-slate-900">0</p>
             </div>
-            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center">
+            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
               <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Reseñas</p>
               <p id="profileReviewsCount" class="text-3xl font-black text-slate-900">0</p>
             </div>
-            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center">
-              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Valoración</p>
+            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
+              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Valoración promedio</p>
               <p id="profileRating" class="text-3xl font-black text-slate-900">0.0</p>
+              <p id="profileAverageStars" class="text-xs text-amber-500 font-bold mt-1">Sin valoraciones</p>
             </div>
-            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center">
+            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
               <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Ciudad</p>
-              <p id="profileCity" class="text-2xl font-black text-slate-900">CABA</p>
+              <p id="profileCity" class="text-lg font-black text-slate-900">N/D</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
+              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Provincia</p>
+              <p id="profileProvince" class="text-lg font-black text-slate-900">N/D</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center mb-3">
+              <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">País</p>
+              <p id="profileCountry" class="text-lg font-black text-slate-900">N/D</p>
             </div>
             <div class="bg-white border border-slate-200 rounded-3xl p-4 text-center">
               <p class="text-xs text-slate-500 uppercase tracking-[0.2em]">Institución</p>
-              <p id="profileInstitution" class="text-2xl font-black text-slate-900">N/D</p>
+              <p id="profileInstitution" class="text-lg font-black text-slate-900">N/D</p>
             </div>
-          </div>
-          </div>
-          <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
-            <h3 class="text-sm font-black text-slate-900 mb-3">Sobre mí</h3>
-            <p class="text-sm text-slate-600 mb-4"><span class="font-bold">Institución:</span> <span id="profileInstitution">N/D</span></p>
-            <p class="text-sm text-slate-600">Este es tu perfil público. Tus publicaciones aparecen abajo en tiempo real para que otros usuarios vean tu trabajo.</p>
           </div>
         </aside>
 
         <section class="space-y-6">
           <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
-            <div class="flex items-center justify-between gap-4 mb-4">
-              <div>
-                <h3 class="text-lg font-black text-slate-900">Tus publicaciones</h3>
-                <p class="text-xs text-slate-500">Mira tus apuntes publicados y el estado de cada uno.</p>
-              </div>
-            </div>
+            <h3 class="text-lg font-black text-slate-900 mb-3">Publicaciones:</h3>
             <div id="profilePublicationsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h3 class="text-lg font-black text-slate-900 mb-3">Reseñas:</h3>
+            <div id="profileReviewsList" class="space-y-3"></div>
           </div>
         </section>
       </div>
@@ -727,7 +745,7 @@
     let hasMorePublications = true;
     let currentCityFilter = '';
     let currentSubjectFilter = '';
-    let activeMobileQuickFilter = 'todos';
+    let activeMobileQuickFilter = 'cerca';
     const publicationsPageSize = 30;
     const defaultAvatar = 'https://via.placeholder.com/40?text=U';
 
@@ -815,11 +833,6 @@
       if (sheet) sheet.classList.add('hidden');
     }
 
-    function openSettingsPlaceholder() {
-      closeMobileProfileSheet();
-      alert('La sección de configuración estará disponible próximamente.');
-    }
-
     function openMobileSearch() {
       const modal = document.getElementById('mobileSearchModal');
       const mobileInput = document.getElementById('mobileSearchInput');
@@ -831,7 +844,8 @@
       if (mobileInput) mobileInput.focus();
     }
 
-    function closeMobileSearch() {
+    function closeMobileSearch(event = null) {
+      if (event && event.target && event.target.id !== 'mobileSearchModal') return;
       const modal = document.getElementById('mobileSearchModal');
       if (modal) modal.classList.add('hidden');
     }
@@ -986,11 +1000,26 @@
       e.preventDefault();
       const email = document.getElementById('regEmail').value;
       const pass = document.getElementById('regPass').value;
-      const username = document.getElementById('regUser').value;
+      const username = document.getElementById('regUser').value.trim();
       const city = document.getElementById('regCity').value;
       const inst = document.getElementById('regInst').value;
+      const province = city;
+      const country = 'Argentina';
       const avatarUrlInput = document.getElementById('regAvatarUrl').value.trim();
       const avatarFile = document.getElementById('regAvatarFile').files[0];
+
+      const usernameLower = username.toLowerCase();
+
+      if (!username) {
+        alert('Debes ingresar un nombre de usuario.');
+        return;
+      }
+
+      const usernameTaken = await isUsernameTaken(usernameLower);
+      if (usernameTaken) {
+        alert('Ese nombre de usuario ya existe. Elige otro.');
+        return;
+      }
 
       if (!isRealFirebase) {
         alert("Modo local: Registro simulado con éxito.");
@@ -1010,8 +1039,11 @@
 
         const userDoc = {
           username: username,
+          usernameLower,
           email: email,
           city: city,
+          province: province,
+          country: country,
           institution: inst,
           avatarUrl: avatarUrl || '',
           isAdmin: adminEmails.includes(email),
@@ -1064,12 +1096,17 @@
       }
       const provider = new firebase.auth.GoogleAuthProvider();
       authRef.signInWithPopup(provider)
-        .then(result => {
+        .then(async result => {
           const user = result.user;
+          const candidateUsername = user.displayName ? user.displayName.replace(/\s+/g, '').toLowerCase() : `user${Date.now()}`;
+          const safeUsername = (await isUsernameTaken(candidateUsername, user.uid)) ? `user${Date.now()}` : candidateUsername;
           dbRef.collection('users').doc(user.uid).set({
-            username: user.displayName ? user.displayName.replace(/\s+/g, '').toLowerCase() : `user${Date.now()}`,
+            username: safeUsername,
+            usernameLower: safeUsername.toLowerCase(),
             email: user.email,
-            city: "Argentina",
+            city: "CABA",
+            province: "Buenos Aires",
+            country: "Argentina",
             institution: "UBA",
             avatarUrl: user.photoURL || ''
           }, { merge: true });
@@ -1340,20 +1377,26 @@
       });
 
       if (isMobileLayout()) {
-        if (activeMobileQuickFilter === 'resumenes') {
-          filtered = filtered.filter(item => String(item.type || '').toLowerCase().includes('resumen'));
-        }
-        if (activeMobileQuickFilter === 'universidades') {
-          filtered = filtered.filter(item => String(item.institution || '').trim());
-        }
-        if (activeMobileQuickFilter === 'materias') {
+        if (activeMobileQuickFilter === 'materia') {
           filtered = filtered.filter(item => String(item.subject || '').trim());
         }
-        if (activeMobileQuickFilter === 'carreras') {
+        if (activeMobileQuickFilter === 'universidad') {
           filtered = filtered.filter(item => {
-            const combined = `${item.subject || ''} ${item.description || ''}`.toLowerCase();
-            return /(ingenier|medicin|derecho|arquitect|contador|psicolog|econom|sistemas)/.test(combined);
+            const inst = String(item.institution || '').toLowerCase();
+            return /universidad|uba|utn|unr|unlp|uca|austral/.test(inst);
           });
+        }
+        if (activeMobileQuickFilter === 'escuela') {
+          filtered = filtered.filter(item => {
+            const inst = String(item.institution || '').toLowerCase();
+            return /escuela|colegio|instituto/.test(inst);
+          });
+        }
+        if (activeMobileQuickFilter === 'cerca') {
+          const myCity = String(currentUserData?.city || '').toLowerCase();
+          if (myCity) {
+            filtered = filtered.filter(item => String(item.city || '').toLowerCase().includes(myCity));
+          }
         }
         if (activeMobileQuickFilter === 'mas-vendidos') {
           filtered = [...filtered].sort((a, b) => (Number(b.publicationReviewCount || 0) - Number(a.publicationReviewCount || 0)));
@@ -1491,6 +1534,51 @@
       });
     }
 
+    function renderProfileReviews(reviews) {
+      const reviewsList = document.getElementById('profileReviewsList');
+      if (!reviewsList) return;
+      reviewsList.innerHTML = '';
+
+      if (!reviews.length) {
+        reviewsList.innerHTML = '<div class="bg-white border border-slate-200 rounded-2xl p-4 text-sm text-slate-500">Este perfil todavía no tiene reseñas.</div>';
+        return;
+      }
+
+      reviews.forEach(review => {
+        const stars = Math.max(1, Math.min(5, Number(review.estrellas || 0)));
+        const name = review.reviewerName || review.nombreAutor || 'Usuario';
+        const comment = review.comentario || 'Sin comentario';
+
+        const card = document.createElement('div');
+        card.className = 'bg-white border border-slate-200 rounded-2xl p-4';
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-black text-slate-900">${name}</p>
+            <p class="text-xs font-bold text-amber-500">${'⭐'.repeat(stars)}</p>
+          </div>
+          <p class="text-sm text-slate-600">${comment}</p>
+        `;
+        reviewsList.appendChild(card);
+      });
+    }
+
+    async function isUsernameTaken(usernameLower, excludeUserId = null) {
+      const normalized = String(usernameLower || '').trim().toLowerCase();
+      if (!normalized) return false;
+
+      if (!isRealFirebase) {
+        return localUsers.some(user => String(user.username || '').trim().toLowerCase() === normalized && String(user.id) !== String(excludeUserId || ''));
+      }
+
+      const snapshot = await dbRef.collection('users').get();
+      return snapshot.docs.some(doc => {
+        if (String(doc.id) === String(excludeUserId || '')) return false;
+        const data = doc.data() || {};
+        const candidate = String(data.usernameLower || data.username || '').trim().toLowerCase();
+        return candidate === normalized;
+      });
+    }
+
     function filterItems() {
       const cityValue = document.getElementById('filterCity').value.trim();
       const subjectValue = document.getElementById('filterSubject').value.trim();
@@ -1517,8 +1605,8 @@
       if (filterSubjectMobile) filterSubjectMobile.value = '';
       currentCityFilter = '';
       currentSubjectFilter = '';
-      activeMobileQuickFilter = 'todos';
-      setMobileQuickFilter('todos');
+      activeMobileQuickFilter = 'cerca';
+      setMobileQuickFilter('cerca');
       resetPublicationLoad();
     }
 
@@ -2026,6 +2114,7 @@
 
       let userDoc = null;
       let publications = [];
+      let receivedReviews = [];
 
       if (isRealFirebase) {
         const userSnapshot = await dbRef.collection('users').doc(userId).get();
@@ -2060,6 +2149,7 @@
               const data = doc.data();
               reviewsCount += 1;
               ratingSum += (data.estrellas || 0);
+              receivedReviews.push({ id: doc.id, ...data });
             });
           }
         } else {
@@ -2068,6 +2158,7 @@
             .forEach(review => {
               reviewsCount += 1;
               ratingSum += (review.estrellas || 0);
+              receivedReviews.push(review);
             });
         }
       }
@@ -2080,9 +2171,12 @@
       document.getElementById('profileAvatar').src = userDoc.avatarUrl || defaultAvatar;
       document.getElementById('profileUsername').innerText = userDoc.username || 'usuario';
       document.getElementById('profileCity').innerText = userDoc.city || 'N/D';
+      document.getElementById('profileProvince').innerText = userDoc.province || 'N/D';
+      document.getElementById('profileCountry').innerText = userDoc.country || 'N/D';
       document.getElementById('profilePublicationsCount').innerText = publicationCount;
       document.getElementById('profileReviewsCount').innerText = reviewsCount;
       document.getElementById('profileRating').innerText = averageRating;
+      document.getElementById('profileAverageStars').innerText = reviewsCount ? `${averageRating} de promedio (${reviewsCount} reseñas)` : 'Sin valoraciones';
       document.getElementById('profileInstitution').innerText = userDoc.institution || 'N/D';
 
       if (editToggleButton) {
@@ -2095,6 +2189,8 @@
       if (canEdit) {
         document.getElementById('editUsername').value = userDoc.username || '';
         document.getElementById('editCity').value = userDoc.city || '';
+        document.getElementById('editProvince').value = userDoc.province || '';
+        document.getElementById('editCountry').value = userDoc.country || 'Argentina';
         document.getElementById('editInstitution').value = userDoc.institution || '';
         document.getElementById('editAvatarUrl').value = userDoc.avatarUrl || '';
       }
@@ -2104,6 +2200,7 @@
       }
 
       renderProfilePublications(publications);
+      renderProfileReviews(receivedReviews);
       return true;
     }
 
@@ -2119,12 +2216,21 @@
 
       const username = document.getElementById('editUsername').value.trim();
       const city = document.getElementById('editCity').value.trim();
+      const province = document.getElementById('editProvince').value.trim();
+      const country = document.getElementById('editCountry').value.trim();
       const institution = document.getElementById('editInstitution').value.trim();
       const avatarUrl = document.getElementById('editAvatarUrl').value.trim();
       const avatarFile = document.getElementById('editAvatarFile').files[0];
 
-      if (!username || !city || !institution) {
-        alert('Completa nombre, ciudad e institución.');
+      if (!username || !city || !province || !country || !institution) {
+        alert('Completa nombre, ciudad, provincia, país e institución.');
+        return;
+      }
+
+      const usernameLower = username.toLowerCase();
+      const usernameTaken = await isUsernameTaken(usernameLower, currentUser.uid);
+      if (usernameTaken) {
+        alert('Ese nombre de usuario ya existe. Elige otro.');
         return;
       }
 
@@ -2142,7 +2248,10 @@
 
         const updateData = {
           username,
+          usernameLower,
           city,
+          province,
+          country,
           institution,
           avatarUrl: finalAvatarUrl || currentUserData?.avatarUrl || ''
         };
