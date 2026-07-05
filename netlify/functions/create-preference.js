@@ -1,6 +1,6 @@
-const { MercadoPagoConfig, Preference } = require("mercadopago");
+import { MercadoPagoConfig, Preference } from "mercadopago";
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   const accessToken = process.env.MP_ACCESS_TOKEN;
   if (!accessToken) {
     return { statusCode: 500, body: JSON.stringify({ error: "Falta MP_ACCESS_TOKEN" }) };
@@ -46,7 +46,6 @@ exports.handler = async (event) => {
       statusCode: 500,
       body: JSON.stringify({
         error: "No se pudo crear la preferencia",
-        // Si querés, pasame el mensaje exacto que te devuelve acá para afinarlo
       }),
     };
   }
