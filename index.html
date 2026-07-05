@@ -751,27 +751,6 @@
       <div class="space-y-6">
         <section class="space-y-6">
           <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
-            <h3 class="text-lg font-black text-slate-900 mb-3">Publicaciones:</h3>
-            <div id="profilePublicationsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-          </div>
-
-          <div id="profileFavoritesSection" class="hidden bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
-            <h3 class="text-lg font-black text-slate-900 mb-3">Favoritos:</h3>
-            <div id="profileFavoritesList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-          </div>
-
-          <div id="profilePurchaseHistorySection" class="hidden bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-              <h3 class="text-lg font-black text-slate-900">Historial de compras:</h3>
-              <button type="button" onclick="openPurchaseHistoryPage(currentUser?.uid)" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-black text-white shadow-sm">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                Ver compras realizadas
-              </button>
-            </div>
-            <div id="profilePurchaseHistoryList" class="space-y-3"></div>
-          </div>
-
-          <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
             <h3 id="profileReviewsHeading" class="text-lg font-black text-slate-900 mb-3">Reseñas:</h3>
             <div id="profileReviewsList" class="space-y-3"></div>
           </div>
@@ -793,6 +772,38 @@
           </div>
         </section>
       </div>
+    </div>
+  </div>
+
+  <div id="favoritesPage" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <button onclick="closeFavoritesPage()" class="text-slate-500 hover:text-slate-900 font-bold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver al perfil
+        </button>
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-400 font-bold">Guardados</p>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900">Tus favoritos</h2>
+        </div>
+      </div>
+      <div id="profileFavoritesList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
+  </div>
+
+  <div id="publicationsPage" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <button onclick="closePublicationsPage()" class="text-slate-500 hover:text-slate-900 font-bold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver al perfil
+        </button>
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-400 font-bold">Vendedor</p>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900">Tus publicaciones</h2>
+        </div>
+      </div>
+      <div id="profilePublicationsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
   </div>
 
@@ -1940,23 +1951,22 @@
       openProfilePage();
     }
 
-    function getProfileSectionElement(sectionKey) {
-      if (sectionKey === 'favorites') return document.getElementById('profileFavoritesSection');
-      if (sectionKey === 'history') return document.getElementById('profilePurchaseHistorySection');
-      if (sectionKey === 'publications') return document.getElementById('profilePublicationsGrid')?.closest('.bg-slate-50');
-      return document.getElementById('profilePage');
-    }
-
     function drawerGoToProfileSection(sectionKey) {
       if (!requireDrawerAuth()) return;
       closeAppDrawer();
+      if (sectionKey === 'favorites') {
+        openFavoritesPage(currentUser?.uid || '');
+        return;
+      }
+      if (sectionKey === 'history') {
+        openPurchaseHistoryPage(currentUser?.uid || '');
+        return;
+      }
+      if (sectionKey === 'publications') {
+        openPublicationsPage(currentUser?.uid || '');
+        return;
+      }
       openProfilePage();
-      setTimeout(() => {
-        const section = getProfileSectionElement(sectionKey);
-        if (section && typeof section.scrollIntoView === 'function') {
-          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 220);
     }
 
     function drawerLogout() {
@@ -4044,10 +4054,71 @@
     }
 
     function getProfileUserIdFromHash() {
-      const hash = String(window.location.hash || '');
-      const prefix = '#perfil/';
-      if (!hash.startsWith(prefix)) return '';
-      return decodeURIComponent(hash.slice(prefix.length));
+      const segments = getRouteSegments();
+      if (segments[0] !== 'perfil') return '';
+      return decodeURIComponent(segments[1] || '');
+    }
+
+    function getFavoritesRouteDataFromHash() {
+      const segments = getRouteSegments();
+      if (segments[0] !== 'perfil' || segments[2] !== 'favoritos') return null;
+      return {
+        userId: decodeURIComponent(segments[1] || '')
+      };
+    }
+
+    function getPublicationsRouteDataFromHash() {
+      const segments = getRouteSegments();
+      if (segments[0] !== 'perfil' || segments[2] !== 'publicaciones') return null;
+      return {
+        userId: decodeURIComponent(segments[1] || '')
+      };
+    }
+
+    function openFavoritesPage(userId = currentUser?.uid || '') {
+      const targetUserId = String(userId || '').trim();
+      if (!targetUserId) {
+        alert('Debes iniciar sesión para ver tus favoritos.');
+        openAuthModal();
+        return;
+      }
+      window.location.hash = `perfil/${encodeURIComponent(targetUserId)}/favoritos`;
+    }
+
+    function openPublicationsPage(userId = currentUser?.uid || '') {
+      const targetUserId = String(userId || '').trim();
+      if (!targetUserId) {
+        alert('Debes iniciar sesión para ver tus publicaciones.');
+        openAuthModal();
+        return;
+      }
+      window.location.hash = `perfil/${encodeURIComponent(targetUserId)}/publicaciones`;
+    }
+
+    function closeFavoritesPage(updateUrl = true) {
+      const page = document.getElementById('favoritesPage');
+      if (page) page.classList.add('hidden');
+      if (updateUrl) {
+        const userId = getProfileUserIdFromHash() || String(currentUser?.uid || '').trim();
+        if (userId) {
+          history.pushState(null, '', `${window.location.pathname}${window.location.search}#perfil/${encodeURIComponent(userId)}`);
+        } else {
+          history.pushState(null, '', `${window.location.pathname}${window.location.search}`);
+        }
+      }
+    }
+
+    function closePublicationsPage(updateUrl = true) {
+      const page = document.getElementById('publicationsPage');
+      if (page) page.classList.add('hidden');
+      if (updateUrl) {
+        const userId = getProfileUserIdFromHash() || String(currentUser?.uid || '').trim();
+        if (userId) {
+          history.pushState(null, '', `${window.location.pathname}${window.location.search}#perfil/${encodeURIComponent(userId)}`);
+        } else {
+          history.pushState(null, '', `${window.location.pathname}${window.location.search}`);
+        }
+      }
     }
 
     function isTopRoute() {
@@ -4064,6 +4135,26 @@
       if (purchaseRouteData) {
         await renderPurchaseHistoryPage(purchaseRouteData.userId, purchaseRouteData.publicationId);
         closeTopRanking(false);
+        closeFavoritesPage(false);
+        closePublicationsPage(false);
+        return;
+      }
+
+      const favoritesRouteData = getFavoritesRouteDataFromHash();
+      if (favoritesRouteData) {
+        await renderFavoritesPage(favoritesRouteData.userId);
+        closeTopRanking(false);
+        closePurchaseHistoryPage(false);
+        closePublicationsPage(false);
+        return;
+      }
+
+      const publicationsRouteData = getPublicationsRouteDataFromHash();
+      if (publicationsRouteData) {
+        await renderPublicationsPage(publicationsRouteData.userId);
+        closeTopRanking(false);
+        closePurchaseHistoryPage(false);
+        closeFavoritesPage(false);
         return;
       }
 
@@ -4071,6 +4162,8 @@
         await renderTopPage();
         document.getElementById('profilePage').classList.add('hidden');
         closePurchaseHistoryPage(false);
+        closeFavoritesPage(false);
+        closePublicationsPage(false);
         return;
       }
 
@@ -4079,6 +4172,8 @@
         closeProfilePage(false);
         closeTopRanking(false);
         closePurchaseHistoryPage(false);
+        closeFavoritesPage(false);
+        closePublicationsPage(false);
         return;
       }
 
@@ -4087,6 +4182,8 @@
         document.getElementById('profilePage').classList.remove('hidden');
         closeTopRanking(false);
         closePurchaseHistoryPage(false);
+        closeFavoritesPage(false);
+        closePublicationsPage(false);
       }
     }
 
@@ -4101,9 +4198,55 @@
     function closeProfilePage(updateUrl = true) {
       document.getElementById('profilePage').classList.add('hidden');
       closePurchaseHistoryPage(false);
+      closeFavoritesPage(false);
+      closePublicationsPage(false);
       if (updateUrl && window.location.hash.startsWith('#perfil/')) {
         history.pushState(null, '', `${window.location.pathname}${window.location.search}`);
       }
+    }
+
+    async function renderFavoritesPage(targetUserId) {
+      const favoritesPage = document.getElementById('favoritesPage');
+      const profilePage = document.getElementById('profilePage');
+      const purchasePage = document.getElementById('purchaseHistoryPage');
+      const topPage = document.getElementById('topPage');
+      const publicationsPage = document.getElementById('publicationsPage');
+      if (profilePage) profilePage.classList.add('hidden');
+      if (purchasePage) purchasePage.classList.add('hidden');
+      if (topPage) topPage.classList.add('hidden');
+      if (publicationsPage) publicationsPage.classList.add('hidden');
+      if (favoritesPage) favoritesPage.classList.remove('hidden');
+
+      if (!currentUser || String(targetUserId || '') !== String(currentUser.uid || '')) {
+        const favoritesContainer = document.getElementById('profileFavoritesList');
+        if (favoritesContainer) {
+          favoritesContainer.innerHTML = '<div class="col-span-full bg-white border border-slate-200 rounded-2xl p-4 text-sm text-slate-500">Debes iniciar sesión con tu usuario para ver tus favoritos.</div>';
+        }
+        if (!currentUser) openAuthModal();
+        return false;
+      }
+
+      const favoritePublications = Array.from(currentFavoriteIds)
+        .map(pubId => getPublicationById(pubId))
+        .filter(Boolean);
+      renderProfileFavorites(favoritePublications);
+      return true;
+    }
+
+    async function renderPublicationsPage(targetUserId) {
+      const publicationsPage = document.getElementById('publicationsPage');
+      const profilePage = document.getElementById('profilePage');
+      const purchasePage = document.getElementById('purchaseHistoryPage');
+      const topPage = document.getElementById('topPage');
+      const favoritesPage = document.getElementById('favoritesPage');
+      if (profilePage) profilePage.classList.add('hidden');
+      if (purchasePage) purchasePage.classList.add('hidden');
+      if (topPage) topPage.classList.add('hidden');
+      if (favoritesPage) favoritesPage.classList.add('hidden');
+      if (publicationsPage) publicationsPage.classList.remove('hidden');
+
+      const loaded = await loadProfileData(targetUserId);
+      return Boolean(loaded);
     }
 
     function getTopBorderClass(rank) {
@@ -4310,8 +4453,6 @@
       const editToggleButton = document.querySelector('button[onclick="toggleProfileEdit()"]');
       const editSection = document.getElementById('profileEditSection');
       const reviewsHeading = document.getElementById('profileReviewsHeading');
-      const favoritesSection = document.getElementById('profileFavoritesSection');
-      const historySection = document.getElementById('profilePurchaseHistorySection');
       const payoutSection = document.getElementById('profilePayoutSection');
 
       document.getElementById('profileAvatar').src = userDoc.avatarUrl || defaultAvatar;
@@ -4327,8 +4468,12 @@
       if (editToggleButton) {
         editToggleButton.classList.toggle('hidden', !canEdit);
       }
-      if (editSection && !canEdit) {
-        editSection.classList.add('hidden');
+      if (editSection) {
+        if (canEdit) {
+          editSection.classList.remove('hidden');
+        } else {
+          editSection.classList.add('hidden');
+        }
       }
 
       if (canEdit) {
@@ -4356,21 +4501,6 @@
 
       renderProfilePublications(publications);
       renderProfileReviews(receivedReviews);
-
-      if (favoritesSection) {
-        favoritesSection.classList.toggle('hidden', !canEdit);
-      }
-      if (historySection) {
-        historySection.classList.toggle('hidden', !canEdit);
-      }
-
-      if (canEdit) {
-        const favoritePublications = Array.from(currentFavoriteIds)
-          .map(pubId => getPublicationById(pubId))
-          .filter(Boolean);
-        renderProfileFavorites(favoritePublications);
-        renderPurchaseHistory(currentPurchaseHistory);
-      }
 
       return true;
     }
