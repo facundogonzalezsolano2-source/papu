@@ -1,6 +1,6 @@
-import { MercadoPagoConfig, Preference } from "mercadopago";
+const { MercadoPagoConfig, Preference } = require("mercadopago");
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
   const accessToken = process.env.MP_ACCESS_TOKEN;
   if (!accessToken) {
     return { statusCode: 500, body: JSON.stringify({ error: "Falta MP_ACCESS_TOKEN" }) };
