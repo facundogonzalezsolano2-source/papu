@@ -1225,6 +1225,34 @@
       };
     }
 
+    async function getSellerPayoutDataSnapshot(sellerId, publication = null) {
+      let payoutAlias = String(publication?.sellerPayoutAlias || '').trim();
+      let payoutCbu = normalizeCbu(publication?.sellerPayoutCbu || '');
+      let payoutOwnerName = String(publication?.sellerPayoutOwnerName || '').trim();
+
+      if (isRealFirebase && sellerId) {
+        try {
+          const sellerDoc = await dbRef.collection('users').doc(String(sellerId)).get();
+          if (sellerDoc.exists) {
+            const sellerData = sellerDoc.data() || {};
+            payoutAlias = String(sellerData.payoutAlias || payoutAlias || '').trim();
+            payoutCbu = normalizeCbu(sellerData.payoutCbu || payoutCbu || '');
+            payoutOwnerName = String(sellerData.payoutOwnerName || payoutOwnerName || '').trim();
+          }
+        } catch (error) {
+          console.warn('No se pudo refrescar datos de cobro del vendedor', error);
+        }
+      }
+
+      const cbuAliasCombined = payoutAlias || payoutCbu || '';
+      return {
+        payoutAlias,
+        payoutCbu,
+        payoutOwnerName,
+        cbuAliasCombined
+      };
+    }
+
     async function toggleFavorite(publicationId, event = null) {
       if (event) {
         event.stopPropagation();
@@ -1275,6 +1303,8 @@
       const userId = getCurrentUserId();
       if (!userId || !publication) return;
       const buyerPayout = await getBuyerPayoutDataSnapshot(userId);
+      const sellerId = String(publication.authorId || '');
+      const sellerPayout = await getSellerPayoutDataSnapshot(sellerId, publication);
 
       const entry = {
         buyerId: userId,
@@ -1286,10 +1316,14 @@
         institution: publication.institution || '',
         price: Number(publication.price || 0),
         quantity: Number(quantity || 1),
-        authorId: publication.authorId || '',
+        authorId: sellerId,
         authorNick: publication.authorNick || 'Anónimo',
-        // Mapeo explícito para evitar undefined en Firestore.
-        cbu_alias: buyerPayout.cbuAliasCombined || '',
+        // cbu_alias corresponde al dato de cobro de la venta (vendedor).
+        cbu_alias: String(sellerPayout.cbuAliasCombined || ''),
+        sellerPayoutAlias: String(sellerPayout.payoutAlias || ''),
+        sellerPayoutCbu: String(sellerPayout.payoutCbu || ''),
+        sellerPayoutOwnerName: String(sellerPayout.payoutOwnerName || ''),
+        buyer_cbu_alias: String(buyerPayout.cbuAliasCombined || ''),
         buyerPayoutAlias: buyerPayout.payoutAlias || '',
         buyerPayoutCbu: buyerPayout.payoutCbu || '',
         buyerPayoutOwnerName: buyerPayout.payoutOwnerName || '',
@@ -1298,6 +1332,7 @@
       };
 
       if (isRealFirebase) {
+        console.log('Payload compra a Firestore (purchases):', entry);
         const added = await dbRef.collection('purchases').add(entry);
         currentPurchaseHistory.unshift({ id: added.id, ...entry });
       } else {
