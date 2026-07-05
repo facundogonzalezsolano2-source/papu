@@ -2329,6 +2329,47 @@
         .replace(/'/g, '&#39;');
     }
 
+    async function copyTextToClipboard(value, successMessage = 'Dato copiado.') {
+      const text = String(value || '').trim();
+      if (!text || text === 'N/D') {
+        alert('No hay datos para copiar.');
+        return;
+      }
+
+      try {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          await navigator.clipboard.writeText(text);
+          alert(successMessage);
+          return;
+        }
+      } catch (error) {
+        console.warn('Clipboard API no disponible', error);
+      }
+
+      const fallbackInput = document.createElement('textarea');
+      fallbackInput.value = text;
+      fallbackInput.setAttribute('readonly', 'readonly');
+      fallbackInput.style.position = 'fixed';
+      fallbackInput.style.opacity = '0';
+      document.body.appendChild(fallbackInput);
+      fallbackInput.focus();
+      fallbackInput.select();
+
+      let copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } catch (error) {
+        copied = false;
+      }
+
+      document.body.removeChild(fallbackInput);
+      if (copied) {
+        alert(successMessage);
+      } else {
+        alert('No se pudo copiar automáticamente. Intenta mantener presionado y copiar manualmente.');
+      }
+    }
+
     function getRouteSegments() {
       return String(window.location.hash || '').replace(/^#/, '').split('?')[0].split('/').filter(Boolean);
     }
@@ -2550,10 +2591,21 @@
         const title = entry.title || publication?.title || 'Material educativo';
         const description = entry.description || publication?.description || 'Sin descripción disponible.';
         const cover = entry.portadaUrl || publication?.portadaUrl || 'https://via.placeholder.com/640x420?text=Material';
-        const price = Number(entry.price || publication?.price || 0).toLocaleString('es-AR');
+        const priceNumber = Number(entry.price || publication?.price || 0);
+        const price = priceNumber.toLocaleString('es-AR');
+        const payoutAmount = (priceNumber * 1.85).toLocaleString('es-AR');
         const dateLabel = formatDate(entry.createdAt || entry.purchasedAt || entry.date);
         const status = String(entry.status || 'pendiente');
         const canOpen = true;
+        const institution = entry.institution || publication?.institution || 'N/D';
+        const subject = entry.subject || publication?.subject || 'N/D';
+        const sellerAliasOrCbu = String(entry.cbu_alias || entry.sellerPayoutAlias || entry.sellerPayoutCbu || 'N/D');
+        const sellerOwnerName = String(entry.sellerPayoutOwnerName || 'N/D');
+        const authorId = String(entry.authorId || publication?.authorId || 'N/D');
+        const authorNick = String(entry.authorNick || publication?.authorNick || 'N/D');
+        const buyerId = String(entry.buyerId || currentUser?.uid || 'N/D');
+        const orderId = String(entry.orderId || 'N/D');
+        const publicationId = String(entry.publicationId || publication?.id || 'N/D');
 
         return `
           <article class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
@@ -2580,8 +2632,36 @@
                     <p class="mt-1 font-black text-slate-900">${dateLabel}</p>
                   </div>
                   <div class="rounded-2xl bg-slate-50 p-3">
-                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Cantidad</p>
-                    <p class="mt-1 font-black text-slate-900">${Number(entry.quantity || 1)}</p>
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Institución</p>
+                    <p class="mt-1 font-black text-slate-900">${institution}</p>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2 text-xs text-slate-700">
+                  <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black">Control de compra</p>
+                  <p><span class="font-black text-slate-800">Author ID:</span> ${authorId}</p>
+                  <p><span class="font-black text-slate-800">Author Nick:</span> ${authorNick}</p>
+                  <p><span class="font-black text-slate-800">Buyer ID:</span> ${buyerId}</p>
+                  <p><span class="font-black text-slate-800">Buyer payout alias/CBU:</span> ${sellerAliasOrCbu}</p>
+                  <p><span class="font-black text-slate-800">Buyer payout owner name:</span> ${sellerOwnerName}</p>
+                  <p><span class="font-black text-slate-800">Cuándo se creó:</span> ${dateLabel}</p>
+                  <p><span class="font-black text-slate-800">Descripción:</span> ${description}</p>
+                  <p><span class="font-black text-slate-800">Institución:</span> ${institution}</p>
+                  <p><span class="font-black text-slate-800">Order ID:</span> ${orderId}</p>
+                  <p><span class="font-black text-slate-800">Portada URL:</span> ${cover}</p>
+                  <p><span class="font-black text-slate-800">Precio:</span> $${price} ARS</p>
+                  <p><span class="font-black text-slate-800">Publicación:</span> ${publicationId}</p>
+                  <p><span class="font-black text-slate-800">Estatus:</span> ${status}</p>
+                  <p><span class="font-black text-slate-800">Materia:</span> ${subject}</p>
+                  <p><span class="font-black text-slate-800">Título:</span> ${title}</p>
+                  <div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                    <p class="font-black text-emerald-800">Parte a pagar (185%)</p>
+                    <p class="text-emerald-700 mt-1">$${payoutAmount} ARS</p>
+                    <p class="text-emerald-700 mt-1">Pago por CBU/alias: ${sellerAliasOrCbu}</p>
+                    <p class="text-emerald-700">Nombre: ${sellerOwnerName}</p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <button type="button" onclick="copyTextToClipboard('${String(sellerAliasOrCbu || '').replace(/'/g, "\\'")}', 'CBU/Alias copiado.')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-black">Copiar CBU/Alias</button>
+                      <button type="button" onclick="copyTextToClipboard('${String(sellerOwnerName || '').replace(/'/g, "\\'")}', 'Nombre copiado.')" class="px-3 py-1.5 rounded-lg bg-emerald-700 text-white text-[11px] font-black">Copiar nombre</button>
+                    </div>
                   </div>
                 </div>
                 <div class="flex flex-wrap gap-3">
@@ -2631,6 +2711,17 @@
       const status = String(purchaseEntry?.status || 'pendiente');
       const isApprovedPurchase = String(status || '').toLowerCase() === 'approved' || !isRealFirebase;
       const assets = isApprovedPurchase ? await getPurchasedContentAssets(publication, purchaseEntry) : [];
+      const priceNumber = Number(purchaseEntry?.price || publication?.price || 0);
+      const sellerAliasOrCbu = String(purchaseEntry?.cbu_alias || purchaseEntry?.sellerPayoutAlias || purchaseEntry?.sellerPayoutCbu || 'N/D');
+      const sellerOwnerName = String(purchaseEntry?.sellerPayoutOwnerName || 'N/D');
+      const authorId = String(purchaseEntry?.authorId || publication?.authorId || 'N/D');
+      const authorNick = String(purchaseEntry?.authorNick || publication?.authorNick || 'N/D');
+      const buyerId = String(purchaseEntry?.buyerId || currentUser?.uid || 'N/D');
+      const institution = String(purchaseEntry?.institution || publication?.institution || 'N/D');
+      const subject = String(purchaseEntry?.subject || publication?.subject || 'N/D');
+      const orderId = String(purchaseEntry?.orderId || 'N/D');
+      const publicationIdLabel = String(purchaseEntry?.publicationId || publication?.id || 'N/D');
+      const payoutAmount = (priceNumber * 1.85).toLocaleString('es-AR');
 
       container.innerHTML = `
         <div class="space-y-6">
@@ -2651,7 +2742,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div class="rounded-2xl bg-slate-50 p-4">
                     <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Precio</p>
-                    <p class="mt-1 font-black text-slate-900">$${Number(purchaseEntry?.price || publication?.price || 0).toLocaleString('es-AR')} ARS</p>
+                    <p class="mt-1 font-black text-slate-900">$${priceNumber.toLocaleString('es-AR')} ARS</p>
                   </div>
                   <div class="rounded-2xl bg-slate-50 p-4">
                     <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Comprado</p>
@@ -2660,6 +2751,34 @@
                   <div class="rounded-2xl bg-slate-50 p-4 sm:col-span-2">
                     <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Vendedor</p>
                     <p class="mt-1 font-black text-slate-900">${purchaseEntry?.authorNick || publication?.authorNick || 'Anónimo'}</p>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2 text-xs text-slate-700">
+                  <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black">Control de compra</p>
+                  <p><span class="font-black text-slate-800">Author ID:</span> ${authorId}</p>
+                  <p><span class="font-black text-slate-800">Author Nick:</span> ${authorNick}</p>
+                  <p><span class="font-black text-slate-800">Buyer ID:</span> ${buyerId}</p>
+                  <p><span class="font-black text-slate-800">Buyer payout alias/CBU:</span> ${sellerAliasOrCbu}</p>
+                  <p><span class="font-black text-slate-800">Buyer payout owner name:</span> ${sellerOwnerName}</p>
+                  <p><span class="font-black text-slate-800">Cuándo se creó:</span> ${purchaseDate}</p>
+                  <p><span class="font-black text-slate-800">Descripción:</span> ${description}</p>
+                  <p><span class="font-black text-slate-800">Institución:</span> ${institution}</p>
+                  <p><span class="font-black text-slate-800">Order ID:</span> ${orderId}</p>
+                  <p><span class="font-black text-slate-800">Portada URL:</span> ${cover}</p>
+                  <p><span class="font-black text-slate-800">Precio:</span> $${priceNumber.toLocaleString('es-AR')} ARS</p>
+                  <p><span class="font-black text-slate-800">Publicación:</span> ${publicationIdLabel}</p>
+                  <p><span class="font-black text-slate-800">Estatus:</span> ${status}</p>
+                  <p><span class="font-black text-slate-800">Materia:</span> ${subject}</p>
+                  <p><span class="font-black text-slate-800">Título:</span> ${title}</p>
+                  <div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                    <p class="font-black text-emerald-800">Parte a pagar (185%)</p>
+                    <p class="text-emerald-700 mt-1">$${payoutAmount} ARS</p>
+                    <p class="text-emerald-700 mt-1">Pago por CBU/alias: ${sellerAliasOrCbu}</p>
+                    <p class="text-emerald-700">Nombre: ${sellerOwnerName}</p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <button type="button" onclick="copyTextToClipboard('${String(sellerAliasOrCbu || '').replace(/'/g, "\\'")}', 'CBU/Alias copiado.')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-black">Copiar CBU/Alias</button>
+                      <button type="button" onclick="copyTextToClipboard('${String(sellerOwnerName || '').replace(/'/g, "\\'")}', 'Nombre copiado.')" class="px-3 py-1.5 rounded-lg bg-emerald-700 text-white text-[11px] font-black">Copiar nombre</button>
+                    </div>
                   </div>
                 </div>
                 <button type="button" onclick="closePurchaseHistoryPage()" class="w-full rounded-xl bg-brand px-4 py-3 text-sm font-black text-white shadow-sm">Volver a mis compras</button>
