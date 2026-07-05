@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
+import { createSignedContentAccessResponse, fetchMercadoPagoPayment, markPurchaseAsApproved } from './netlify/functions/_shared/private-content.js';
 
 dotenv.config();
 
@@ -23,9 +24,25 @@ app.get('/mp/config', (_req, res) => {
   res.json({ publicKey });
 });
 
+app.post('/content/access', async (req, res) => {
+  try {
+    const result = await createSignedContentAccessResponse({
+      request: req,
+      publicationId: req.body?.publicationId || req.body?.contentId || '',
+      deviceId: req.body?.deviceId || '',
+      source: 'express'
+    });
+
+    res.status(result.statusCode).send(result.body);
+  } catch (error) {
+    console.error('Error verificando acceso al contenido:', error);
+    res.status(500).json({ error: error.message || 'No se pudo verificar el acceso al contenido.' });
+  }
+});
+
 app.post('/mp/create-preference', async (req, res) => {
   try {
-    const { orderId, title, description, price, items, backUrls } = req.body;
+    const { orderId, title, description, price, items, backUrls, publicationId, buyerId, deviceId } = req.body;
 
     if (!orderId) {
       return res.status(400).json({ error: 'orderId es requerido' });
@@ -62,7 +79,10 @@ app.post('/mp/create-preference', async (req, res) => {
         notification_url: `${appBaseUrl}/mp/webhook`,
         metadata: {
           orderId: String(orderId),
-          source: 'tuapunte'
+          source: 'tuapunte',
+          publicationId: String(publicationId || ''),
+          buyerId: String(buyerId || ''),
+          deviceId: String(deviceId || '')
         }
       }
     };
@@ -82,8 +102,34 @@ app.post('/mp/create-preference', async (req, res) => {
 });
 
 app.post('/mp/webhook', (req, res) => {
-  console.log('Webhook recibido:', JSON.stringify(req.body));
-  res.sendStatus(200);
+  (async () => {
+    try {
+      const paymentId = req.body?.data?.id || req.body?.id || req.body?.payment_id || req.query?.id || '';
+      if (!paymentId) {
+        console.log('Webhook recibido sin paymentId:', JSON.stringify(req.body));
+        res.sendStatus(200);
+        return;
+      }
+
+      const payment = await fetchMercadoPagoPayment(paymentId);
+      const externalReference = String(payment?.external_reference || payment?.metadata?.orderId || '').trim();
+      const paymentStatus = String(payment?.status || '').toLowerCase();
+
+      if (paymentStatus === 'approved' && externalReference) {
+        await markPurchaseAsApproved({
+          orderId: externalReference,
+          paymentId: String(paymentId),
+          paymentStatus: 'approved'
+        });
+      }
+
+      console.log('Webhook procesado:', { paymentId, paymentStatus, externalReference });
+      res.sendStatus(200);
+    } catch (error) {
+      console.error('Error procesando webhook de pago:', error);
+      res.sendStatus(200);
+    }
+  })();
 });
 
 app.listen(port, '0.0.0.0', () => {
