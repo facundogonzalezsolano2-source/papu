@@ -955,6 +955,8 @@
     let nearbyPublicationDistanceKm = new Map();
     let currentFavoriteIds = new Set();
     let currentPurchaseHistory = [];
+    let lastLoadedProfilePublications = [];
+    let pendingPayoutFocus = false;
     const cityCoordinatesCache = new Map();
     const publicationsPageSize = 30;
     const defaultAvatar = 'https://via.placeholder.com/40?text=U';
@@ -1191,16 +1193,8 @@
         openAuthModal();
         return;
       }
+      pendingPayoutFocus = true;
       openProfilePage();
-      setTimeout(() => {
-        const editSection = document.getElementById('profileEditSection');
-        const payoutInput = document.getElementById('editPayoutIdentifier');
-        if (editSection) editSection.classList.remove('hidden');
-        if (payoutInput) {
-          payoutInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          payoutInput.focus();
-        }
-      }, 240);
     }
 
     function getCurrentUserId() {
@@ -2346,7 +2340,10 @@
       return {
         orderId: String(params.get('order') || params.get('orderId') || '').trim(),
         status: String(params.get('status') || '').trim(),
-        message: String(params.get('message') || '').trim()
+        message: String(params.get('message') || '').trim(),
+        paymentId: String(params.get('payment_id') || params.get('paymentId') || '').trim(),
+        collectionStatus: String(params.get('collection_status') || params.get('collectionStatus') || '').trim(),
+        externalReference: String(params.get('external_reference') || '').trim()
       };
     }
 
@@ -2371,8 +2368,20 @@
         flow: decodeURIComponent(segments[1] || ''),
         orderId: decodeURIComponent(query.orderId || ''),
         status: decodeURIComponent(query.status || segments[1] || ''),
-        message: decodeURIComponent(query.message || '')
+        message: decodeURIComponent(query.message || ''),
+        paymentId: decodeURIComponent(query.paymentId || ''),
+        collectionStatus: decodeURIComponent(query.collectionStatus || ''),
+        externalReference: decodeURIComponent(query.externalReference || '')
       };
+    }
+
+    function isApprovedPaymentRoute(paymentRouteData) {
+      const normalizedStatus = String(paymentRouteData?.status || '').trim().toLowerCase();
+      const normalizedCollection = String(paymentRouteData?.collectionStatus || '').trim().toLowerCase();
+      const hasPaymentId = Boolean(String(paymentRouteData?.paymentId || '').trim());
+      const approvedByStatus = normalizedStatus === 'approved' || normalizedStatus === 'success';
+      const approvedByCollection = normalizedCollection === 'approved';
+      return Boolean(hasPaymentId && (approvedByStatus || approvedByCollection));
     }
 
     function isPaymentRoute() {
@@ -2455,12 +2464,17 @@
       hidePaymentResultPage();
 
       if (paymentRouteData.flow === 'success') {
-        const approvedEntry = await confirmPurchaseFromCheckout(paymentRouteData.orderId);
+        const isApproved = isApprovedPaymentRoute(paymentRouteData);
+        const approvedEntry = isApproved ? await confirmPurchaseFromCheckout(paymentRouteData.orderId) : null;
         renderPaymentResultPage({
-          title: 'Felicidades por tu compra',
-          message: 'Tu pago fue confirmado. Para ver los artículos comprados, entrá en tu perfil y abrí la sección Compras realizadas.',
-          actionLabel: 'Ir a Compras realizadas',
-          actionHref: currentUser?.uid ? `#perfil/${encodeURIComponent(currentUser.uid)}/compras` : '#',
+          title: approvedEntry ? 'Felicidades por tu compra' : 'Pago aún no acreditado',
+          message: approvedEntry
+            ? 'Tu pago fue confirmado. Para ver los artículos comprados, entrá en tu perfil y abrí la sección Compras realizadas.'
+            : 'Todavía no se acreditó el pago de forma válida. Cuando la pasarela lo confirme, verás el contenido en Compras.',
+          actionLabel: approvedEntry ? 'Ir a Compras realizadas' : 'Volver al inicio',
+          actionHref: approvedEntry
+            ? (currentUser?.uid ? `#perfil/${encodeURIComponent(currentUser.uid)}/compras` : '#')
+            : '#top',
           icon: approvedEntry ? '✓' : '!',
           tone: approvedEntry ? 'success' : 'warning'
         });
@@ -2539,7 +2553,7 @@
         const price = Number(entry.price || publication?.price || 0).toLocaleString('es-AR');
         const dateLabel = formatDate(entry.createdAt || entry.purchasedAt || entry.date);
         const status = String(entry.status || 'pendiente');
-        const canOpen = status.toLowerCase() === 'approved' || !isRealFirebase;
+        const canOpen = true;
 
         return `
           <article class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
@@ -2571,9 +2585,9 @@
                   </div>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                  <button type="button" onclick="openPurchaseDetailPage('${String(currentUser?.uid || entry.buyerId || '')}', '${String(entry.publicationId || '')}')" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-white shadow-sm ${canOpen ? '' : 'opacity-60 cursor-not-allowed pointer-events-none'}">
+                  <button type="button" onclick="openPurchaseDetailPage('${String(entry.buyerId || currentUser?.uid || '')}', '${String(entry.publicationId || '')}')" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-white shadow-sm ${canOpen ? '' : 'opacity-60 cursor-not-allowed pointer-events-none'}">
                     <i class="fa-solid fa-images"></i>
-                    Ver imágenes compradas
+                    Ver detalles
                   </button>
                   <button type="button" onclick="openDetailModal(${JSON.stringify(entry.publicationId)})" class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700">
                     <i class="fa-solid fa-eye"></i>
@@ -2615,7 +2629,8 @@
       const cover = purchaseEntry?.portadaUrl || publication?.portadaUrl || 'https://via.placeholder.com/960x640?text=Material';
       const purchaseDate = formatDate(purchaseEntry?.createdAt || purchaseEntry?.purchasedAt || purchaseEntry?.date);
       const status = String(purchaseEntry?.status || 'pendiente');
-      const assets = await getPurchasedContentAssets(publication, purchaseEntry);
+      const isApprovedPurchase = String(status || '').toLowerCase() === 'approved' || !isRealFirebase;
+      const assets = isApprovedPurchase ? await getPurchasedContentAssets(publication, purchaseEntry) : [];
 
       container.innerHTML = `
         <div class="space-y-6">
@@ -2655,8 +2670,13 @@
           <section class="space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h4 class="text-lg font-black text-slate-900">Imágenes compradas</h4>
-              <p class="text-xs text-slate-500">Desplázate hacia abajo para verlas grandes.</p>
+              <p class="text-xs text-slate-500">Esta vista usa una sola URL por compra para ver todo el documento.</p>
             </div>
+            ${!isApprovedPurchase ? `
+              <div class="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800">
+                El pago todavía no aparece como acreditado, por eso las imágenes aún no están habilitadas.
+              </div>
+            ` : ''}
             ${assets.length ? assets.map((asset, index) => `
               <article class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 py-3 border-b border-slate-100">
@@ -2672,7 +2692,7 @@
               </article>
             `).join('') : `
               <div class="rounded-3xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                No hay imágenes disponibles para esta compra.
+                ${isApprovedPurchase ? 'No hay imágenes disponibles para esta compra.' : 'Las imágenes se habilitan cuando el pago queda acreditado.'}
               </div>
             `}
           </section>
@@ -3455,6 +3475,7 @@
     function renderProfilePublications(publications) {
       const grid = document.getElementById('profilePublicationsGrid');
       if (!grid) return;
+      lastLoadedProfilePublications = Array.isArray(publications) ? [...publications] : [];
       grid.innerHTML = '';
 
       if (!publications.length) {
@@ -3511,9 +3532,21 @@
         return;
       }
 
-      const publication = getPublicationById(targetId) || null;
-      const ownerId = String(publication?.authorId || '');
-      if (!ownerId || ownerId !== String(currentUser.uid || '')) {
+      let publication = getPublicationById(targetId) || lastLoadedProfilePublications.find(item => String(item?.id || '') === targetId) || null;
+
+      if (!publication && isRealFirebase) {
+        try {
+          const publicationDoc = await dbRef.collection('publications').doc(targetId).get();
+          if (publicationDoc.exists) {
+            publication = { id: targetId, ...publicationDoc.data() };
+          }
+        } catch (loadError) {
+          console.warn('No se pudo cargar la publicación antes de eliminar', loadError);
+        }
+      }
+
+      const ownerId = String(publication?.authorId || currentUser.uid || '');
+      if (ownerId !== String(currentUser.uid || '')) {
         alert('Solo puedes eliminar tus propias publicaciones.');
         return;
       }
@@ -3541,6 +3574,7 @@
 
         loadedPublications = loadedPublications.filter(item => String(item.id) !== targetId);
         allPublications = allPublications.filter(item => String(item.id) !== targetId);
+        lastLoadedProfilePublications = lastLoadedProfilePublications.filter(item => String(item?.id || '') !== targetId);
         renderGrid(applyFilters(loadedPublications));
 
         const profileUserId = getProfileUserIdFromHash() || String(currentUser.uid || '');
@@ -4485,6 +4519,15 @@
         document.getElementById('editAvatarUrl').value = userDoc.avatarUrl || '';
         document.getElementById('editPayoutIdentifier').value = userDoc.payoutIdentifier || userDoc.payoutAlias || formatMaskedCbu(userDoc.payoutCbu || '') || '';
         document.getElementById('editPayoutOwnerName').value = userDoc.payoutOwnerName || '';
+
+        if (pendingPayoutFocus) {
+          const payoutInput = document.getElementById('editPayoutIdentifier');
+          if (payoutInput) {
+            payoutInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            payoutInput.focus();
+          }
+          pendingPayoutFocus = false;
+        }
       }
 
       if (payoutSection) {
