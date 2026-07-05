@@ -439,7 +439,6 @@
             <button onclick="drawerGoToProfileSection('publications');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-file-lines mr-2"></i>Mis publicaciones</button>
             <button onclick="openInfoModal('configuracion');" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100"><i class="fa-solid fa-gear mr-2"></i>Configuración</button>
             <button onclick="drawerLogout();" class="drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-red-50 text-red-600"><i class="fa-solid fa-right-from-bracket mr-2"></i>Cerrar sesión</button>
-            <button id="drawerAdminAccess" onclick="drawerOpenAdmin();" class="hidden drawer-item w-full text-left px-3 py-2.5 rounded-xl hover:bg-amber-50 text-amber-700"><i class="fa-solid fa-shield-halved mr-2"></i>Panel de Administración</button>
           </div>
         </section>
 
@@ -517,11 +516,11 @@
       <button onclick="closeVenderModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"><i class="fa-solid fa-xmark"></i></button>
 
       <h2 class="text-xl font-black text-brand mb-4 flex items-center gap-2"><i class="fa-solid fa-file-circle-plus"></i> Publicar Material</h2>
-      <p class="text-sm text-slate-500 mb-3">Todas las publicaciones pasan por moderación antes de aparecer en el marketplace. Esto ayuda a mantener la calidad, evitar duplicados y proteger a los estudiantes; puede tardar unos minutos mientras el equipo revisa el contenido.</p>
+      <p class="text-sm text-slate-500 mb-3">Publica tu material en pocos pasos. Verifica que la información sea clara para que otros estudiantes puedan encontrarla y comprarla fácilmente.</p>
       <form id="venderForm" class="space-y-4 text-xs">
         <div id="publishPayoutWarning" class="hidden rounded-2xl border border-rose-200 bg-rose-50 p-3 text-rose-700">
           <p class="font-black mb-1">Antes de publicar debes completar tus datos de cobro.</p>
-          <p class="text-[11px] mb-2">Es obligatorio para vendedores cargar Alias o CBU, CBU y nombre del titular de la cuenta.</p>
+          <p class="text-[11px] mb-2">Es obligatorio para vendedores cargar CBU/alias y nombre del titular de la cuenta.</p>
           <button type="button" onclick="goToPayoutSetupFromPublish()" class="h-9 px-3 rounded-xl bg-rose-600 text-white font-bold text-[11px]">Hacer clic aquí</button>
         </div>
         <div>
@@ -598,7 +597,7 @@
           <input id="publishTermsAccepted" type="checkbox" class="mt-0.5" />
           <span>Leí y acepto los <button type="button" onclick="openLegalDocument('terminos')" class="font-black underline">Términos y Condiciones</button> de la plataforma para publicar.</span>
         </label>
-        <p class="text-[11px] text-emerald-700">Los pagos al vendedor se acreditan dentro de los primeros 3 días hábiles después de cada venta aprobada.</p>
+        <p class="text-[11px] text-emerald-700">Los pagos al vendedor se acreditan dentro de los primeros 3 días hábiles después de cada venta aprobada. Si tenemos problemas para acreditar el pago, nos contactaremos por mail.</p>
         <button type="submit" class="w-full bg-brand text-white py-3 rounded-xl font-bold text-xs shadow-md">Publicar Ahora</button>
       </form>
     </div>
@@ -711,14 +710,14 @@
           </div>
           <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
             <h4 class="text-sm font-black text-emerald-800 mb-2">Datos de cobro para vender (obligatorio)</h4>
-            <p class="text-xs text-emerald-700 mb-3">Solo tú puedes ver y editar esta información desde tu perfil. Los cobros se envían a esta cuenta dentro de los primeros 3 días hábiles después de cada venta.</p>
+            <p class="text-xs text-emerald-700 mb-3">Solo tú puedes ver y editar esta información desde tu perfil. Los cobros se envían a esta cuenta dentro de los primeros 3 días hábiles después de cada venta. Si tenemos problemas para acreditar el pago, nos contactaremos por mail.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">Alias de cuenta *</label>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Alias de cuenta</label>
                 <input type="text" id="editPayoutAlias" placeholder="Ej: nombre.apunte" class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">CBU (22 dígitos) *</label>
+                <label class="block text-xs font-bold text-slate-600 mb-1">CBU (22 dígitos)</label>
                 <input type="text" id="editPayoutCbu" inputmode="numeric" maxlength="22" placeholder="0000000000000000000000" class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
               </div>
             </div>
@@ -786,39 +785,6 @@
     </div>
   </div>
 
-  <div id="adminPanel" class="hidden fixed inset-0 bg-slate-900/80 z-50 overflow-y-auto">
-    <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-      <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
-        <div class="flex items-center justify-between gap-4 border-b border-slate-200 p-5">
-          <div>
-            <h2 class="text-xl font-black text-slate-900">Panel de Moderación</h2>
-            <p class="text-sm text-slate-500">Revisa, advierte o elimina publicaciones en el marketplace.</p>
-          </div>
-          <button onclick="closeAdminPanel()" class="text-slate-500 hover:text-slate-900 rounded-full p-3 bg-slate-100">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-        <div class="p-5 space-y-5">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-slate-50 rounded-3xl p-5 border border-slate-200">
-              <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Total de publicaciones</p>
-              <p id="adminPublicationsCount" class="text-3xl font-black text-slate-900">0</p>
-            </div>
-            <div class="bg-slate-50 rounded-3xl p-5 border border-slate-200">
-              <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Publicaciones pendientes</p>
-              <p id="adminPendingCount" class="text-3xl font-black text-slate-900">0</p>
-            </div>
-            <div class="bg-slate-50 rounded-3xl p-5 border border-slate-200">
-              <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Acciones disponibles</p>
-              <p class="text-sm text-slate-700">Eliminar, advertir o marcar como revisada.</p>
-            </div>
-          </div>
-          <div id="adminPublicationsGrid" class="grid gap-4"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div id="topPage" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28">
       <div class="flex items-center justify-between gap-3 mb-5">
@@ -857,7 +823,6 @@
     };
 
     let isRealFirebase = false;
-    const adminEmails = ['facundogonzalezsolanoyt@gmail.com'];
 
     let localDB = [
       {
@@ -926,7 +891,6 @@
     const nombreAutorEjemplo = "Usuario Anónimo";
     let currentUser = null;
     let currentUserData = null;
-    let currentUserIsAdmin = false;
     let allPublications = [];
     let loadedPublications = [];
     let publicationsLastVisible = null;
@@ -937,6 +901,7 @@
     let activeMobileQuickFilter = 'cerca';
     let userLocationContext = { city: '', province: '', country: '', institution: '', latitude: null, longitude: null };
     let nearbyPublicationIds = new Set();
+    let nearbyPublicationDistanceKm = new Map();
     let currentFavoriteIds = new Set();
     let currentPurchaseHistory = [];
     const cityCoordinatesCache = new Map();
@@ -952,7 +917,7 @@
           <p>Este documento regula el acceso y uso de la plataforma digital, servicios y contenidos ofrecidos por el titular del sitio web.</p>
           <ol>
             <li><strong>Aceptación de los términos.</strong> Al acceder o utilizar este sitio web, el usuario acepta quedar vinculado por estos términos y condiciones. Si no está de acuerdo, debe abstenerse de utilizar los servicios.</li>
-            <li><strong>Descripción del servicio.</strong> La plataforma ofrece servicios digitales de publicación, visualización y gestión de contenidos generados por usuarios o administradores.</li>
+            <li><strong>Descripción del servicio.</strong> La plataforma ofrece servicios digitales de publicación, visualización y gestión de contenidos generados por usuarios.</li>
             <li><strong>Uso adecuado.</strong> El usuario se compromete a no utilizar el sitio para actividades ilícitas, fraudulentas o que puedan dañar la integridad del sistema o de terceros.</li>
             <li><strong>Contenido del usuario.</strong> El usuario es responsable del contenido que publica, garantizando que no infringe derechos de terceros, incluyendo derechos de autor, marcas o privacidad.</li>
             <li><strong>Propiedad intelectual.</strong> Todos los elementos del sitio web, diseño, estructura y código están protegidos por derechos de propiedad intelectual. Queda prohibida su reproducción sin autorización.</li>
@@ -1038,7 +1003,7 @@
       },
       como_vender: {
         title: 'Cómo vender',
-        body: '<p>Carga portada, contenido protegido, precio y datos académicos. Tu publicación puede quedar pendiente de revisión administrativa.</p>'
+        body: '<p>Carga portada, contenido protegido, precio y datos académicos. Tu publicación se mostrará en el marketplace una vez creada.</p>'
       },
       como_cobrar: {
         title: 'Cómo cobrar las ventas',
@@ -1080,7 +1045,6 @@
           dbRef.collection('users').doc(user.uid).get().then(doc => {
             const data = doc.data() || {};
             currentUserData = data;
-            currentUserIsAdmin = adminEmails.includes(user.email);
             updateAuthContainer();
             refreshUserLocationContext();
             loadUserCommerceState();
@@ -1088,7 +1052,6 @@
         } else {
           currentUser = null;
           currentUserData = null;
-          currentUserIsAdmin = false;
           updateAuthContainer();
           refreshUserLocationContext();
           loadUserCommerceState();
@@ -1136,7 +1099,8 @@
       const alias = String(userData?.payoutAlias || '').trim();
       const ownerName = String(userData?.payoutOwnerName || '').trim();
       const cbu = normalizeCbu(userData?.payoutCbu || '');
-      return Boolean(alias && ownerName && cbu.length === 22);
+      const hasAliasOrCbu = Boolean(alias || cbu.length === 22);
+      return Boolean(ownerName && hasAliasOrCbu);
     }
 
     function updatePublishPayoutWarning() {
@@ -1426,38 +1390,50 @@
     async function refreshNearbyPublicationsCache(items = []) {
       const publicationList = Array.isArray(items) ? items : [];
       const nearbySet = new Set();
+      const distanceMap = new Map();
       const myInstitution = normalizeText(userLocationContext.institution);
       const myCity = normalizeText(userLocationContext.city);
 
       publicationList.forEach(item => {
+        const publicationId = String(item?.id || '');
+        if (!publicationId) return;
+        distanceMap.set(publicationId, Number.POSITIVE_INFINITY);
         const itemInstitution = normalizeText(item?.institution);
         if (myInstitution && itemInstitution && (itemInstitution.includes(myInstitution) || myInstitution.includes(itemInstitution))) {
-          nearbySet.add(String(item.id));
+          nearbySet.add(publicationId);
+          distanceMap.set(publicationId, 0);
         }
       });
 
       publicationList.forEach(item => {
-        if (nearbySet.has(String(item.id))) return;
+        const publicationId = String(item?.id || '');
+        if (!publicationId) return;
         const itemCity = normalizeText(item?.city);
         if (myCity && itemCity && (itemCity.includes(myCity) || myCity.includes(itemCity))) {
-          nearbySet.add(String(item.id));
+          nearbySet.add(publicationId);
+          const currentDistance = Number(distanceMap.get(publicationId));
+          distanceMap.set(publicationId, Math.min(currentDistance, 1));
         }
       });
 
       if (Number.isFinite(userLocationContext.latitude) && Number.isFinite(userLocationContext.longitude)) {
         const checks = publicationList.map(async item => {
-          if (nearbySet.has(String(item.id))) return;
+          const publicationId = String(item?.id || '');
+          if (!publicationId) return;
           const coords = await resolveCityCoordinates(item?.city, item?.province || '', item?.country || 'Argentina');
           if (!coords) return;
           const distance = calculateDistanceKm(userLocationContext.latitude, userLocationContext.longitude, coords.lat, coords.lon);
+          const currentDistance = Number(distanceMap.get(publicationId));
+          distanceMap.set(publicationId, Math.min(currentDistance, distance));
           if (distance <= 100) {
-            nearbySet.add(String(item.id));
+            nearbySet.add(publicationId);
           }
         });
         await Promise.all(checks);
       }
 
       nearbyPublicationIds = nearbySet;
+      nearbyPublicationDistanceKm = distanceMap;
     }
 
     function isMobileLayout() {
@@ -1467,10 +1443,8 @@
     function updateDrawerUserSummary() {
       const avatar = document.getElementById('drawerUserAvatar');
       const name = document.getElementById('drawerUserName');
-      const adminAccess = document.getElementById('drawerAdminAccess');
       if (avatar) avatar.src = currentUserData?.avatarUrl || defaultAvatar;
       if (name) name.innerText = currentUserData?.username || 'Invitado';
-      if (adminAccess) adminAccess.classList.toggle('hidden', !currentUserIsAdmin);
     }
 
     function openAppDrawer() {
@@ -1568,11 +1542,6 @@
     function drawerLogout() {
       closeAppDrawer();
       handleLogout();
-    }
-
-    function drawerOpenAdmin() {
-      closeAppDrawer();
-      openAdminPanel();
     }
 
     function getReportTypeLabel(typeKey) {
@@ -2012,7 +1981,6 @@
           payoutAlias: '',
           payoutCbu: '',
           payoutOwnerName: '',
-          isAdmin: adminEmails.includes(email),
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
@@ -2034,7 +2002,7 @@
       if (!isRealFirebase) {
         currentUser = { uid: `local_${btoa(email).replace(/=+$/g, '')}`, email };
         currentUserData = {
-          username: email === adminEmails[0] ? 'Administrador' : email.split('@')[0],
+          username: email.split('@')[0],
           avatarUrl: defaultAvatar,
           email,
           city: 'CABA',
@@ -2045,7 +2013,6 @@
           payoutCbu: '',
           payoutOwnerName: ''
         };
-        currentUserIsAdmin = adminEmails.includes(email);
         updateAuthContainer();
         refreshUserLocationContext();
         loadUserCommerceState();
@@ -2099,7 +2066,6 @@
       } else {
         currentUser = null;
         currentUserData = null;
-        currentUserIsAdmin = false;
         updateAuthContainer();
         refreshUserLocationContext();
         loadUserCommerceState();
@@ -2165,7 +2131,7 @@
       }
 
       if (!hasValidSellerPayoutData(currentUserData)) {
-        alert('Antes de publicar debes completar Alias, CBU y titular en tu perfil.');
+        alert('Antes de publicar debes completar CBU/alias y titular en tu perfil.');
         goToPayoutSetupFromPublish();
         resetSubmitState();
         return;
@@ -2198,9 +2164,7 @@
         const finalData = {
           ...postData,
           portadaUrl: coverUrl,
-          protectedUrls,
-          adminStatus: 'pending',
-          adminNote: 'Publicación pendiente de revisión por el equipo de administración.',
+          protectedUrls
         };
 
         if (!isRealFirebase) {
@@ -2208,7 +2172,7 @@
           renderGrid(localDB);
           form.reset();
           closeVenderModal();
-          alert('Tu publicación fue enviada y está pendiente de revisión. El administrador la revisará en breve.');
+          alert('Tu publicación fue creada con éxito.');
           resetSubmitState();
           return;
         }
@@ -2310,13 +2274,11 @@
             hasMorePublications = false;
           } else {
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const activeUserId = (authRef && authRef.currentUser && authRef.currentUser.uid) || currentUser?.uid || '';
-            const visibleItems = items.filter(item => item.adminStatus !== 'pending' || (activeUserId && item.authorId === activeUserId));
             publicationsLastVisible = snapshot.docs[snapshot.docs.length - 1];
             if (snapshot.size < publicationsPageSize) {
               hasMorePublications = false;
             }
-            loadedPublications = [...loadedPublications, ...visibleItems];
+            loadedPublications = [...loadedPublications, ...items];
             allPublications = loadedPublications;
             await refreshNearbyPublicationsCache(loadedPublications);
             renderGrid(applyFilters(loadedPublications));
@@ -2327,15 +2289,13 @@
         }
       } else {
         const filteredLocal = localDB.filter(item => {
-          const activeUserId = currentUser?.uid || '';
           const city = item.city.toLowerCase();
           const subject = (item.subject || '').toLowerCase();
           const searchText = `${item.title} ${item.description} ${item.city} ${item.subject} ${item.professor} ${item.institution}`.toLowerCase();
           const cityMatch = !currentCityFilter || city.includes(currentCityFilter.toLowerCase());
           const subjectMatch = !currentSubjectFilter || subject.includes(currentSubjectFilter);
           const searchMatch = !searchValue || searchText.includes(searchValue);
-          const visible = item.adminStatus !== 'pending' || (activeUserId && item.authorId === activeUserId);
-          return visible && cityMatch && subjectMatch && searchMatch;
+          return cityMatch && subjectMatch && searchMatch;
         });
         const page = filteredLocal.slice(0, publicationsPageSize);
         loadedPublications = page;
@@ -2394,7 +2354,14 @@
           });
         }
         if (activeMobileQuickFilter === 'cerca') {
-          filtered = filtered.filter(item => nearbyPublicationIds.has(String(item.id)));
+          filtered = [...filtered].sort((a, b) => {
+            const aDistance = Number(nearbyPublicationDistanceKm.get(String(a?.id || '')));
+            const bDistance = Number(nearbyPublicationDistanceKm.get(String(b?.id || '')));
+            const safeADistance = Number.isFinite(aDistance) ? aDistance : Number.POSITIVE_INFINITY;
+            const safeBDistance = Number.isFinite(bDistance) ? bDistance : Number.POSITIVE_INFINITY;
+            if (safeADistance !== safeBDistance) return safeADistance - safeBDistance;
+            return getPublicationTimestamp(b) - getPublicationTimestamp(a);
+          });
         }
         if (activeMobileQuickFilter === 'mas-vendidos') {
           filtered = [...filtered].sort((a, b) => (Number(b.publicationReviewCount || 0) - Number(a.publicationReviewCount || 0)));
@@ -3083,7 +3050,8 @@
         userMap.set(currentId, {
           userId: currentId,
           username: currentUserData?.username || 'Tú',
-          avatarUrl: currentUserData?.avatarUrl || defaultAvatar
+          avatarUrl: currentUserData?.avatarUrl || defaultAvatar,
+          city: currentUserData?.city || 'Ciudad no indicada'
         });
       }
       if (currentId && !salesMap.has(currentId)) {
@@ -3133,7 +3101,7 @@
               <img src="${entry.avatarUrl || defaultAvatar}" alt="${entry.username}" class="w-10 h-10 rounded-full object-cover" />
               <button class="text-left min-w-0" onclick="openUserProfile('${entry.userId}')">
                 <p class="text-sm font-black text-slate-900 truncate">${entry.username}</p>
-                <p class="text-[11px] text-slate-500 truncate">${entry.institution || 'Institución no indicada'} · ${entry.city || 'Ciudad no indicada'}</p>
+                <p class="text-[11px] text-slate-500 truncate">Ciudad: ${entry.city || 'Ciudad no indicada'}</p>
               </button>
             </div>
           `;
@@ -3172,178 +3140,6 @@
 
     function toggleNotifications() { document.getElementById('notificationsMenu').classList.toggle('hidden'); }
     function toggleProfileMenu() { document.getElementById('profileMenu').classList.toggle('hidden'); }
-    function openAdminPanel() {
-      if (!currentUserIsAdmin) {
-        alert('Solo los administradores pueden abrir este panel.');
-        return;
-      }
-      loadAdminPublications();
-      document.getElementById('adminPanel').classList.remove('hidden');
-    }
-
-    function closeAdminPanel() {
-      document.getElementById('adminPanel').classList.add('hidden');
-    }
-
-    async function loadAdminPublications() {
-      const adminGrid = document.getElementById('adminPublicationsGrid');
-      const countEl = document.getElementById('adminPublicationsCount');
-      if (!adminGrid || !countEl) return;
-
-      adminGrid.innerHTML = '<p class="text-sm text-slate-500">Cargando publicaciones...</p>';
-
-      try {
-        const items = [];
-        if (isRealFirebase) {
-          const snapshot = await dbRef.collection('publications').orderBy('createdAt', 'desc').get();
-          snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
-        } else {
-          items.push(...localDB.map(item => ({ ...item })));
-        }
-
-        const pendingCount = items.filter(item => item.adminStatus === 'pending').length;
-        countEl.innerText = items.length;
-        const pendingEl = document.getElementById('adminPendingCount');
-        if (pendingEl) pendingEl.innerText = pendingCount;
-        renderAdminPublications(items);
-      } catch (error) {
-        console.error('Error cargando publicaciones de administración:', error);
-        adminGrid.innerHTML = '<p class="text-sm text-red-500">No se pudieron cargar las publicaciones.</p>';
-      }
-    }
-
-    function renderAdminPublications(items) {
-      const adminGrid = document.getElementById('adminPublicationsGrid');
-      if (!adminGrid) return;
-      if (!items.length) {
-        adminGrid.innerHTML = '<div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 text-slate-500 text-sm">No hay publicaciones para moderar.</div>';
-        return;
-      }
-
-      adminGrid.innerHTML = '';
-      items.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'bg-white border border-slate-200 rounded-3xl p-5 shadow-sm';
-        card.innerHTML = `
-          <div class="sm:flex sm:justify-between sm:items-start gap-4">
-            <div class="sm:flex-1">
-              <div class="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3">
-                <span>${item.type || 'Publicación'}</span>
-                ${item.adminStatus ? `<span class="inline-flex items-center bg-amber-100 text-amber-700 rounded-full px-2 py-1">${item.adminStatus === 'warning' ? 'Advertencia' : item.adminStatus}</span>` : ''}
-              </div>
-              <h3 class="text-base font-black text-slate-900 mb-2">${item.title}</h3>
-              <p class="text-xs text-slate-500 mb-3">${item.description || ''}</p>
-              <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600">
-                <div><strong>Autor:</strong> ${item.authorNick || 'Anónimo'}</div>
-                <div><strong>Ciudad:</strong> ${item.city || 'N/D'}</div>
-                <div><strong>Materia:</strong> ${item.subject || 'N/D'}</div>
-                <div><strong>Precio:</strong> $${item.price || 0} ARS</div>
-              </div>
-              ${item.adminNote ? `<p class="mt-3 text-xs text-amber-700"><strong>Nota admin:</strong> ${item.adminNote}</p>` : ''}
-            </div>
-            <div class="mt-4 sm:mt-0 flex flex-col gap-3 w-full sm:w-auto">
-              <button onclick="adminDeletePublication('${item.id}')" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-2xl text-xs font-bold">Eliminar</button>
-              <button onclick="adminWarnPublication('${item.id}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-2xl text-xs font-bold">Advertir</button>
-              <button onclick="adminClearStatus('${item.id}')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-2xl text-xs font-bold">${item.adminStatus === 'pending' ? 'Aprobar' : 'Marcar OK'}</button>
-              ${item.authorId ? `<button onclick="adminDeleteAuthor('${item.authorId}')" class="w-full bg-slate-300 hover:bg-slate-400 text-slate-900 py-3 rounded-2xl text-xs font-bold">Eliminar autor</button>` : ''}
-            </div>
-          </div>
-        `;
-        adminGrid.appendChild(card);
-      });
-    }
-
-    async function adminDeletePublication(publicationId) {
-      if (!confirm('¿Querés eliminar esta publicación definitivamente?')) return;
-      try {
-        if (isRealFirebase) {
-          await dbRef.collection('publications').doc(publicationId).delete();
-        } else {
-          const index = localDB.findIndex(item => String(item.id) === String(publicationId));
-          if (index >= 0) localDB.splice(index, 1);
-        }
-        alert('Publicación eliminada.');
-        loadGrid();
-        loadAdminPublications();
-      } catch (error) {
-        console.error('Error eliminando publicación:', error);
-        alert('No se pudo eliminar la publicación.');
-      }
-    }
-
-    async function adminWarnPublication(publicationId) {
-      const note = prompt('Ingresa una advertencia o nota para esta publicación:');
-      if (note === null) return;
-      try {
-        if (isRealFirebase) {
-          await dbRef.collection('publications').doc(publicationId).set({
-            adminStatus: 'warning',
-            adminNote: note,
-            lastAdminAction: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-        } else {
-          const item = localDB.find(pub => String(pub.id) === String(publicationId));
-          if (item) {
-            item.adminStatus = 'warning';
-            item.adminNote = note;
-          }
-        }
-        alert('Advertencia registrada.');
-        loadAdminPublications();
-      } catch (error) {
-        console.error('Error registrando advertencia:', error);
-        alert('No se pudo registrar la advertencia.');
-      }
-    }
-
-    async function adminDeleteAuthor(authorId) {
-      if (!confirm('¿Querés eliminar al autor y sus publicaciones? Esta acción es irreversible.')) return;
-      try {
-        if (isRealFirebase) {
-          await dbRef.collection('users').doc(authorId).delete();
-          const publicationsSnapshot = await dbRef.collection('publications').where('authorId', '==', authorId).get();
-          const batch = dbRef.batch();
-          publicationsSnapshot.forEach(doc => batch.delete(doc.ref));
-          await batch.commit();
-        } else {
-          for (let i = localDB.length - 1; i >= 0; i--) {
-            if (String(localDB[i].authorId) === String(authorId)) {
-              localDB.splice(i, 1);
-            }
-          }
-        }
-        alert('Autor y sus publicaciones eliminados.');
-        loadGrid();
-        loadAdminPublications();
-      } catch (error) {
-        console.error('Error eliminando autor:', error);
-        alert('No se pudo eliminar la cuenta del autor.');
-      }
-    }
-
-    async function adminClearStatus(publicationId) {
-      if (!confirm('¿Querés marcar esta publicación como revisada y OK?')) return;
-      try {
-        if (isRealFirebase) {
-          await dbRef.collection('publications').doc(publicationId).set({
-            adminStatus: 'approved',
-            adminNote: '',
-            lastAdminAction: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-        } else {
-          const item = localDB.find(pub => String(pub.id) === String(publicationId));
-          if (item) {
-            delete item.adminStatus;
-            delete item.adminNote;
-          }
-        }
-        alert('Publicación marcada como OK.');
-        loadAdminPublications();
-      } catch (error) {
-        console.error('Error actualizando estado admin:', error);
-        alert('No se pudo actualizar el estado.');
-      }
-    }
 
     async function loadProfileData(targetUserId = null) {
       const userId = targetUserId || currentUser?.uid;
@@ -3507,8 +3303,13 @@
 
       const hasAnyPayoutField = Boolean(payoutAlias || payoutCbu || payoutOwnerName);
       if (hasAnyPayoutField) {
-        if (!payoutAlias || !payoutOwnerName || payoutCbu.length !== 22) {
-          alert('Para guardar datos de cobro debes completar Alias, CBU de 22 dígitos y titular.');
+        const hasAliasOrCbu = Boolean(payoutAlias || payoutCbu);
+        if (!hasAliasOrCbu || !payoutOwnerName) {
+          alert('Para guardar datos de cobro debes completar CBU/alias y titular.');
+          return;
+        }
+        if (payoutCbu && payoutCbu.length !== 22) {
+          alert('Si cargas CBU, debe tener 22 dígitos.');
           return;
         }
       }
