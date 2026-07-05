@@ -55,6 +55,14 @@
       padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
     }
 
+    .brand-logo-letter {
+      font-size: 1.25rem;
+      font-weight: 900;
+      line-height: 1;
+      transform: translateY(-0.5px);
+      display: inline-block;
+    }
+
     @media (max-width: 639px) {
       input,
       select,
@@ -119,13 +127,13 @@
   <header class="sm:hidden sticky top-0 z-50 bg-white border-b border-slate-200">
     <div class="px-4 pt-3 pb-2">
       <div class="flex items-center justify-between gap-3 mb-3">
-        <div class="flex items-center gap-3 cursor-pointer shrink-0" onclick="resetFilters()">
-          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand to-brand-dark text-white flex items-center justify-center shadow-lg shadow-violet-500/25 ring-1 ring-white/40">
-            <i class="fa-solid fa-book-open-reader text-lg"></i>
+        <div class="flex items-center gap-2 cursor-pointer" onclick="resetFilters()">
+          <div class="bg-brand w-10 h-10 rounded-2xl flex items-center justify-center text-white">
+            <span class="brand-logo-letter" aria-hidden="true">T</span>
           </div>
           <div class="leading-none">
-            <p class="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Marketplace</p>
-            <span class="block text-xl font-black tracking-tight text-brand">Tu Apunte</span>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Marketplace</p>
+            <span class="text-xl font-black tracking-tight text-brand">Tu Apunte</span>
           </div>
         </div>
         <button onclick="openAppDrawer()" class="w-11 h-11 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 text-lg">
@@ -154,13 +162,13 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
       
       <!-- Logo -->
-      <div class="flex items-center gap-3 cursor-pointer shrink-0" onclick="resetFilters()">
-        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-brand to-brand-dark text-white flex items-center justify-center shadow-lg shadow-violet-500/25 ring-1 ring-white/40">
-          <i class="fa-solid fa-book-open-reader text-base sm:text-lg"></i>
+      <div class="flex items-center gap-2 cursor-pointer" onclick="resetFilters()">
+        <div class="bg-brand w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-white">
+          <span class="brand-logo-letter" aria-hidden="true">T</span>
         </div>
         <div class="leading-none">
-          <p class="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Marketplace</p>
-          <span class="block text-base sm:text-2xl font-black tracking-tight text-brand">Tu Apunte</span>
+          <p class="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Marketplace</p>
+          <span class="text-base sm:text-2xl font-black tracking-tight text-brand">Tu Apunte</span>
         </div>
       </div>
 
@@ -174,7 +182,7 @@
 
       <!-- Acciones de Usuario -->
       <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto">
-        <button onclick="openVenderModal()" class="bg-gradient-to-r from-brand to-brand-dark hover:from-brand-dark hover:to-brand-dark text-white px-4 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-violet-500/20 text-xs sm:text-sm border border-white/20">
+        <button onclick="openVenderModal()" class="bg-brand hover:bg-brand-dark text-white px-4 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md text-xs sm:text-sm">
           <i class="fa-solid fa-file-circle-plus"></i>
           <span>Publicar</span>
         </button>
@@ -413,7 +421,7 @@
     <div class="grid grid-cols-5 gap-1">
       <button onclick="window.location.reload()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-house text-base"></i><span>Inicio</span></button>
       <button onclick="openMobileSearch()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-magnifying-glass text-base"></i><span>Buscar</span></button>
-      <button onclick="openVenderModal()" class="h-12 rounded-xl bg-gradient-to-br from-brand to-brand-dark text-white text-xs font-bold flex flex-col items-center justify-center gap-1 shadow-lg shadow-violet-500/20 border border-white/20"><i class="fa-solid fa-plus text-base"></i><span>Publicar</span></button>
+      <button onclick="openVenderModal()" class="h-12 rounded-xl bg-brand text-white text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-plus text-base"></i><span>Publicar</span></button>
       <button onclick="openTopRanking()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-solid fa-fire text-base"></i><span>Top</span></button>
       <button onclick="openProfilePage()" class="h-12 rounded-xl text-slate-600 text-xs font-bold flex flex-col items-center justify-center gap-1"><i class="fa-regular fa-user text-base"></i><span>Perfil</span></button>
     </div>
@@ -1092,14 +1100,14 @@
             currentUserData = data;
             updateAuthContainer();
             refreshUserLocationContext();
-            loadUserCommerceState();
+            loadUserCommerceState().then(() => handleAppRoute()).catch(() => handleAppRoute());
           });
         } else {
           currentUser = null;
           currentUserData = null;
           updateAuthContainer();
           refreshUserLocationContext();
-          loadUserCommerceState();
+          loadUserCommerceState().then(() => handleAppRoute()).catch(() => handleAppRoute());
         }
       });
     }
@@ -2557,7 +2565,18 @@
       if (!container) return false;
 
       const purchaseEntry = currentPurchaseHistory.find(entry => String(entry.publicationId || '') === String(publicationId || '') && String(entry.buyerId || currentUser?.uid || '') === String(targetUserId || currentUser?.uid || ''));
-      const publication = getPublicationById(publicationId) || purchaseEntry || null;
+      let publication = getPublicationById(publicationId) || purchaseEntry || null;
+
+      if (!publication && isRealFirebase && publicationId) {
+        try {
+          const publicationDoc = await dbRef.collection('publications').doc(String(publicationId)).get();
+          if (publicationDoc.exists) {
+            publication = { id: String(publicationId), ...publicationDoc.data() };
+          }
+        } catch (error) {
+          console.warn('No se pudo cargar la publicación comprada', error);
+        }
+      }
 
       if (!purchaseEntry && !publication) {
         container.innerHTML = '<div class="rounded-3xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">No se encontró esta compra.</div>';
@@ -2576,7 +2595,7 @@
           <div class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
             <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-0">
               <div class="bg-slate-100 p-3 sm:p-4">
-                <img src="${cover}" alt="${title}" class="w-full max-h-[70vh] object-contain rounded-3xl bg-white border border-slate-200" />
+                <img src="${cover}" alt="${title}" class="w-full max-h-[44vh] sm:max-h-[70vh] object-contain rounded-3xl bg-white border border-slate-200" />
               </div>
               <div class="p-5 sm:p-6 space-y-4">
                 <div class="space-y-2">
@@ -2607,13 +2626,13 @@
           </div>
 
           <section class="space-y-4">
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h4 class="text-lg font-black text-slate-900">Imágenes compradas</h4>
               <p class="text-xs text-slate-500">Desplázate hacia abajo para verlas grandes.</p>
             </div>
             ${assets.length ? assets.map((asset, index) => `
               <article class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-slate-100">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 py-3 border-b border-slate-100">
                   <div>
                     <p class="text-sm font-black text-slate-900">${asset.label || `Imagen ${index + 1}`}</p>
                     <p class="text-xs text-slate-500">Imagen ${index + 1} de ${assets.length}</p>
@@ -2621,7 +2640,7 @@
                   <a href="${asset.url}" target="_blank" rel="noopener noreferrer" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700">Abrir</a>
                 </div>
                 <div class="bg-slate-50 p-3 sm:p-4">
-                  <img src="${asset.url}" alt="${asset.label || `Imagen ${index + 1}`}" class="w-full max-h-[78vh] object-contain rounded-2xl bg-white border border-slate-200" />
+                  <img src="${asset.url}" alt="${asset.label || `Imagen ${index + 1}`}" class="w-full max-h-[62vh] sm:max-h-[78vh] object-contain rounded-2xl bg-white border border-slate-200" />
                 </div>
               </article>
             `).join('') : `
@@ -3410,6 +3429,7 @@
       }
 
       publications.forEach(item => {
+        const canDelete = Boolean(currentUser && String(currentUser.uid || '') === String(item.authorId || ''));
         const card = document.createElement('div');
         card.className = 'bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-all';
         card.setAttribute('onclick', `openDetailModal(${JSON.stringify(item.id)})`);
@@ -3428,10 +3448,74 @@
               <i class="fa-solid fa-location-dot"></i>
               <span>${item.city}</span>
             </div>
+            ${canDelete ? `
+              <button type="button" onclick="deleteOwnPublication(event, ${JSON.stringify(item.id)})" class="w-full mt-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 py-2 text-xs font-black hover:bg-rose-100 transition-colors">
+                Eliminar publicación
+              </button>
+            ` : ''}
           </div>
         `;
         grid.appendChild(card);
       });
+    }
+
+    async function deleteOwnPublication(event, publicationId) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      if (!currentUser) {
+        alert('Debes iniciar sesión para eliminar publicaciones.');
+        openAuthModal();
+        return;
+      }
+
+      const targetId = String(publicationId || '').trim();
+      if (!targetId) {
+        alert('No se encontró la publicación a eliminar.');
+        return;
+      }
+
+      const publication = getPublicationById(targetId) || null;
+      const ownerId = String(publication?.authorId || '');
+      if (!ownerId || ownerId !== String(currentUser.uid || '')) {
+        alert('Solo puedes eliminar tus propias publicaciones.');
+        return;
+      }
+
+      const confirmed = window.confirm('¿Seguro que deseas eliminar esta publicación? Esta acción no se puede deshacer.');
+      if (!confirmed) return;
+
+      try {
+        if (isRealFirebase) {
+          const assets = Array.isArray(publication?.contentAssets) ? publication.contentAssets : [];
+          for (const asset of assets) {
+            const storagePath = String(asset?.storagePath || '').trim();
+            if (!storagePath) continue;
+            try {
+              await storage.ref(storagePath).delete();
+            } catch (assetError) {
+              console.warn('No se pudo eliminar un archivo protegido', assetError);
+            }
+          }
+
+          await dbRef.collection('publications').doc(targetId).delete();
+        } else {
+          localDB = localDB.filter(item => String(item.id) !== targetId);
+        }
+
+        loadedPublications = loadedPublications.filter(item => String(item.id) !== targetId);
+        allPublications = allPublications.filter(item => String(item.id) !== targetId);
+        renderGrid(applyFilters(loadedPublications));
+
+        const profileUserId = getProfileUserIdFromHash() || String(currentUser.uid || '');
+        await loadProfileData(profileUserId);
+        alert('Publicación eliminada con éxito.');
+      } catch (error) {
+        console.error('No se pudo eliminar la publicación', error);
+        alert('No se pudo eliminar la publicación. Intenta nuevamente.');
+      }
     }
 
     function renderProfileReviews(reviews) {
@@ -3947,6 +4031,11 @@
     }
 
     async function handleAppRoute() {
+      if (isPaymentRoute()) {
+        await handlePaymentRoute();
+        return;
+      }
+
       const purchaseRouteData = getPurchaseRouteDataFromHash();
       if (purchaseRouteData) {
         await renderPurchaseHistoryPage(purchaseRouteData.userId, purchaseRouteData.publicationId);
