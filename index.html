@@ -1,50 +1,43 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tuapunte - Marketplace Educativo</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Iconos -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- CARGA DE SDKs DE FIREBASE DESDE LA NUBE -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tu Apunte</title>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            brand: {
-              light: '#6366F1',
-              DEFAULT: '#4F46E5', 
-              dark: '#3730A3',
-            }
+            brand: '#7c3aed',
+            'brand-dark': '#6d28d9'
+          },
+          boxShadow: {
+            soft: '0 20px 60px rgba(15, 23, 42, 0.08)'
           }
         }
       }
     };
-
-    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    html,
-    body {
-      overflow-x: hidden;
+    html {
+      scroll-behavior: smooth;
     }
 
-    .protected-view {
-      user-select: none;
+    body {
+      font-family: 'Inter', sans-serif;
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
+      user-select: none;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
     }
+
     .protected-view img {
       pointer-events: none;
     }
@@ -128,7 +121,7 @@
       <div class="flex items-center justify-between gap-3 mb-3">
         <div class="flex items-center gap-2 cursor-pointer" onclick="resetFilters()">
           <div class="bg-brand w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-lg">T</div>
-          <span class="text-xl font-black tracking-tight text-slate-900">Tu Apunte</span>
+          <span class="text-xl font-black tracking-tight text-brand">Tu Apunte</span>
         </div>
         <button onclick="openAppDrawer()" class="w-11 h-11 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 text-lg">
           <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -189,7 +182,7 @@
   </header>
 
   <!-- MENSAJE DE ESTADO DE CONEXIÓN A LA NUBE -->
-  <div id="connectionStatus" class="bg-amber-100 border-b border-amber-200 text-amber-800 text-center py-2 text-xs font-bold">
+  <div id="connectionStatus" class="hidden bg-amber-100 border-b border-amber-200 text-amber-800 text-center py-2 text-xs font-bold">
     ⚠️ Estás usando el modo de prueba local. Para conectar tu base de datos real en la nube, debes pegar tus llaves de Firebase en el código del archivo index.html.
   </div>
 
@@ -383,9 +376,9 @@
               </div>
               <div>
                 <label class="block font-bold text-slate-600 mb-1">Comentario</label>
-                <textarea id="detailReviewComment" rows="3" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand text-xs" placeholder="Cuenta qué te gustó y cómo se puede mejorar."></textarea>
+                <textarea id="detailReviewComment" rows="3" class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand text-xs" placeholder="Cuenta qué te gustó o qué debería mejorar."></textarea>
               </div>
-              <p id="detailReviewHint" class="text-xs text-slate-500">Si tu calificación es menor a 3 estrellas, el comentario es obligatorio. Si es 3 o más, es opcional.</p>
+              <p id="detailReviewHint" class="hidden text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">Si elegís 1 o 2 estrellas, tenés que explicar por qué en el comentario.</p>
               <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs">Enviar reseña</button>
             </form>
           </div>
@@ -520,7 +513,7 @@
       <form id="venderForm" class="space-y-4 text-xs">
         <div id="publishPayoutWarning" class="hidden rounded-2xl border border-rose-200 bg-rose-50 p-3 text-rose-700">
           <p class="font-black mb-1">Antes de publicar debes completar tus datos de cobro.</p>
-          <p class="text-[11px] mb-2">Es obligatorio para vendedores cargar CBU/alias y nombre del titular de la cuenta.</p>
+          <p class="text-[11px] mb-2">Es obligatorio para vendedores cargar un CBU o alias, junto al nombre del titular de la cuenta.</p>
           <button type="button" onclick="goToPayoutSetupFromPublish()" class="h-9 px-3 rounded-xl bg-rose-600 text-white font-bold text-[11px]">Hacer clic aquí</button>
         </div>
         <div>
@@ -572,7 +565,7 @@
               <span id="commissionSellerAmount" class="font-black">$0</span>
             </div>
           </div>
-          <p class="mt-2 text-[11px] text-amber-800">Todo el proceso está respaldado por Mercado Pago y queda 100% seguro para la venta y el cobro.</p>
+          <p class="mt-2 text-[11px] text-amber-800">Todo el proceso está respaldado por una pasarela de pago segura para la venta y el cobro.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -711,14 +704,10 @@
           <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
             <h4 class="text-sm font-black text-emerald-800 mb-2">Datos de cobro para vender (obligatorio)</h4>
             <p class="text-xs text-emerald-700 mb-3">Solo tú puedes ver y editar esta información desde tu perfil. Los cobros se envían a esta cuenta dentro de los primeros 3 días hábiles después de cada venta. Si tenemos problemas para acreditar el pago, nos contactaremos por mail.</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div class="grid grid-cols-1 gap-3 mb-3">
               <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">Alias de cuenta</label>
-                <input type="text" id="editPayoutAlias" placeholder="Ej: nombre.apunte" class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">CBU (22 dígitos)</label>
-                <input type="text" id="editPayoutCbu" inputmode="numeric" maxlength="22" placeholder="0000000000000000000000" class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
+                <label class="block text-xs font-bold text-slate-600 mb-1">CBU o alias *</label>
+                <input type="text" id="editPayoutIdentifier" placeholder="Ej: nombre.apunte o 0000000000000000000000" class="w-full p-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand text-sm" />
               </div>
             </div>
             <div>
@@ -755,7 +744,13 @@
           </div>
 
           <div id="profilePurchaseHistorySection" class="hidden bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
-            <h3 class="text-lg font-black text-slate-900 mb-3">Historial de compras:</h3>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+              <h3 class="text-lg font-black text-slate-900">Historial de compras:</h3>
+              <button type="button" onclick="openPurchaseHistoryPage(currentUser?.uid)" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-black text-white shadow-sm">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                Ver compras realizadas
+              </button>
+            </div>
             <div id="profilePurchaseHistoryList" class="space-y-3"></div>
           </div>
 
@@ -774,8 +769,7 @@
             </div>
             <div id="profilePayoutSection" class="hidden mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm">
               <p class="text-xs uppercase tracking-[0.2em] text-emerald-700 font-black mb-2">Datos de cobro privados</p>
-              <p><span class="font-black text-slate-700">Alias:</span> <span id="profilePayoutAlias" class="text-slate-600">N/D</span></p>
-              <p><span class="font-black text-slate-700">CBU:</span> <span id="profilePayoutCbu" class="text-slate-600">N/D</span></p>
+              <p><span class="font-black text-slate-700">CBU o alias:</span> <span id="profilePayoutIdentifier" class="text-slate-600">N/D</span></p>
               <p><span class="font-black text-slate-700">Titular:</span> <span id="profilePayoutOwnerName" class="text-slate-600">N/D</span></p>
               <p class="mt-2 text-[11px] text-emerald-700">Las ventas se acreditan dentro de los primeros 3 días hábiles posteriores a cada venta.</p>
             </div>
@@ -808,6 +802,34 @@
     </div>
   </div>
 
+  <div id="purchaseHistoryPage" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <button onclick="closePurchaseHistoryPage()" class="text-slate-500 hover:text-slate-900 font-bold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver al perfil
+        </button>
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-400 font-bold">Compras realizadas</p>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900">Tus compras en detalle</h2>
+        </div>
+      </div>
+      <div id="purchaseHistoryPageContent" class="space-y-5"></div>
+    </div>
+  </div>
+
+  <div id="paymentResultPage" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28">
+      <div id="paymentResultCard" class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden"></div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+
   <script>
     // ==============================================
     // 🟢 TUS LLAVES REALES DE LA NUBE CARGADAS 🟢
@@ -815,6 +837,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyDyal6ABrCi2l1Ye1wgkE5Dw5xFGlUUsaM",
       authDomain: "tuapunte-cd94a.firebaseapp.com",
+      databaseURL: "https://tuapunte-cd94a-default-rtdb.firebaseio.com",
       projectId: "tuapunte-cd94a",
       storageBucket: "tuapunte-cd94a.firebasestorage.app",
       messagingSenderId: "984806073833",
@@ -907,6 +930,8 @@
     const cityCoordinatesCache = new Map();
     const publicationsPageSize = 30;
     const defaultAvatar = 'https://via.placeholder.com/40?text=U';
+    const secureDeviceIdKey = 'tuapunte:deviceId';
+    const secureContentCache = new Map();
     let isDarkModeEnabled = false;
     let legalDocumentsCache = null;
     const legalDocumentDefaults = {
@@ -999,7 +1024,7 @@
       },
       como_comprar: {
         title: 'Cómo comprar',
-        body: '<p>Busca un apunte, revisa el detalle y presiona Comprar. El pago se procesa con Mercado Pago y queda registrado en tu historial.</p>'
+        body: '<p>Busca un apunte, revisa el detalle y presiona Comprar. El pago se procesa con una pasarela segura y queda registrado en tu historial.</p>'
       },
       como_vender: {
         title: 'Cómo vender',
@@ -1015,11 +1040,20 @@
       },
       metodos_pago: {
         title: 'Métodos de pago aceptados',
-        body: '<p>Los pagos se procesan con Mercado Pago según los medios habilitados en tu país: saldo, tarjeta de débito, tarjeta de crédito y otros.</p>'
+        body: '<p>Los pagos se procesan con una pasarela segura según los medios habilitados en tu país: saldo, tarjeta de débito, tarjeta de crédito y otros.</p>'
       }
     };
 
-    if (firebaseConfig.apiKey !== "TU_API_KEY") {
+    const hasRealFirebaseConfig = Boolean(
+      firebaseConfig.apiKey &&
+      firebaseConfig.apiKey !== 'TU_API_KEY' &&
+      firebaseConfig.appId &&
+      firebaseConfig.appId !== 'TU_APP_ID' &&
+      firebaseConfig.projectId &&
+      firebaseConfig.projectId !== 'TU_PROJECT_ID'
+    );
+
+    if (hasRealFirebaseConfig) {
       isRealFirebase = true;
       try {
         firebase.analytics();
@@ -1033,6 +1067,7 @@
     } else {
       const statusEl = document.getElementById('connectionStatus');
       if (statusEl) {
+        statusEl.classList.remove('hidden');
         statusEl.innerText = "⚠️ Estás usando el modo de prueba local. Para conectar tu base de datos real en la nube, debes pegar tus llaves de Firebase en el código del archivo index.html.";
       }
     }
@@ -1095,12 +1130,17 @@
       return `${'*'.repeat(Math.max(0, cbu.length - 4))}${last}`;
     }
 
-    function hasValidSellerPayoutData(userData = currentUserData) {
+    function getPayoutIdentifier(userData = currentUserData) {
+      const directValue = String(userData?.payoutIdentifier || '').trim();
       const alias = String(userData?.payoutAlias || '').trim();
-      const ownerName = String(userData?.payoutOwnerName || '').trim();
       const cbu = normalizeCbu(userData?.payoutCbu || '');
-      const hasAliasOrCbu = Boolean(alias || cbu.length === 22);
-      return Boolean(ownerName && hasAliasOrCbu);
+      return directValue || alias || cbu;
+    }
+
+    function hasValidSellerPayoutData(userData = currentUserData) {
+      const ownerName = String(userData?.payoutOwnerName || '').trim();
+      const identifier = getPayoutIdentifier(userData);
+      return Boolean(ownerName && identifier);
     }
 
     function updatePublishPayoutWarning() {
@@ -1126,11 +1166,11 @@
       openProfilePage();
       setTimeout(() => {
         const editSection = document.getElementById('profileEditSection');
-        const cbuInput = document.getElementById('editPayoutCbu');
+        const payoutInput = document.getElementById('editPayoutIdentifier');
         if (editSection) editSection.classList.remove('hidden');
-        if (cbuInput) {
-          cbuInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          cbuInput.focus();
+        if (payoutInput) {
+          payoutInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          payoutInput.focus();
         }
       }, 240);
     }
@@ -1156,6 +1196,21 @@
 
     function writeLocalStorageArray(key, value) {
       localStorage.setItem(key, JSON.stringify(Array.isArray(value) ? value : []));
+    }
+
+    function readLocalStorageObject(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function writeLocalStorageObject(key, value) {
+      localStorage.setItem(key, JSON.stringify(value && typeof value === 'object' && !Array.isArray(value) ? value : {}));
     }
 
     async function loadUserCommerceState() {
@@ -1193,6 +1248,212 @@
         || loadedPublications.find(item => String(item.id) === targetId)
         || localDB.find(item => String(item.id) === targetId)
         || null;
+    }
+
+    function getPurchaseEntryForPublication(publicationId) {
+      const targetId = String(publicationId || '');
+      return currentPurchaseHistory.find(entry => String(entry.publicationId || '') === targetId && String(entry.status || '').toLowerCase() === 'approved') || null;
+    }
+
+    function getAccessiblePublicationContent(publication) {
+      const purchaseEntry = getPurchaseEntryForPublication(publication?.id);
+
+      return {
+        purchaseEntry,
+        canViewContent: Boolean(purchaseEntry || (currentUser && String(publication?.authorId || '') === String(currentUser.uid)))
+      };
+    }
+
+    function getOrCreateSecureDeviceId() {
+      let deviceId = localStorage.getItem(secureDeviceIdKey);
+      if (!deviceId) {
+        deviceId = (window.crypto?.randomUUID?.() || `device_${Date.now()}_${Math.random().toString(16).slice(2)}`);
+        localStorage.setItem(secureDeviceIdKey, deviceId);
+      }
+      return deviceId;
+    }
+
+    function getContentAccessUrlCandidates() {
+      const origin = window.location.origin || '';
+      return [
+        'http://localhost:3000/content/access',
+        'http://localhost:8888/.netlify/functions/content-access',
+        origin ? `${origin}/.netlify/functions/content-access` : ''
+      ].filter(Boolean);
+    }
+
+    function getCreatePreferenceUrlCandidates() {
+      const origin = window.location.origin || '';
+      return [
+        'http://localhost:3000/mp/create-preference',
+        'http://localhost:8888/.netlify/functions/create-preference',
+        origin ? `${origin}/.netlify/functions/create-preference` : ''
+      ].filter(Boolean);
+    }
+
+    async function postJsonWithFallback(urls, body, headers = {}) {
+      let lastError = null;
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...headers
+            },
+            body: JSON.stringify(body)
+          });
+
+          const data = await response.json().catch(() => ({}));
+          if (response.ok) {
+            return data;
+          }
+
+          lastError = new Error(data.error || `HTTP ${response.status}`);
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      throw lastError || new Error('No se pudo contactar al backend.');
+    }
+
+    async function getCurrentAuthToken() {
+      if (!currentUser) return '';
+      try {
+        return await currentUser.getIdToken(true);
+      } catch (error) {
+        return await currentUser.getIdToken();
+      }
+    }
+
+    async function requestSecureContentAccess(publicationId) {
+      const cacheKey = String(publicationId || '');
+      const currentCache = secureContentCache.get(cacheKey);
+      if (currentCache && currentCache.expiresAt > Date.now() + 15000) {
+        return currentCache.payload;
+      }
+
+      const token = await getCurrentAuthToken();
+      if (!token) {
+        throw new Error('Debes iniciar sesión para acceder al contenido comprado.');
+      }
+
+      const data = await postJsonWithFallback(getContentAccessUrlCandidates(), {
+        publicationId: cacheKey,
+        deviceId: getOrCreateSecureDeviceId()
+      }, {
+        Authorization: `Bearer ${token}`,
+        'X-Device-Id': getOrCreateSecureDeviceId()
+      });
+
+      const payload = data || {};
+      secureContentCache.set(cacheKey, {
+        expiresAt: Date.now() + Number(payload.signedUrlTtlMs || 0),
+        payload
+      });
+      return payload;
+    }
+
+    async function renderSecurePublicationContent(publication) {
+      const assets = Array.isArray(publication?.contentAssets) ? publication.contentAssets : [];
+      if (!assets.length) {
+        return '<div class="text-sm text-slate-500">Sin archivos privados cargados.</div>';
+      }
+
+      const access = await requestSecureContentAccess(publication.id);
+      const signedAssets = Array.isArray(access?.assets) ? access.assets : [];
+      const defaultSignedUrl = String(access?.signedUrl || '');
+
+      const renderedNodes = assets.map(asset => {
+        const signedAsset = signedAssets.find(item => String(item.storagePath || '') === String(asset.storagePath || ''));
+        const assetUrl = String(signedAsset?.signedUrl || defaultSignedUrl || '');
+        if (!assetUrl) {
+          return '<div class="text-sm text-red-500">No se pudo cargar un archivo privado.</div>';
+        }
+
+        if (asset.kind === 'video') {
+          return `<video controls playsinline class="w-full rounded-2xl border border-slate-200"><source src="${assetUrl}" type="${asset.mimeType || 'video/mp4'}"></video>`;
+        }
+
+        if (asset.kind === 'document') {
+          return `<a href="${assetUrl}" target="_blank" rel="noopener noreferrer" class="block rounded-2xl border border-slate-200 p-4 text-sm text-slate-700 hover:bg-slate-50">Abrir ${asset.label || 'documento'}</a>`;
+        }
+
+        return `<img src="${assetUrl}" alt="${asset.label || 'Contenido privado'}" class="w-full rounded-2xl border border-slate-200 object-cover">`;
+      });
+
+      return `
+        <div class="space-y-3">
+          <div class="text-xs uppercase tracking-[0.3em] text-slate-400">Acceso comprado</div>
+          <div class="grid gap-3">${renderedNodes.join('')}</div>
+          ${access?.expiresAt ? `<div class="text-xs text-slate-500">Acceso temporal activo hasta ${formatDate(access.expiresAt)}</div>` : ''}
+        </div>
+      `;
+    }
+
+    async function getBuyerPayoutDataSnapshot(userId) {
+      // Tomamos primero lo que ya está en memoria y en el formulario de perfil como fallback.
+      let payoutIdentifier = String(currentUserData?.payoutIdentifier || currentUserData?.payoutAlias || currentUserData?.payoutCbu || document.getElementById('editPayoutIdentifier')?.value || '').trim();
+      let payoutAlias = String(currentUserData?.payoutAlias || '').trim();
+      let payoutCbu = normalizeCbu(currentUserData?.payoutCbu || '');
+      let payoutOwnerName = String(currentUserData?.payoutOwnerName || document.getElementById('editPayoutOwnerName')?.value || '').trim();
+
+      // Si estamos en Firebase, refrescamos desde users/{uid} para evitar campos vacíos por estado desactualizado.
+      if (isRealFirebase && userId) {
+        try {
+          const userDoc = await dbRef.collection('users').doc(String(userId)).get();
+          if (userDoc.exists) {
+            const dbUser = userDoc.data() || {};
+            payoutIdentifier = String(dbUser.payoutIdentifier || dbUser.payoutAlias || dbUser.payoutCbu || payoutIdentifier || '').trim();
+            payoutAlias = String(dbUser.payoutAlias || payoutAlias || '').trim();
+            payoutCbu = normalizeCbu(dbUser.payoutCbu || payoutCbu || '');
+            payoutOwnerName = String(dbUser.payoutOwnerName || payoutOwnerName || '').trim();
+          }
+        } catch (error) {
+          console.warn('No se pudo refrescar datos de cobro del comprador', error);
+        }
+      }
+
+      const cbuAliasCombined = payoutIdentifier || payoutAlias || payoutCbu || '';
+      return {
+        payoutIdentifier,
+        payoutAlias,
+        payoutCbu,
+        payoutOwnerName,
+        cbuAliasCombined
+      };
+    }
+
+    async function getSellerPayoutDataSnapshot(sellerId, publication = null) {
+      let payoutIdentifier = String(publication?.sellerPayoutIdentifier || publication?.sellerPayoutAlias || publication?.sellerPayoutCbu || '').trim();
+      let payoutAlias = String(publication?.sellerPayoutAlias || '').trim();
+      let payoutCbu = normalizeCbu(publication?.sellerPayoutCbu || '');
+      let payoutOwnerName = String(publication?.sellerPayoutOwnerName || '').trim();
+
+      if (isRealFirebase && sellerId) {
+        try {
+          const sellerDoc = await dbRef.collection('users').doc(String(sellerId)).get();
+          if (sellerDoc.exists) {
+            const sellerData = sellerDoc.data() || {};
+            payoutIdentifier = String(sellerData.payoutIdentifier || sellerData.payoutAlias || sellerData.payoutCbu || payoutIdentifier || '').trim();
+            payoutAlias = String(sellerData.payoutAlias || payoutAlias || '').trim();
+            payoutCbu = normalizeCbu(sellerData.payoutCbu || payoutCbu || '');
+            payoutOwnerName = String(sellerData.payoutOwnerName || payoutOwnerName || '').trim();
+          }
+        } catch (error) {
+          console.warn('No se pudo refrescar datos de cobro del vendedor', error);
+        }
+      }
+
+      const cbuAliasCombined = payoutIdentifier || payoutAlias || payoutCbu || '';
+      return {
+        payoutIdentifier,
+        payoutAlias,
+        payoutCbu,
+        payoutOwnerName,
+        cbuAliasCombined
+      };
     }
 
     async function toggleFavorite(publicationId, event = null) {
@@ -1241,23 +1502,42 @@
       }
     }
 
-    async function addPurchaseHistoryEntry(publication, quantity = 1) {
+    async function addPurchaseHistoryEntry(publication, quantity = 1, orderId = '') {
       const userId = getCurrentUserId();
       if (!userId || !publication) return;
+      const buyerPayout = await getBuyerPayoutDataSnapshot(userId);
+      const sellerId = String(publication.authorId || '');
+      const sellerPayout = await getSellerPayoutDataSnapshot(sellerId, publication);
 
       const entry = {
         buyerId: userId,
         publicationId: String(publication.id || ''),
         title: publication.title || 'Publicación',
+        description: publication.description || '',
+        portadaUrl: publication.portadaUrl || '',
+        subject: publication.subject || '',
+        institution: publication.institution || '',
+        contentAssets: Array.isArray(publication.contentAssets) ? publication.contentAssets : [],
+        orderId: String(orderId || ''),
         price: Number(publication.price || 0),
         quantity: Number(quantity || 1),
-        authorId: publication.authorId || '',
+        authorId: sellerId,
         authorNick: publication.authorNick || 'Anónimo',
+        // cbu_alias corresponde al dato de cobro de la venta (vendedor).
+        cbu_alias: String(sellerPayout.cbuAliasCombined || ''),
+        sellerPayoutAlias: String(sellerPayout.payoutAlias || ''),
+        sellerPayoutCbu: String(sellerPayout.payoutCbu || ''),
+        sellerPayoutOwnerName: String(sellerPayout.payoutOwnerName || ''),
+        buyer_cbu_alias: String(buyerPayout.cbuAliasCombined || ''),
+        buyerPayoutAlias: buyerPayout.payoutAlias || '',
+        buyerPayoutCbu: buyerPayout.payoutCbu || '',
+        buyerPayoutOwnerName: buyerPayout.payoutOwnerName || '',
         createdAt: new Date(),
         status: 'pendiente'
       };
 
       if (isRealFirebase) {
+        console.log('Payload compra a Firestore (purchases):', entry);
         const added = await dbRef.collection('purchases').add(entry);
         currentPurchaseHistory.unshift({ id: added.id, ...entry });
       } else {
@@ -1273,6 +1553,129 @@
         currentPurchaseHistory = stored;
         localPurchaseHistory = globalStored;
       }
+    }
+
+    async function approvePurchaseHistoryEntry(publication, quantity = 1, orderId = '') {
+      const userId = getCurrentUserId();
+      if (!userId || !publication) return null;
+      const buyerPayout = await getBuyerPayoutDataSnapshot(userId);
+      const sellerId = String(publication.authorId || '');
+      const sellerPayout = await getSellerPayoutDataSnapshot(sellerId, publication);
+      const approvedEntry = {
+        buyerId: userId,
+        publicationId: String(publication.id || ''),
+        title: publication.title || 'Publicación',
+        description: publication.description || '',
+        portadaUrl: publication.portadaUrl || '',
+        subject: publication.subject || '',
+        institution: publication.institution || '',
+        contentAssets: Array.isArray(publication.contentAssets) ? publication.contentAssets : [],
+        orderId: String(orderId || ''),
+        price: Number(publication.price || 0),
+        quantity: Number(quantity || 1),
+        authorId: sellerId,
+        authorNick: publication.authorNick || 'Anónimo',
+        cbu_alias: String(sellerPayout.cbuAliasCombined || ''),
+        sellerPayoutAlias: String(sellerPayout.payoutAlias || ''),
+        sellerPayoutCbu: String(sellerPayout.payoutCbu || ''),
+        sellerPayoutOwnerName: String(sellerPayout.payoutOwnerName || ''),
+        buyer_cbu_alias: String(buyerPayout.cbuAliasCombined || ''),
+        buyerPayoutAlias: buyerPayout.payoutAlias || '',
+        buyerPayoutCbu: buyerPayout.payoutCbu || '',
+        buyerPayoutOwnerName: buyerPayout.payoutOwnerName || '',
+        createdAt: new Date(),
+        approvedAt: new Date(),
+        status: 'approved'
+      };
+
+      if (isRealFirebase) {
+        const existingSnapshot = await dbRef.collection('purchases')
+          .where('buyerId', '==', userId)
+          .where('orderId', '==', String(orderId || ''))
+          .limit(1)
+          .get();
+
+        if (existingSnapshot.empty) {
+          const added = await dbRef.collection('purchases').add(approvedEntry);
+          currentPurchaseHistory.unshift({ id: added.id, ...approvedEntry });
+        } else {
+          const doc = existingSnapshot.docs[0];
+          await doc.ref.set(approvedEntry, { merge: true });
+          currentPurchaseHistory = currentPurchaseHistory.map(entry => String(entry.id) === String(doc.id) ? { ...entry, ...approvedEntry, id: doc.id } : entry);
+        }
+      } else {
+        const storageKey = getUserScopedStorageKey('tuapunte:purchaseHistory', userId);
+        const stored = readLocalStorageArray(storageKey);
+        const globalHistoryKey = 'tuapunte:allPurchases';
+        const globalStored = readLocalStorageArray(globalHistoryKey);
+        const finalEntry = { id: `p_${Date.now()}`, ...approvedEntry };
+        const replaceOrInsert = list => {
+          const without = list.filter(item => String(item.orderId || '') !== String(orderId || ''));
+          without.unshift(finalEntry);
+          return without;
+        };
+        writeLocalStorageArray(storageKey, replaceOrInsert(stored));
+        writeLocalStorageArray(globalHistoryKey, replaceOrInsert(globalStored));
+        currentPurchaseHistory = readLocalStorageArray(storageKey);
+        localPurchaseHistory = readLocalStorageArray(globalHistoryKey);
+      }
+
+      return approvedEntry;
+    }
+
+    function savePendingPurchaseCheckout(orderId, publication, quantity = 1) {
+      const userId = getCurrentUserId();
+      if (!orderId || !publication || !userId) return;
+      const storageKey = getUserScopedStorageKey('tuapunte:pendingCheckouts', userId);
+      const pending = readLocalStorageObject(storageKey);
+      pending[String(orderId)] = {
+        orderId: String(orderId),
+        publicationId: String(publication.id || ''),
+        title: String(publication.title || 'Producto'),
+        description: String(publication.description || ''),
+        portadaUrl: String(publication.portadaUrl || ''),
+        price: Number(publication.price || 0),
+        quantity: Number(quantity) > 0 ? Number(quantity) : 1,
+        authorId: String(publication.authorId || ''),
+        authorNick: String(publication.authorNick || 'Anónimo'),
+        contentAssets: Array.isArray(publication.contentAssets) ? publication.contentAssets : [],
+        createdAt: new Date().toISOString()
+      };
+      writeLocalStorageObject(storageKey, pending);
+    }
+
+    function readPendingPurchaseCheckout(orderId) {
+      const userId = getCurrentUserId();
+      if (!orderId || !userId) return null;
+      const storageKey = getUserScopedStorageKey('tuapunte:pendingCheckouts', userId);
+      const pending = readLocalStorageObject(storageKey);
+      return pending[String(orderId)] || null;
+    }
+
+    function clearPendingPurchaseCheckout(orderId) {
+      const userId = getCurrentUserId();
+      if (!orderId || !userId) return;
+      const storageKey = getUserScopedStorageKey('tuapunte:pendingCheckouts', userId);
+      const pending = readLocalStorageObject(storageKey);
+      delete pending[String(orderId)];
+      writeLocalStorageObject(storageKey, pending);
+    }
+
+    async function confirmPurchaseFromCheckout(orderId, fallbackPublication = null) {
+      const pending = readPendingPurchaseCheckout(orderId);
+      const publicationId = String(pending?.publicationId || fallbackPublication?.id || '');
+      const publication = pending || fallbackPublication || (publicationId ? getPublicationById(publicationId) : null);
+
+      if (!publicationId || !publication) {
+        return null;
+      }
+
+      const approvedEntry = await approvePurchaseHistoryEntry({
+        ...publication,
+        id: publicationId
+      }, Number(pending?.quantity || 1), orderId);
+      clearPendingPurchaseCheckout(orderId);
+      return approvedEntry;
     }
 
     async function reportPublicationFromHistory(publicationId) {
@@ -1811,14 +2214,489 @@
       return Number.isFinite(parsed) ? parsed : 0;
     }
 
+    function formatDate(value) {
+      const dateValue = value?.toDate ? value.toDate() : value instanceof Date ? value : new Date(value);
+      if (!dateValue || Number.isNaN(dateValue.getTime())) return 'Fecha no disponible';
+      return dateValue.toLocaleString('es-AR', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      });
+    }
+
+    function formatRatingValue(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric.toFixed(1) : '0.0';
+    }
+
+    async function getPublicationReviewStats(publicationIds = []) {
+      const uniqueIds = Array.from(new Set((publicationIds || []).map(id => String(id || '')).filter(Boolean)));
+      const stats = new Map(uniqueIds.map(id => [id, { count: 0, sum: 0, average: '0.0' }]));
+
+      if (!uniqueIds.length) return stats;
+
+      if (isRealFirebase) {
+        try {
+          for (let index = 0; index < uniqueIds.length; index += 10) {
+            const batch = uniqueIds.slice(index, index + 10);
+            const snapshot = await dbRef.collection('reseñas').where('publicationId', 'in', batch).get();
+            snapshot.forEach(doc => {
+              const data = doc.data() || {};
+              const publicationId = String(data.publicationId || '');
+              if (!stats.has(publicationId)) return;
+              const current = stats.get(publicationId);
+              current.count += 1;
+              current.sum += Number(data.estrellas || 0);
+              current.average = formatRatingValue(current.count ? current.sum / current.count : 0);
+              stats.set(publicationId, current);
+            });
+          }
+        } catch (error) {
+          console.warn('No se pudieron cargar las reseñas por publicación', error);
+        }
+      } else {
+        uniqueIds.forEach(publicationId => {
+          const relatedReviews = localReviews.filter(review => String(review.publicationId || '') === publicationId);
+          const count = relatedReviews.length;
+          const sum = relatedReviews.reduce((acc, review) => acc + Number(review.estrellas || 0), 0);
+          stats.set(publicationId, {
+            count,
+            sum,
+            average: formatRatingValue(count ? sum / count : 0)
+          });
+        });
+      }
+
+      return stats;
+    }
+
+    async function enrichPublicationsWithReviewStats(items = []) {
+      const stats = await getPublicationReviewStats(items.map(item => item?.id));
+      return items.map(item => {
+        const publicationStats = stats.get(String(item?.id || '')) || { count: 0, average: '0.0' };
+        return {
+          ...item,
+          publicationReviewCount: Number(publicationStats.count || 0),
+          publicationAverage: publicationStats.average || '0.0'
+        };
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getRouteSegments() {
+      return String(window.location.hash || '').replace(/^#/, '').split('?')[0].split('/').filter(Boolean);
+    }
+
+    function getRouteQueryParams() {
+      const hash = String(window.location.hash || '').replace(/^#/, '');
+      const queryString = hash.includes('?') ? hash.split('?').slice(1).join('?') : '';
+      const params = new URLSearchParams(queryString);
+      return {
+        orderId: String(params.get('order') || params.get('orderId') || '').trim(),
+        status: String(params.get('status') || '').trim(),
+        message: String(params.get('message') || '').trim()
+      };
+    }
+
+    function getPurchaseRouteDataFromHash() {
+      const segments = getRouteSegments();
+      if (segments[0] !== 'perfil' || segments[2] !== 'compras') return null;
+      return {
+        userId: decodeURIComponent(segments[1] || ''),
+        publicationId: decodeURIComponent(segments[3] || '')
+      };
+    }
+
+    function isPurchaseHistoryRoute() {
+      return Boolean(getPurchaseRouteDataFromHash());
+    }
+
+    function getPaymentRouteDataFromHash() {
+      const segments = getRouteSegments();
+      if (segments[0] !== 'payment') return null;
+      const query = getRouteQueryParams();
+      return {
+        flow: decodeURIComponent(segments[1] || ''),
+        orderId: decodeURIComponent(query.orderId || ''),
+        status: decodeURIComponent(query.status || segments[1] || ''),
+        message: decodeURIComponent(query.message || '')
+      };
+    }
+
+    function isPaymentRoute() {
+      return Boolean(getPaymentRouteDataFromHash());
+    }
+
+    function openPurchaseHistoryPage(userId = currentUser?.uid || '') {
+      const targetUserId = String(userId || '').trim();
+      if (!targetUserId) {
+        alert('Debes iniciar sesión para ver tus compras.');
+        openAuthModal();
+        return;
+      }
+      window.location.hash = `perfil/${encodeURIComponent(targetUserId)}/compras`;
+    }
+
+    function openPurchaseDetailPage(userId = currentUser?.uid || '', publicationId = '') {
+      const targetUserId = String(userId || '').trim();
+      const targetPublicationId = String(publicationId || '').trim();
+      if (!targetUserId || !targetPublicationId) return;
+      window.location.hash = `perfil/${encodeURIComponent(targetUserId)}/compras/${encodeURIComponent(targetPublicationId)}`;
+    }
+
+    function closePurchaseHistoryPage(updateUrl = true) {
+      const purchasePage = document.getElementById('purchaseHistoryPage');
+      if (purchasePage) purchasePage.classList.add('hidden');
+      if (updateUrl && isPurchaseHistoryRoute()) {
+        const routeData = getPurchaseRouteDataFromHash();
+        if (routeData?.userId) {
+          history.pushState(null, '', `${window.location.pathname}${window.location.search}#perfil/${encodeURIComponent(routeData.userId)}`);
+        } else {
+          history.pushState(null, '', `${window.location.pathname}${window.location.search}`);
+        }
+      }
+    }
+
+    function renderPaymentResultPage({ title = 'Compra confirmada', message = '', actionLabel = 'Ver compras realizadas', actionHref = '#', icon = '✓', tone = 'success' } = {}) {
+      const page = document.getElementById('paymentResultPage');
+      const card = document.getElementById('paymentResultCard');
+      if (!page || !card) return;
+
+      const toneStyles = tone === 'success'
+        ? 'from-emerald-500 via-emerald-600 to-teal-600 text-white'
+        : 'from-amber-500 via-orange-500 to-rose-500 text-white';
+
+      card.innerHTML = `
+        <div class="bg-gradient-to-br ${toneStyles} p-6 sm:p-8">
+          <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-2xl font-black shadow-sm">${escapeHtml(icon)}</div>
+          <h2 class="mt-5 text-2xl sm:text-4xl font-black tracking-tight">${escapeHtml(title)}</h2>
+          <p class="mt-3 max-w-2xl text-sm sm:text-base text-white/90 leading-relaxed">${escapeHtml(message)}</p>
+          <div class="mt-6 flex flex-col sm:flex-row gap-3">
+            <a href="${escapeHtml(actionHref)}" class="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 font-bold text-slate-900 shadow-lg shadow-black/10 hover:scale-[1.01] transition-transform">${escapeHtml(actionLabel)}</a>
+            <button onclick="closePaymentResultPage()" class="inline-flex items-center justify-center rounded-2xl border border-white/25 bg-white/10 px-5 py-3 font-bold text-white hover:bg-white/15 transition-colors">Cerrar</button>
+          </div>
+        </div>
+      `;
+
+      page.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closePaymentResultPage() {
+      const page = document.getElementById('paymentResultPage');
+      if (page) page.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    function hidePaymentResultPage() {
+      const page = document.getElementById('paymentResultPage');
+      if (page) page.classList.add('hidden');
+    }
+
+    async function handlePaymentRoute() {
+      const paymentRouteData = getPaymentRouteDataFromHash();
+      if (!paymentRouteData) return false;
+
+      closePurchaseHistoryPage(false);
+      closeProfilePage(false);
+      closeTopRanking(false);
+      hidePaymentResultPage();
+
+      if (paymentRouteData.flow === 'success') {
+        const approvedEntry = await confirmPurchaseFromCheckout(paymentRouteData.orderId);
+        renderPaymentResultPage({
+          title: 'Felicidades por tu compra',
+          message: 'Tu pago fue confirmado. Para ver los artículos comprados, entrá en tu perfil y abrí la sección Compras realizadas.',
+          actionLabel: 'Ir a Compras realizadas',
+          actionHref: currentUser?.uid ? `#perfil/${encodeURIComponent(currentUser.uid)}/compras` : '#',
+          icon: approvedEntry ? '✓' : '!',
+          tone: approvedEntry ? 'success' : 'warning'
+        });
+        return true;
+      }
+
+      renderPaymentResultPage({
+        title: paymentRouteData.flow === 'pending' ? 'Pago en proceso' : 'No pudimos confirmar tu compra',
+        message: paymentRouteData.flow === 'pending'
+          ? 'El pago todavía está pendiente. Cuando se confirme, aparecerá en tu historial de compras.'
+          : 'No se registró la aprobación del pago. Si ya abonaste, esperá unos minutos y revisá nuevamente.',
+        actionLabel: 'Volver al inicio',
+        actionHref: '#top',
+        icon: paymentRouteData.flow === 'pending' ? '…' : '!',
+        tone: 'warning'
+      });
+      return true;
+    }
+
+    async function getPurchasedContentAssets(publication, purchaseEntry) {
+      const publicationAssets = Array.isArray(publication?.contentAssets) ? publication.contentAssets : [];
+      const purchaseAssets = Array.isArray(purchaseEntry?.contentAssets) ? purchaseEntry.contentAssets : [];
+      const fallbackUrls = Array.isArray(publication?.protectedUrls) ? publication.protectedUrls : [];
+      const baseAssets = publicationAssets.length ? publicationAssets : purchaseAssets;
+
+      if (!baseAssets.length && fallbackUrls.length) {
+        return fallbackUrls.map((url, index) => ({
+          id: `${publication?.id || 'purchase'}_${index}`,
+          kind: 'image',
+          mimeType: 'image/jpeg',
+          storagePath: '',
+          label: `Imagen ${index + 1}`,
+          sortOrder: index,
+          url
+        }));
+      }
+
+      if (isRealFirebase && publication?.id && purchaseEntry && String(purchaseEntry.status || '').toLowerCase() === 'approved') {
+        try {
+          const access = await requestSecureContentAccess(publication.id);
+          const accessAssets = Array.isArray(access?.assets) ? access.assets : [];
+          const defaultSignedUrl = String(access?.signedUrl || '');
+          return baseAssets.map(asset => {
+            const signedAsset = accessAssets.find(item => String(item.storagePath || '') === String(asset.storagePath || ''));
+            return {
+              ...asset,
+              url: String(signedAsset?.signedUrl || defaultSignedUrl || asset.url || asset.previewUrl || '')
+            };
+          }).filter(asset => String(asset.url || '').trim());
+        } catch (error) {
+          console.warn('No se pudo resolver el acceso comprado', error);
+        }
+      }
+
+      return baseAssets.map((asset, index) => ({
+        ...asset,
+        id: asset.id || `${publication?.id || 'purchase'}_${index}`,
+        url: String(asset.url || asset.previewUrl || '')
+      })).filter(asset => String(asset.url || '').trim());
+    }
+
+    function renderPurchaseHistoryList(entries) {
+      const container = document.getElementById('purchaseHistoryPageContent');
+      if (!container) return;
+
+      if (!entries.length) {
+        container.innerHTML = '<div class="rounded-3xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">Aún no tienes compras realizadas.</div>';
+        return;
+      }
+
+      container.innerHTML = entries.map(entry => {
+        const publication = getPublicationById(entry.publicationId);
+        const title = entry.title || publication?.title || 'Material educativo';
+        const description = entry.description || publication?.description || 'Sin descripción disponible.';
+        const cover = entry.portadaUrl || publication?.portadaUrl || 'https://via.placeholder.com/640x420?text=Material';
+        const price = Number(entry.price || publication?.price || 0).toLocaleString('es-AR');
+        const dateLabel = formatDate(entry.createdAt || entry.purchasedAt || entry.date);
+        const status = String(entry.status || 'pendiente');
+        const canOpen = status.toLowerCase() === 'approved' || !isRealFirebase;
+
+        return `
+          <article class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+            <div class="grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)] gap-0">
+              <div class="h-56 lg:h-full bg-slate-100 overflow-hidden">
+                <img src="${cover}" alt="${title}" class="w-full h-full object-cover" />
+              </div>
+              <div class="p-5 sm:p-6 space-y-4">
+                <div class="space-y-2">
+                  <div class="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                    <span class="rounded-full bg-slate-100 px-2 py-1">${status}</span>
+                    <span class="rounded-full bg-indigo-50 px-2 py-1 text-brand">Compra realizada</span>
+                  </div>
+                  <h3 class="text-lg font-black text-slate-900 leading-tight">${title}</h3>
+                  <p class="text-sm text-slate-600 line-clamp-3">${description}</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-slate-600">
+                  <div class="rounded-2xl bg-slate-50 p-3">
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Precio</p>
+                    <p class="mt-1 font-black text-slate-900">$${price} ARS</p>
+                  </div>
+                  <div class="rounded-2xl bg-slate-50 p-3">
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Comprado</p>
+                    <p class="mt-1 font-black text-slate-900">${dateLabel}</p>
+                  </div>
+                  <div class="rounded-2xl bg-slate-50 p-3">
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Cantidad</p>
+                    <p class="mt-1 font-black text-slate-900">${Number(entry.quantity || 1)}</p>
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  <button type="button" onclick="openPurchaseDetailPage('${String(currentUser?.uid || entry.buyerId || '')}', '${String(entry.publicationId || '')}')" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-white shadow-sm ${canOpen ? '' : 'opacity-60 cursor-not-allowed pointer-events-none'}">
+                    <i class="fa-solid fa-images"></i>
+                    Ver imágenes compradas
+                  </button>
+                  <button type="button" onclick="openDetailModal(${JSON.stringify(entry.publicationId)})" class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700">
+                    <i class="fa-solid fa-eye"></i>
+                    Ver detalle
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function renderPurchaseDetailPage(targetUserId, publicationId) {
+      const container = document.getElementById('purchaseHistoryPageContent');
+      if (!container) return false;
+
+      const purchaseEntry = currentPurchaseHistory.find(entry => String(entry.publicationId || '') === String(publicationId || '') && String(entry.buyerId || currentUser?.uid || '') === String(targetUserId || currentUser?.uid || ''));
+      const publication = getPublicationById(publicationId) || purchaseEntry || null;
+
+      if (!purchaseEntry && !publication) {
+        container.innerHTML = '<div class="rounded-3xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">No se encontró esta compra.</div>';
+        return false;
+      }
+
+      const title = purchaseEntry?.title || publication?.title || 'Material educativo';
+      const description = purchaseEntry?.description || publication?.description || 'Sin descripción disponible.';
+      const cover = purchaseEntry?.portadaUrl || publication?.portadaUrl || 'https://via.placeholder.com/960x640?text=Material';
+      const purchaseDate = formatDate(purchaseEntry?.createdAt || purchaseEntry?.purchasedAt || purchaseEntry?.date);
+      const status = String(purchaseEntry?.status || 'pendiente');
+      const assets = await getPurchasedContentAssets(publication, purchaseEntry);
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+            <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-0">
+              <div class="bg-slate-100 p-3 sm:p-4">
+                <img src="${cover}" alt="${title}" class="w-full max-h-[70vh] object-contain rounded-3xl bg-white border border-slate-200" />
+              </div>
+              <div class="p-5 sm:p-6 space-y-4">
+                <div class="space-y-2">
+                  <div class="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                    <span class="rounded-full bg-slate-100 px-2 py-1">${status}</span>
+                    <span class="rounded-full bg-indigo-50 px-2 py-1 text-brand">Vista en URL propia</span>
+                  </div>
+                  <h3 class="text-2xl font-black text-slate-900 leading-tight">${title}</h3>
+                  <p class="text-sm text-slate-600 leading-relaxed">${description}</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div class="rounded-2xl bg-slate-50 p-4">
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Precio</p>
+                    <p class="mt-1 font-black text-slate-900">$${Number(purchaseEntry?.price || publication?.price || 0).toLocaleString('es-AR')} ARS</p>
+                  </div>
+                  <div class="rounded-2xl bg-slate-50 p-4">
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Comprado</p>
+                    <p class="mt-1 font-black text-slate-900">${purchaseDate}</p>
+                  </div>
+                  <div class="rounded-2xl bg-slate-50 p-4 sm:col-span-2">
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Vendedor</p>
+                    <p class="mt-1 font-black text-slate-900">${purchaseEntry?.authorNick || publication?.authorNick || 'Anónimo'}</p>
+                  </div>
+                </div>
+                <button type="button" onclick="closePurchaseHistoryPage()" class="w-full rounded-xl bg-brand px-4 py-3 text-sm font-black text-white shadow-sm">Volver a mis compras</button>
+              </div>
+            </div>
+          </div>
+
+          <section class="space-y-4">
+            <div class="flex items-center justify-between gap-3">
+              <h4 class="text-lg font-black text-slate-900">Imágenes compradas</h4>
+              <p class="text-xs text-slate-500">Desplázate hacia abajo para verlas grandes.</p>
+            </div>
+            ${assets.length ? assets.map((asset, index) => `
+              <article class="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-slate-100">
+                  <div>
+                    <p class="text-sm font-black text-slate-900">${asset.label || `Imagen ${index + 1}`}</p>
+                    <p class="text-xs text-slate-500">Imagen ${index + 1} de ${assets.length}</p>
+                  </div>
+                  <a href="${asset.url}" target="_blank" rel="noopener noreferrer" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700">Abrir</a>
+                </div>
+                <div class="bg-slate-50 p-3 sm:p-4">
+                  <img src="${asset.url}" alt="${asset.label || `Imagen ${index + 1}`}" class="w-full max-h-[78vh] object-contain rounded-2xl bg-white border border-slate-200" />
+                </div>
+              </article>
+            `).join('') : `
+              <div class="rounded-3xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+                No hay imágenes disponibles para esta compra.
+              </div>
+            `}
+          </section>
+        </div>
+      `;
+
+      return true;
+    }
+
+    async function renderPurchaseHistoryPage(targetUserId, publicationId = '') {
+      const purchasePage = document.getElementById('purchaseHistoryPage');
+      const profilePage = document.getElementById('profilePage');
+      const topPage = document.getElementById('topPage');
+      if (profilePage) profilePage.classList.add('hidden');
+      if (topPage) topPage.classList.add('hidden');
+      if (purchasePage) purchasePage.classList.remove('hidden');
+
+      if (!currentUser || String(targetUserId || '') !== String(currentUser.uid || '')) {
+        const container = document.getElementById('purchaseHistoryPageContent');
+        if (container) {
+          container.innerHTML = '<div class="rounded-3xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">Debes iniciar sesión con tu usuario para ver tus compras.</div>';
+        }
+        if (!currentUser) {
+          openAuthModal();
+        }
+        return false;
+      }
+
+      const ownPurchases = currentPurchaseHistory
+        .filter(entry => String(entry.buyerId || currentUser.uid || '') === String(currentUser.uid))
+        .sort((a, b) => getPublicationTimestamp(b) - getPublicationTimestamp(a));
+
+      if (publicationId) {
+        return await renderPurchaseDetailPage(targetUserId, publicationId);
+      }
+
+      const container = document.getElementById('purchaseHistoryPageContent');
+      if (container) {
+        container.innerHTML = '<div class="rounded-3xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">Cargando compras...</div>';
+      }
+      renderPurchaseHistoryList(ownPurchases);
+      return true;
+    }
+
     const detailReviewForm = document.getElementById("detailReviewForm");
+    const detailReviewStars = document.getElementById('detailReviewStars');
+    const detailReviewComment = document.getElementById('detailReviewComment');
+    const detailReviewHint = document.getElementById('detailReviewHint');
+
+    function updateReviewRequirementState() {
+      if (!detailReviewStars || !detailReviewComment || !detailReviewHint) return;
+      const selectedStars = Number(detailReviewStars.value || 0);
+      const needsExplanation = selectedStars > 0 && selectedStars < 3;
+      detailReviewHint.classList.toggle('hidden', !needsExplanation);
+      detailReviewComment.required = needsExplanation;
+      detailReviewComment.setCustomValidity('');
+      if (!needsExplanation && detailReviewComment.value.trim()) {
+        detailReviewComment.setCustomValidity('');
+      }
+    }
+
+    if (detailReviewStars) {
+      detailReviewStars.addEventListener('change', updateReviewRequirementState);
+      detailReviewStars.addEventListener('input', updateReviewRequirementState);
+    }
+
+    if (detailReviewComment) {
+      detailReviewComment.addEventListener('input', () => {
+        if (detailReviewComment.value.trim()) {
+          detailReviewComment.setCustomValidity('');
+        }
+      });
+    }
 
     if (detailReviewForm) {
       detailReviewForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const estrellas = parseInt(document.getElementById("detailReviewStars").value, 10);
-        const comentario = document.getElementById("detailReviewComment").value.trim();
+        const estrellas = parseInt(detailReviewStars?.value || '', 10);
+        const comentario = String(detailReviewComment?.value || '').trim();
         const publicationId = document.getElementById("detailModal").dataset.publicationId;
         const authorId = document.getElementById("detailModal").dataset.authorId;
         const reviewerId = currentUser ? currentUser.uid : idAutorEjemplo;
@@ -1829,8 +2707,18 @@
           return;
         }
 
+        if (!Number.isFinite(estrellas) || estrellas < 1 || estrellas > 5) {
+          alert('Selecciona una calificación válida.');
+          return;
+        }
+
         if (estrellas < 3 && !comentario) {
-          alert("Para calificaciones de 1 o 2 estrellas, el comentario es obligatorio.");
+          if (detailReviewComment) {
+            detailReviewComment.setCustomValidity('Debes explicar por qué elegiste menos de 3 estrellas.');
+            detailReviewComment.reportValidity();
+            detailReviewComment.focus();
+          }
+          alert("Para calificaciones de 1 o 2 estrellas, tenés que explicar por qué.");
           return;
         }
 
@@ -1857,6 +2745,7 @@
 
           alert("¡Muchas gracias! Tu opinión ha sido registrada.");
           detailReviewForm.reset();
+          updateReviewRequirementState();
           if (authorId) {
             loadAuthorStatistics(authorId, document.getElementById('modalAuthor').innerText, document.getElementById('modalPublisherAvatar').src);
           }
@@ -1880,7 +2769,7 @@
       avatarEl.src = authorAvatar || defaultAvatar;
       nameEl.innerText = authorNick || 'Autor';
       nameEl.onclick = () => openUserProfile(authorId || '');
-      badgeEl.innerText = 'Perfil del vendedor';
+      badgeEl.innerText = 'Validación del vendedor';
       pubsEl.innerText = '0';
       reviewsEl.innerText = '0';
       ratingEl.innerText = '0.0';
@@ -1978,6 +2867,7 @@
           country: country,
           institution: inst,
           avatarUrl: avatarUrl || '',
+          payoutIdentifier: '',
           payoutAlias: '',
           payoutCbu: '',
           payoutOwnerName: '',
@@ -2009,6 +2899,7 @@
           province: 'Buenos Aires',
           country: 'Argentina',
           institution: 'N/D',
+          payoutIdentifier: '',
           payoutAlias: '',
           payoutCbu: '',
           payoutOwnerName: ''
@@ -2051,6 +2942,7 @@
             country: "Argentina",
             institution: "UBA",
             avatarUrl: user.photoURL || '',
+            payoutIdentifier: '',
             payoutAlias: '',
             payoutCbu: '',
             payoutOwnerName: ''
@@ -2131,7 +3023,7 @@
       }
 
       if (!hasValidSellerPayoutData(currentUserData)) {
-        alert('Antes de publicar debes completar CBU/alias y titular en tu perfil.');
+        alert('Antes de publicar debes completar un CBU o alias, junto con el titular, en tu perfil.');
         goToPayoutSetupFromPublish();
         resetSubmitState();
         return;
@@ -2160,11 +3052,13 @@
         createdAt: isRealFirebase ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
       };
 
-      const savePublication = async (coverUrl, protectedUrls) => {
+      const savePublication = async (coverUrl, contentAssets) => {
         const finalData = {
           ...postData,
           portadaUrl: coverUrl,
-          protectedUrls
+          contentAssets,
+          protectedStoragePaths: Array.isArray(contentAssets) ? contentAssets.map(asset => asset.storagePath).filter(Boolean) : [],
+          protectedUrls: []
         };
 
         if (!isRealFirebase) {
@@ -2207,22 +3101,38 @@
       };
 
       const uploadProtectedImages = async () => {
-        const urls = [];
-        for (const file of protectedFiles) {
+        const assets = [];
+        for (const [index, file] of Array.from(protectedFiles).entries()) {
           if (!isRealFirebase) {
-            urls.push(URL.createObjectURL(file));
+            assets.push({
+              id: `local_${Date.now()}_${index}`,
+              kind: 'image',
+              mimeType: file.type || 'image/jpeg',
+              storagePath: `local/${Date.now()}_${file.name}`,
+              url: URL.createObjectURL(file),
+              label: file.name || `Archivo ${index + 1}`,
+              sortOrder: index
+            });
             continue;
           }
           const safeName = String(file.name || 'file').replace(/\s+/g, '_');
           const protectedRef = storage.ref(`protegidos/${ownerUid}/${Date.now()}_${safeName}`);
           await protectedRef.put(file);
-          urls.push(await protectedRef.getDownloadURL());
+          assets.push({
+            id: protectedRef.fullPath.replace(/[^a-zA-Z0-9_-]/g, '_'),
+            kind: String(file.type || 'image/jpeg').startsWith('video/') ? 'video' : String(file.type || 'image/jpeg').startsWith('application/pdf') ? 'document' : 'image',
+            mimeType: file.type || 'image/jpeg',
+            storagePath: protectedRef.fullPath,
+            label: file.name || `Archivo ${index + 1}`,
+            filename: file.name || '',
+            sortOrder: index
+          });
         }
-        return urls;
+        return assets;
       };
 
       Promise.all([uploadCover(), uploadProtectedImages()])
-        .then(([coverUrl, protectedUrls]) => savePublication(coverUrl, protectedUrls))
+        .then(([coverUrl, contentAssets]) => savePublication(coverUrl, contentAssets))
         .catch(err => {
           console.error('Error al subir archivos', err);
           if (err?.code === 'storage/unauthorized') {
@@ -2274,11 +3184,12 @@
             hasMorePublications = false;
           } else {
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const enrichedItems = await enrichPublicationsWithReviewStats(items);
             publicationsLastVisible = snapshot.docs[snapshot.docs.length - 1];
             if (snapshot.size < publicationsPageSize) {
               hasMorePublications = false;
             }
-            loadedPublications = [...loadedPublications, ...items];
+            loadedPublications = [...loadedPublications, ...enrichedItems];
             allPublications = loadedPublications;
             await refreshNearbyPublicationsCache(loadedPublications);
             renderGrid(applyFilters(loadedPublications));
@@ -2298,8 +3209,8 @@
           return cityMatch && subjectMatch && searchMatch;
         });
         const page = filteredLocal.slice(0, publicationsPageSize);
-        loadedPublications = page;
-        allPublications = page;
+        loadedPublications = await enrichPublicationsWithReviewStats(page);
+        allPublications = loadedPublications;
         hasMorePublications = filteredLocal.length > publicationsPageSize;
         await refreshNearbyPublicationsCache(loadedPublications);
         renderGrid(loadedPublications);
@@ -2433,7 +3344,7 @@
                 <div class="flex items-center gap-2">
                   <span id="pubRatingBadge-${item.id}" class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[10px] text-slate-700 cursor-pointer" onclick="openDetailModal(${JSON.stringify(item.id)}, true)">
                     <i class="fa-solid fa-star text-amber-400"></i>
-                    ${item.publicationAverage || '0.0'}
+                    Validación vendedor ${item.publicationAverage || '0.0'}
                   </span>
                   <span id="pubReviewsBadge-${item.id}" class="text-[10px] text-slate-400">${item.publicationReviewCount ? item.publicationReviewCount + ' reseñas' : 'Sin reseñas'}</span>
                   <span class="text-brand font-black text-sm">$${item.price} ARS</span>
@@ -2579,19 +3490,36 @@
       }
 
       historyItems.forEach(entry => {
+        const publication = getPublicationById(entry.publicationId);
+        const materialTitle = entry.title || publication?.title || 'Material educativo';
+        const materialDescription = entry.description || publication?.description || 'Sin descripción disponible.';
+        const materialCover = entry.portadaUrl || publication?.portadaUrl || 'https://via.placeholder.com/280x180?text=Material';
+        const materialSubject = entry.subject || publication?.subject || '';
+        const materialInstitution = entry.institution || publication?.institution || '';
         const card = document.createElement('div');
         card.className = 'bg-white border border-slate-200 rounded-2xl p-4';
         const status = entry.status || 'pendiente';
         card.innerHTML = `
           <div class="flex items-start justify-between gap-3">
-            <div>
-              <p class="text-sm font-black text-slate-900">${entry.title || 'Publicación'}</p>
+            <div class="flex items-start gap-3 min-w-0">
+              <img src="${materialCover}" alt="${materialTitle}" class="w-20 h-20 rounded-xl object-cover border border-slate-200" />
+              <div class="min-w-0">
+                <p class="text-sm font-black text-slate-900 line-clamp-2">${materialTitle}</p>
+                <p class="text-xs text-slate-500 line-clamp-2">${materialDescription}</p>
+                <p class="text-xs text-slate-500">${materialSubject ? `Materia: ${materialSubject}` : 'Materia: N/D'}</p>
+                <p class="text-xs text-slate-500">${materialInstitution ? `Institución: ${materialInstitution}` : 'Institución: N/D'}</p>
               <p class="text-xs text-slate-500">Vendedor: ${entry.authorNick || 'Anónimo'}</p>
               <p class="text-xs text-slate-500">Cantidad: ${entry.quantity || 1}</p>
               <p class="text-xs text-slate-500">Estado: ${status}</p>
+              <div class="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
+                <p class="font-black">Contenido de la compra</p>
+                <p class="mt-1">Este material quedó asociado a tu cuenta. El contenido se vuelve visible desde el botón de abajo cuando el acceso está aprobado.</p>
+              </div>
+            </div>
             </div>
             <div class="text-right">
               <p class="text-sm font-black text-brand">$${Number(entry.price || 0)} ARS</p>
+              <button onclick="openPurchaseDetailPage('${String(currentUser?.uid || entry.buyerId || '')}', '${String(entry.publicationId || '')}')" class="mt-2 px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-xs font-bold">Ver imágenes compradas</button>
               <button onclick="reportPublicationFromHistory('${entry.publicationId}')" class="mt-2 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-bold">Reportar</button>
             </div>
           </div>
@@ -2690,9 +3618,10 @@
 
     // MODAL DETALLE
     function openDetailModal(id, focusReviews = false) {
-      const item = isRealFirebase ? null : localDB.find(x => x.id === id);
+      const normalizedId = String(id || '');
+      const item = isRealFirebase ? null : localDB.find(x => String(x.id) === normalizedId);
       
-      const setupModal = (data) => {
+      const setupModal = async (data) => {
         document.getElementById('modalTitle').innerText = data.title;
         document.getElementById('modalDescription').innerText = data.description;
         document.getElementById('modalType').innerText = data.type;
@@ -2708,41 +3637,78 @@
             <img src="${data.portadaUrl || 'https://via.placeholder.com/300x400?text=Sin+portada'}" alt="Portada" class="w-full rounded-3xl object-cover max-h-96" />
           </div>
         `;
-        const protectedUrls = data.protectedUrls || [];
-        document.getElementById('modalImageCount').innerText = protectedUrls.length
-          ? `${protectedUrls.length} imagen${protectedUrls.length === 1 ? '' : 'es'} protegida${protectedUrls.length === 1 ? '' : 's'}`
-          : 'Sin imágenes protegidas';
-        document.getElementById('protectedContentPlaceholder').classList.remove('hidden');
-        document.getElementById('protectedContent').classList.add('hidden');
-        document.getElementById('protectedContentText').innerHTML = protectedUrls.length
-          ? protectedUrls.map(url => `<img src="${url}" alt="Contenido protegido" class="w-full rounded-2xl mb-3" />`).join('')
-          : '<p class="text-sm text-slate-500">El contenido protegido está disponible tras la compra.</p>';
-        document.getElementById('buyButtonContainer').innerHTML = `
-          <div class="flex items-center gap-2">
-            <button onclick="simulatePurchase()" class="flex-1 bg-[#009EE3] text-white py-3.5 rounded-xl font-bold text-xs shadow-md">Comprar</button>
-            <span class="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-bold text-[#009EE3]">Mercado Pago</span>
+        const accessState = getAccessiblePublicationContent(data);
+        const modalImageCount = document.getElementById('modalImageCount');
+        if (modalImageCount) {
+          const assetCount = Array.isArray(data.contentAssets) ? data.contentAssets.length : 0;
+          modalImageCount.innerText = assetCount
+            ? `${assetCount} archivo${assetCount === 1 ? '' : 's'} protegido${assetCount === 1 ? '' : 's'}`
+            : 'Sin archivos protegidos';
+        }
+        const protectedPlaceholder = document.getElementById('protectedContentPlaceholder');
+        const protectedContent = document.getElementById('protectedContent');
+        const protectedContentText = document.getElementById('protectedContentText');
+        if (accessState.canViewContent) {
+          if (protectedPlaceholder) protectedPlaceholder.classList.add('hidden');
+          if (protectedContent) protectedContent.classList.remove('hidden');
+        } else {
+          if (protectedPlaceholder) protectedPlaceholder.classList.remove('hidden');
+          if (protectedContent) protectedContent.classList.add('hidden');
+        }
+        if (protectedContentText) {
+          if (accessState.canViewContent) {
+            protectedContentText.innerHTML = '<p class="text-sm text-slate-500">Cargando contenido privado...</p>';
+            try {
+              protectedContentText.innerHTML = await renderSecurePublicationContent(data);
+            } catch (error) {
+              protectedContentText.innerHTML = '<p class="text-sm text-red-500">No se pudo cargar el contenido privado.</p>';
+            }
+          } else {
+            protectedContentText.innerHTML = '<p class="text-sm text-slate-500">El contenido protegido está disponible tras la compra.</p>';
+          }
+        }
+        document.getElementById('buyButtonContainer').innerHTML = accessState.canViewContent
+          ? `
+          <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 text-sm">
+            <p class="font-black">Contenido habilitado</p>
+            <p class="mt-1 text-xs leading-relaxed">Ya podés ver el material comprado. Si querés volver a encontrarlo más tarde, entrá en tu perfil y abrí la sección Compras.</p>
           </div>
+        `
+          : `
+          <button onclick="simulatePurchase()" class="w-full bg-[#009EE3] text-white py-3.5 rounded-xl font-bold text-xs shadow-md">Comprar ahora</button>
         `;
         document.getElementById('detailModal').dataset.publicationId = data.id || '';
         document.getElementById('detailModal').dataset.authorId = data.authorId || '';
-        document.getElementById('detailModal').dataset.purchased = 'false';
+        document.getElementById('detailModal').dataset.purchased = accessState.canViewContent ? 'true' : 'false';
         const reviewForm = document.getElementById('detailReviewForm');
         if (reviewForm) reviewForm.reset();
+        updateReviewRequirementState();
         const reviewSection = document.getElementById('detailReviewSection');
-        if (reviewSection) reviewSection.classList.add('hidden');
+        if (reviewSection) reviewSection.classList.toggle('hidden', !accessState.canViewContent);
         const purchasePrompt = document.getElementById('purchasePrompt');
-        if (purchasePrompt) purchasePrompt.classList.remove('hidden');
+        if (purchasePrompt) {
+          purchasePrompt.classList.remove('hidden');
+          purchasePrompt.innerHTML = accessState.canViewContent
+            ? `
+              <p class="font-bold text-slate-800 mb-2">Importante: tu compra ya está disponible.</p>
+              <p>Para volver a verla en cualquier momento, entrá en <strong>Perfil</strong> y abrí la sección <strong>Compras</strong>. Desde allí vas a encontrar el detalle completo del material adquirido.</p>
+            `
+            : `
+              <p class="font-bold text-slate-800 mb-2">Primero completá la compra para acceder al contenido protegido.</p>
+              <p>Cuando el pago esté realizado, vas a encontrar esta publicación en <strong>Perfil</strong> &gt; <strong>Compras</strong> con el material desbloqueado.</p>
+            `;
+        }
         loadAuthorStatistics(data.authorId, data.authorNick, data.authorAvatar);
         document.getElementById('detailModal').classList.remove('hidden');
       };
 
       if (isRealFirebase) {
-        dbRef.collection('publications').doc(id).get().then(doc => {
+        dbRef.collection('publications').doc(normalizedId).get().then(doc => {
           if (!doc.exists) {
             alert('No se encontró la publicación en la nube.');
             return;
           }
-          setupModal({ id: id, ...doc.data() });
+          setupModal({ id: normalizedId, ...doc.data() });
         });
       } else if (item) {
         setupModal(item);
@@ -2777,7 +3743,16 @@
       const title = String(publicacion?.title || publicacion?.name || 'Producto').trim();
       const price = normalizarPrecio(publicacion?.price);
       const safeQuantity = Number(quantity) > 0 ? Number(quantity) : 1;
-      const payload = { title, price, quantity: safeQuantity };
+      const orderId = String(publicacion?.orderId || `order_${publicacion?.id || 'item'}_${Date.now()}`);
+      const payload = {
+        title,
+        price,
+        quantity: safeQuantity,
+        orderId,
+        publicationId: String(publicacion?.id || ''),
+        buyerId: getCurrentUserId(),
+        deviceId: getOrCreateSecureDeviceId()
+      };
 
       if (!publicacion?.id) console.warn('Publicación sin id al iniciar pago', publicacion);
 
@@ -2788,7 +3763,7 @@
       }
 
       try {
-        const response = await fetch('/.netlify/functions/create-preference', {
+        const response = await fetch(getCreatePreferenceFunctionUrl(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -2833,7 +3808,7 @@
           return false;
         }
 
-        await addPurchaseHistoryEntry(publicacion, safeQuantity);
+        savePendingPurchaseCheckout(orderId, publicacion, safeQuantity);
         window.location.href = data.init_point;
         return true;
       } catch (error) {
@@ -2962,9 +3937,17 @@
     }
 
     async function handleAppRoute() {
+      const purchaseRouteData = getPurchaseRouteDataFromHash();
+      if (purchaseRouteData) {
+        await renderPurchaseHistoryPage(purchaseRouteData.userId, purchaseRouteData.publicationId);
+        closeTopRanking(false);
+        return;
+      }
+
       if (isTopRoute()) {
         await renderTopPage();
         document.getElementById('profilePage').classList.add('hidden');
+        closePurchaseHistoryPage(false);
         return;
       }
 
@@ -2972,6 +3955,7 @@
       if (!profileUserId) {
         closeProfilePage(false);
         closeTopRanking(false);
+        closePurchaseHistoryPage(false);
         return;
       }
 
@@ -2979,6 +3963,7 @@
       if (loaded) {
         document.getElementById('profilePage').classList.remove('hidden');
         closeTopRanking(false);
+        closePurchaseHistoryPage(false);
       }
     }
 
@@ -2992,6 +3977,7 @@
 
     function closeProfilePage(updateUrl = true) {
       document.getElementById('profilePage').classList.add('hidden');
+      closePurchaseHistoryPage(false);
       if (updateUrl && window.location.hash.startsWith('#perfil/')) {
         history.pushState(null, '', `${window.location.pathname}${window.location.search}`);
       }
@@ -3229,16 +4215,14 @@
         document.getElementById('editCountry').value = userDoc.country || 'Argentina';
         document.getElementById('editInstitution').value = userDoc.institution || '';
         document.getElementById('editAvatarUrl').value = userDoc.avatarUrl || '';
-        document.getElementById('editPayoutAlias').value = userDoc.payoutAlias || '';
-        document.getElementById('editPayoutCbu').value = normalizeCbu(userDoc.payoutCbu || '');
+        document.getElementById('editPayoutIdentifier').value = userDoc.payoutIdentifier || userDoc.payoutAlias || formatMaskedCbu(userDoc.payoutCbu || '') || '';
         document.getElementById('editPayoutOwnerName').value = userDoc.payoutOwnerName || '';
       }
 
       if (payoutSection) {
         payoutSection.classList.toggle('hidden', !canEdit);
         if (canEdit) {
-          document.getElementById('profilePayoutAlias').innerText = userDoc.payoutAlias || 'Pendiente de completar';
-          document.getElementById('profilePayoutCbu').innerText = formatMaskedCbu(userDoc.payoutCbu || '');
+          document.getElementById('profilePayoutIdentifier').innerText = userDoc.payoutIdentifier || userDoc.payoutAlias || formatMaskedCbu(userDoc.payoutCbu || '') || 'Pendiente de completar';
           document.getElementById('profilePayoutOwnerName').innerText = userDoc.payoutOwnerName || 'Pendiente de completar';
         }
       }
@@ -3285,8 +4269,7 @@
       const institution = document.getElementById('editInstitution').value.trim();
       const avatarUrl = document.getElementById('editAvatarUrl').value.trim();
       const avatarFile = document.getElementById('editAvatarFile').files[0];
-      const payoutAlias = document.getElementById('editPayoutAlias').value.trim();
-      const payoutCbu = normalizeCbu(document.getElementById('editPayoutCbu').value);
+      const payoutIdentifier = String(document.getElementById('editPayoutIdentifier').value || '').trim();
       const payoutOwnerName = document.getElementById('editPayoutOwnerName').value.trim();
 
       if (!username || !city || !province || !country || !institution) {
@@ -3301,15 +4284,14 @@
         return;
       }
 
-      const hasAnyPayoutField = Boolean(payoutAlias || payoutCbu || payoutOwnerName);
+      const hasAnyPayoutField = Boolean(payoutIdentifier || payoutOwnerName);
       if (hasAnyPayoutField) {
-        const hasAliasOrCbu = Boolean(payoutAlias || payoutCbu);
-        if (!hasAliasOrCbu || !payoutOwnerName) {
-          alert('Para guardar datos de cobro debes completar CBU/alias y titular.');
+        if (!payoutIdentifier || !payoutOwnerName) {
+          alert('Para guardar datos de cobro debes completar un CBU o alias y el titular.');
           return;
         }
-        if (payoutCbu && payoutCbu.length !== 22) {
-          alert('Si cargas CBU, debe tener 22 dígitos.');
+        if (/^\d+$/.test(payoutIdentifier) && payoutIdentifier.length !== 22) {
+          alert('Si ingresas un CBU, debe tener 22 dígitos.');
           return;
         }
       }
@@ -3334,8 +4316,9 @@
           country,
           institution,
           avatarUrl: finalAvatarUrl || currentUserData?.avatarUrl || '',
-          payoutAlias,
-          payoutCbu,
+          payoutIdentifier,
+          payoutAlias: /^\d+$/.test(payoutIdentifier) ? '' : payoutIdentifier,
+          payoutCbu: /^\d+$/.test(payoutIdentifier) ? payoutIdentifier : '',
           payoutOwnerName
         };
 
