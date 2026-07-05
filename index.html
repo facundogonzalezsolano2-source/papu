@@ -182,7 +182,7 @@
   </header>
 
   <!-- MENSAJE DE ESTADO DE CONEXIÓN A LA NUBE -->
-  <div id="connectionStatus" class="bg-amber-100 border-b border-amber-200 text-amber-800 text-center py-2 text-xs font-bold">
+  <div id="connectionStatus" class="hidden bg-amber-100 border-b border-amber-200 text-amber-800 text-center py-2 text-xs font-bold">
     ⚠️ Estás usando el modo de prueba local. Para conectar tu base de datos real en la nube, debes pegar tus llaves de Firebase en el código del archivo index.html.
   </div>
 
@@ -1010,7 +1010,16 @@
       }
     };
 
-    if (firebaseConfig.apiKey !== "TU_API_KEY") {
+    const hasRealFirebaseConfig = Boolean(
+      firebaseConfig.apiKey &&
+      firebaseConfig.apiKey !== 'TU_API_KEY' &&
+      firebaseConfig.appId &&
+      firebaseConfig.appId !== 'TU_APP_ID' &&
+      firebaseConfig.projectId &&
+      firebaseConfig.projectId !== 'TU_PROJECT_ID'
+    );
+
+    if (hasRealFirebaseConfig) {
       isRealFirebase = true;
       try {
         firebase.analytics();
@@ -1024,6 +1033,7 @@
     } else {
       const statusEl = document.getElementById('connectionStatus');
       if (statusEl) {
+        statusEl.classList.remove('hidden');
         statusEl.innerText = "⚠️ Estás usando el modo de prueba local. Para conectar tu base de datos real en la nube, debes pegar tus llaves de Firebase en el código del archivo index.html.";
       }
     }
