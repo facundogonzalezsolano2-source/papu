@@ -592,13 +592,8 @@
               <option value="Examen">Examen</option>
               <option value="Clase">Clase</option>
               <option value="Trabajo práctico">Trabajo práctico</option>
-              <option value="Otra">Otra</option>
             </select>
           </div>
-        </div>
-        <div id="otherTypeDetailWrapper" class="hidden">
-          <label class="block font-bold text-slate-600 mb-1">¿Qué vendes en "Otra"? *</label>
-          <textarea id="formOtherTypeDetail" rows="2" placeholder="Ej: Guía de ejercicios resueltos, mapa conceptual, etc." class="w-full p-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand"></textarea>
         </div>
         <div id="commissionSummary" class="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
           <div class="flex items-center justify-between mb-2">
@@ -972,6 +967,7 @@
     let localFavorites = [];
     let localPurchaseHistory = [];
     let localReports = [];
+    const publicationViewsStorageKey = 'tuapunte:publicationViews';
 
     // INICIALIZACIÓN
     const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
@@ -1231,13 +1227,10 @@
       const protectedInput = document.getElementById('formProtectedImages');
       const protectedLabel = document.getElementById('formProtectedLabel');
       const protectedHint = document.getElementById('formProtectedHint');
-      const otherTypeDetailWrapper = document.getElementById('otherTypeDetailWrapper');
-      const otherTypeDetailInput = document.getElementById('formOtherTypeDetail');
       if (!typeSelect || !protectedInput) return;
 
       const selectedType = String(typeSelect.value || '').trim();
       const isClassType = selectedType === 'Clase';
-      const isOtherType = selectedType === 'Otra';
 
       if (protectedLabel) {
         protectedLabel.innerText = isClassType ? 'Material restringido (video de la clase) *' : 'Contenido protegido (imágenes) *';
@@ -1255,16 +1248,6 @@
         protectedInput.setAttribute('multiple', 'multiple');
       }
       protectedInput.value = '';
-
-      if (otherTypeDetailWrapper) {
-        otherTypeDetailWrapper.classList.toggle('hidden', !isOtherType);
-      }
-      if (otherTypeDetailInput) {
-        otherTypeDetailInput.required = isOtherType;
-        if (!isOtherType) {
-          otherTypeDetailInput.value = '';
-        }
-      }
     }
 
     function goToPayoutSetupFromPublish() {
@@ -1314,6 +1297,107 @@
 
     function writeLocalStorageObject(key, value) {
       localStorage.setItem(key, JSON.stringify(value && typeof value === 'object' && !Array.isArray(value) ? value : {}));
+    }
+
+    function getViewedPublicationsTrackerKey() {
+      const viewerId = currentUser?.uid
+        ? `user:${currentUser.uid}`
+        : `anon:${getOrCreateSecureDeviceId()}`;
+      return `tuapunte:viewedPublications:${viewerId}`;
+    }
+
+    function getLocalFavoritesCountByPublication(publicationId) {
+      const targetId = String(publicationId || '');
+      let total = 0;
+
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i) || '';
+        if (!key.startsWith('tuapunte:favorites:')) continue;
+        const favorites = readLocalStorageArray(key);
+        if (favorites.some(id => String(id) === targetId)) {
+          total += 1;
+        }
+      }
+
+      return total;
+    }
+
+    function getLocalSoldCountByPublication(publicationId) {
+      const targetId = String(publicationId || '');
+      const allPurchases = readLocalStorageArray('tuapunte:allPurchases');
+      return allPurchases.reduce((acc, entry) => {
+        if (String(entry?.publicationId || '') !== targetId) return acc;
+        if (!isPurchaseAccessApproved(entry)) return acc;
+        return acc + Number(entry?.quantity || 1);
+      }, 0);
+    }
+
+    async function getPublicationOwnerMetrics(publication) {
+      const publicationId = String(publication?.id || '');
+      if (!publicationId) {
+        return { views: 0, saved: 0, sold: 0, score: 0 };
+      }
+
+      let views = 0;
+      let saved = 0;
+      let sold = 0;
+
+      if (isRealFirebase) {
+        const [statsDoc, favoritesSnapshot, purchasesSnapshot] = await Promise.all([
+          dbRef.collection('publicationStats').doc(publicationId).get(),
+          dbRef.collection('favorites').where('publicationId', '==', publicationId).get(),
+          dbRef.collection('purchases').where('publicationId', '==', publicationId).get()
+        ]);
+
+        views = Number(statsDoc.data()?.views || 0);
+        saved = Number(favoritesSnapshot.size || 0);
+        sold = purchasesSnapshot.docs.reduce((acc, doc) => {
+          const data = doc.data() || {};
+          if (!isPurchaseAccessApproved(data)) return acc;
+          return acc + Number(data.quantity || 1);
+        }, 0);
+      } else {
+        const viewsMap = readLocalStorageObject(publicationViewsStorageKey);
+        views = Number(viewsMap?.[publicationId] || 0);
+        saved = getLocalFavoritesCountByPublication(publicationId);
+        sold = getLocalSoldCountByPublication(publicationId);
+      }
+
+      const score = (sold * 4) + (saved * 2) + views;
+      return { views, saved, sold, score };
+    }
+
+    async function registerPublicationView(publication) {
+      const publicationId = String(publication?.id || '');
+      if (!publicationId) return;
+
+      const ownerId = String(publication?.authorId || '');
+      if (currentUser?.uid && ownerId && String(currentUser.uid) === ownerId) {
+        return;
+      }
+
+      const trackerKey = getViewedPublicationsTrackerKey();
+      const viewedMap = readLocalStorageObject(trackerKey);
+      if (viewedMap?.[publicationId]) return;
+
+      viewedMap[publicationId] = new Date().toISOString();
+      writeLocalStorageObject(trackerKey, viewedMap);
+
+      if (isRealFirebase) {
+        try {
+          await dbRef.collection('publicationStats').doc(publicationId).set({
+            publicationId,
+            views: firebase.firestore.FieldValue.increment(1),
+            updatedAt: new Date()
+          }, { merge: true });
+        } catch (error) {
+          console.warn('No se pudo registrar la vista de publicación', error);
+        }
+      } else {
+        const viewsMap = readLocalStorageObject(publicationViewsStorageKey);
+        viewsMap[publicationId] = Number(viewsMap?.[publicationId] || 0) + 1;
+        writeLocalStorageObject(publicationViewsStorageKey, viewsMap);
+      }
     }
 
     async function loadUserCommerceState() {
@@ -3181,6 +3265,7 @@
     // PUBLICAR MATERIAL
     let isPublishing = false;
     const PUBLISH_LOGIN_REQUIRED_MESSAGE = 'Debes loggearte primero para publicar.';
+    const CHECKOUT_PROFILE_REQUIRED_MESSAGE = 'Primero debes hacerte una cuenta, un perfil. Presiona, ve al apartado de Perfil y créate una cuenta.';
 
     function handlePublish(e) {
       e.preventDefault();
@@ -3210,7 +3295,6 @@
       const protectedFiles = document.getElementById('formProtectedImages').files;
       const price = parseFloat(document.getElementById('formPrice').value);
       const type = document.getElementById('formType').value;
-      const otherTypeDetail = String(document.getElementById('formOtherTypeDetail')?.value || '').trim();
       const city = document.getElementById('formCity').value;
       const inst = document.getElementById('formInst').value;
       const professor = document.getElementById('formProfessor').value;
@@ -3237,12 +3321,6 @@
 
       if (!isClassType && protectedFilesArray.some(file => !String(file.type || '').startsWith('image/'))) {
         alert('Para este tipo de publicación, el material restringido debe ser en imágenes.');
-        resetSubmitState();
-        return;
-      }
-
-      if (String(type || '').trim() === 'Otra' && !otherTypeDetail) {
-        alert('Debes explicar qué vendes cuando eliges el tipo Otra.');
         resetSubmitState();
         return;
       }
@@ -3275,9 +3353,9 @@
         title,
         description: desc,
         price,
-        type: (String(type || '').trim() === 'Otra' && otherTypeDetail) ? `Otra: ${otherTypeDetail}` : type,
+        type,
         typeBase: type,
-        otherTypeDetail,
+        otherTypeDetail: '',
         city,
         institution: inst,
         professor,
@@ -3636,9 +3714,10 @@
       });
     }
 
-    function renderProfilePublications(publications) {
+    async function renderProfilePublications(publications, options = {}) {
       const grid = document.getElementById('profilePublicationsGrid');
       if (!grid) return;
+      const ownerView = Boolean(options?.ownerView);
       lastLoadedProfilePublications = Array.isArray(publications) ? [...publications] : [];
       grid.innerHTML = '';
 
@@ -3647,7 +3726,46 @@
         return;
       }
 
-      publications.forEach(item => {
+      let publicationsToRender = Array.isArray(publications) ? [...publications] : [];
+      let metricsByPublicationId = new Map();
+
+      if (ownerView) {
+        grid.innerHTML = '<div class="col-span-full bg-slate-50 border border-slate-200 rounded-3xl p-4 text-sm text-slate-500">Cargando métricas de tus publicaciones...</div>';
+
+        const withMetrics = await Promise.all(publicationsToRender.map(async item => {
+          const metrics = await getPublicationOwnerMetrics(item);
+          return { ...item, __metrics: metrics };
+        }));
+
+        withMetrics.forEach(item => {
+          metricsByPublicationId.set(String(item.id || ''), item.__metrics || { views: 0, saved: 0, sold: 0, score: 0 });
+        });
+
+        publicationsToRender = withMetrics
+          .sort((a, b) => {
+            const scoreDiff = Number(b.__metrics?.score || 0) - Number(a.__metrics?.score || 0);
+            if (scoreDiff !== 0) return scoreDiff;
+            const soldDiff = Number(b.__metrics?.sold || 0) - Number(a.__metrics?.sold || 0);
+            if (soldDiff !== 0) return soldDiff;
+            return getPublicationTimestamp(b) - getPublicationTimestamp(a);
+          })
+          .map(({ __metrics, ...rest }) => rest);
+
+        lastLoadedProfilePublications = [...publicationsToRender];
+        grid.innerHTML = '<div class="col-span-full bg-emerald-50 border border-emerald-200 rounded-3xl p-4 text-xs text-emerald-800 font-bold">Estas métricas (vistas, guardados y vendidos) solo las ves tú. Ordenado de mejor a peor rendimiento.</div>';
+      }
+
+      publicationsToRender.forEach((item, index) => {
+        const publicationKey = String(item.id || '');
+        const metrics = metricsByPublicationId.get(publicationKey) || { views: 0, saved: 0, sold: 0, score: 0 };
+        const rankBadge = ownerView
+          ? (index === 0
+            ? '<span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-black text-emerald-700">Mejor rendimiento</span>'
+            : (index === publicationsToRender.length - 1 && publicationsToRender.length > 1
+              ? '<span class="inline-flex items-center rounded-full bg-rose-100 px-2 py-1 text-[10px] font-black text-rose-700">Menor rendimiento</span>'
+              : `<span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">#${index + 1}</span>`))
+          : '';
+
         const card = document.createElement('div');
         card.className = 'bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-all';
         card.setAttribute('onclick', `openDetailModal(${JSON.stringify(item.id)})`);
@@ -3660,12 +3778,29 @@
               <span class="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-black">${item.type}</span>
               <span class="text-brand text-sm font-black">$${item.price} ARS</span>
             </div>
+            ${ownerView ? `<div class="flex items-center justify-between gap-2">${rankBadge}<span class="text-[10px] font-black text-slate-500">Score ${metrics.score}</span></div>` : ''}
             <h3 class="text-sm font-black text-slate-900 leading-tight">${item.title}</h3>
             <p class="text-[11px] text-slate-500 line-clamp-2">${item.subject} · ${item.professor}</p>
             <div class="flex items-center gap-2 text-[11px] text-slate-400">
               <i class="fa-solid fa-location-dot"></i>
               <span>${item.city}</span>
             </div>
+            ${ownerView ? `
+            <div class="grid grid-cols-3 gap-2 text-[11px]">
+              <div class="rounded-xl bg-slate-100 px-2 py-2 text-center">
+                <p class="text-slate-500 font-bold">Vistas</p>
+                <p class="text-slate-900 font-black">${metrics.views}</p>
+              </div>
+              <div class="rounded-xl bg-slate-100 px-2 py-2 text-center">
+                <p class="text-slate-500 font-bold">Guardados</p>
+                <p class="text-slate-900 font-black">${metrics.saved}</p>
+              </div>
+              <div class="rounded-xl bg-slate-100 px-2 py-2 text-center">
+                <p class="text-slate-500 font-bold">Vendidos</p>
+                <p class="text-slate-900 font-black">${metrics.sold}</p>
+              </div>
+            </div>
+            ` : ''}
           </div>
         `;
         grid.appendChild(card);
@@ -3942,6 +4077,7 @@
       const item = isRealFirebase ? null : localDB.find(x => String(x.id) === normalizedId);
       
       const setupModal = async (data) => {
+        registerPublicationView(data);
         document.getElementById('modalTitle').innerText = data.title;
         document.getElementById('modalDescription').innerText = data.description;
         document.getElementById('modalType').innerText = data.type;
@@ -4144,6 +4280,24 @@
     async function simulatePurchase() {
       const modal = document.getElementById('detailModal');
       if (!modal) return;
+
+      const activeUser = isRealFirebase ? ((authRef && authRef.currentUser) || currentUser) : currentUser;
+      if (!activeUser?.uid) {
+        alert(CHECKOUT_PROFILE_REQUIRED_MESSAGE);
+        openAuthModal();
+        return;
+      }
+
+      const hasBasicProfile = Boolean(
+        String(currentUserData?.username || '').trim()
+        && String(currentUserData?.city || '').trim()
+        && String(currentUserData?.institution || '').trim()
+      );
+      if (!hasBasicProfile) {
+        alert(CHECKOUT_PROFILE_REQUIRED_MESSAGE);
+        openProfileEditorFromSettings();
+        return;
+      }
 
       const publicationId = modal.dataset.publicationId || '';
       const item = isRealFirebase ? null : localDB.find(x => String(x.id) === String(publicationId));
@@ -4439,6 +4593,15 @@
       if (favoritesPage) favoritesPage.classList.add('hidden');
       if (publicationsPage) publicationsPage.classList.remove('hidden');
 
+      if (!currentUser || String(targetUserId || '') !== String(currentUser.uid || '')) {
+        const publicationsGrid = document.getElementById('profilePublicationsGrid');
+        if (publicationsGrid) {
+          publicationsGrid.innerHTML = '<div class="col-span-full bg-white border border-slate-200 rounded-2xl p-4 text-sm text-slate-500">Solo puedes ver las métricas de tus propias publicaciones.</div>';
+        }
+        if (!currentUser) openAuthModal();
+        return false;
+      }
+
       const loaded = await loadProfileData(targetUserId);
       return Boolean(loaded);
     }
@@ -4702,7 +4865,7 @@
         currentUserData = userDoc;
       }
 
-      renderProfilePublications(publications);
+      await renderProfilePublications(publications, { ownerView: canEdit });
       renderProfileReviews(receivedReviews);
 
       return true;
