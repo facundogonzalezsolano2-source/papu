@@ -463,7 +463,7 @@
           <img id="drawerUserAvatar" src="https://via.placeholder.com/80?text=U" alt="Usuario" class="w-12 h-12 rounded-full object-cover border border-slate-200" />
           <div class="min-w-0">
             <p class="text-[11px] uppercase tracking-[0.2em] text-slate-400">Cuenta</p>
-            <p id="drawerUserName" class="text-sm font-black text-slate-900 truncate">Invitado</p>
+            <p id="drawerUserName" class="text-sm font-black text-slate-900 truncate">Sin iniciar sesión</p>
           </div>
         </div>
         <button onclick="closeAppDrawer()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600"><i class="fa-solid fa-xmark"></i></button>
@@ -1145,7 +1145,29 @@
           currentUser = user;
           dbRef.collection('users').doc(user.uid).get().then(doc => {
             const data = doc.data() || {};
-            currentUserData = data;
+            currentUserData = {
+              username: data.username || user.displayName || 'usuario',
+              email: data.email || user.email || '',
+              city: data.city || '',
+              province: data.province || '',
+              country: data.country || 'Argentina',
+              institution: data.institution || '',
+              avatarUrl: data.avatarUrl || user.photoURL || ''
+            };
+            updateAuthContainer();
+            refreshUserLocationContext();
+            loadUserCommerceState().then(() => handleAppRoute()).catch(() => handleAppRoute());
+          }).catch(error => {
+            console.warn('No se pudo cargar el perfil del usuario al iniciar sesión', error);
+            currentUserData = {
+              username: user.displayName || 'usuario',
+              email: user.email || '',
+              city: '',
+              province: '',
+              country: 'Argentina',
+              institution: '',
+              avatarUrl: user.photoURL || ''
+            };
             updateAuthContainer();
             refreshUserLocationContext();
             loadUserCommerceState().then(() => handleAppRoute()).catch(() => handleAppRoute());
@@ -2076,7 +2098,7 @@
       const avatar = document.getElementById('drawerUserAvatar');
       const name = document.getElementById('drawerUserName');
       if (avatar) avatar.src = currentUserData?.avatarUrl || defaultAvatar;
-      if (name) name.innerText = currentUserData?.username || 'Invitado';
+      if (name) name.innerText = currentUserData?.username || 'Sin iniciar sesión';
     }
 
     function openAppDrawer() {
@@ -4753,14 +4775,46 @@
     async function loadProfileData(targetUserId = null) {
       const userId = targetUserId || currentUser?.uid;
       if (!userId) return false;
+      const isOwnProfile = Boolean(currentUser && String(currentUser.uid || '') === String(userId || ''));
 
       let userDoc = null;
       let publications = [];
       let receivedReviews = [];
 
       if (isRealFirebase) {
-        const userSnapshot = await dbRef.collection('users').doc(userId).get();
-        userDoc = userSnapshot.exists ? (userSnapshot.data() || {}) : null;
+        let userSnapshot = null;
+        try {
+          userSnapshot = await dbRef.collection('users').doc(userId).get();
+          userDoc = userSnapshot.exists ? (userSnapshot.data() || {}) : null;
+        } catch (error) {
+          console.warn('No se pudo obtener el documento del perfil', error);
+          userDoc = null;
+        }
+
+        if (!userDoc && isOwnProfile) {
+          const fallbackUserDoc = {
+            username: String(currentUserData?.username || currentUser?.displayName || '').trim() || 'usuario',
+            usernameLower: String((currentUserData?.username || currentUser?.displayName || 'usuario')).trim().toLowerCase(),
+            email: String(currentUserData?.email || currentUser?.email || '').trim(),
+            city: String(currentUserData?.city || '').trim(),
+            province: String(currentUserData?.province || '').trim(),
+            country: String(currentUserData?.country || 'Argentina').trim() || 'Argentina',
+            institution: String(currentUserData?.institution || '').trim(),
+            avatarUrl: String(currentUserData?.avatarUrl || currentUser?.photoURL || '').trim(),
+            payoutIdentifier: String(currentUserData?.payoutIdentifier || '').trim(),
+            payoutAlias: String(currentUserData?.payoutAlias || '').trim(),
+            payoutCbu: String(currentUserData?.payoutCbu || '').trim(),
+            payoutOwnerName: String(currentUserData?.payoutOwnerName || '').trim()
+          };
+
+          userDoc = fallbackUserDoc;
+
+          try {
+            await dbRef.collection('users').doc(userId).set(fallbackUserDoc, { merge: true });
+          } catch (error) {
+            console.warn('No se pudo crear el perfil base automáticamente', error);
+          }
+        }
 
         const publicationsSnapshot = await dbRef.collection('publications').where('authorId', '==', userId).get();
         publications = publicationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -4770,7 +4824,9 @@
       }
 
       if (!userDoc) {
-        alert('No se encontró el perfil.');
+        if (!isOwnProfile) {
+          alert('No se encontró el perfil.');
+        }
         return false;
       }
 
