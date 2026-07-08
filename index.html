@@ -1275,7 +1275,8 @@
     function goToPayoutSetupFromPublish() {
       closeVenderModal();
       closeAppDrawer();
-      if (!currentUser) {
+      const activeUser = getActiveSessionUser();
+      if (!activeUser?.uid) {
         openAuthModal();
         return;
       }
@@ -1283,8 +1284,14 @@
       openProfilePage();
     }
 
+    function getActiveSessionUser() {
+      if (currentUser?.uid) return currentUser;
+      if (isRealFirebase && authRef?.currentUser?.uid) return authRef.currentUser;
+      return currentUser;
+    }
+
     function getCurrentUserId() {
-      return currentUser?.uid || '';
+      return getActiveSessionUser()?.uid || '';
     }
 
     function getUserScopedStorageKey(baseKey, userId) {
@@ -2128,7 +2135,8 @@
 
     function openProfileEditorFromSettings() {
       closeInfoModal();
-      if (!currentUser) {
+      const activeUser = getActiveSessionUser();
+      if (!activeUser?.uid) {
         openAuthModal();
         return;
       }
@@ -2162,7 +2170,8 @@
     }
 
     function requireDrawerAuth() {
-      if (currentUser) return true;
+      const activeUser = getActiveSessionUser();
+      if (activeUser?.uid) return true;
       closeAppDrawer();
       openAuthModal();
       return false;
@@ -2177,16 +2186,17 @@
     function drawerGoToProfileSection(sectionKey) {
       if (!requireDrawerAuth()) return;
       closeAppDrawer();
+      const activeUser = getActiveSessionUser();
       if (sectionKey === 'favorites') {
-        openFavoritesPage(currentUser?.uid || '');
+        openFavoritesPage(activeUser?.uid || '');
         return;
       }
       if (sectionKey === 'history') {
-        openPurchaseHistoryPage(currentUser?.uid || '');
+        openPurchaseHistoryPage(activeUser?.uid || '');
         return;
       }
       if (sectionKey === 'publications') {
-        openPublicationsPage(currentUser?.uid || '');
+        openPublicationsPage(activeUser?.uid || '');
         return;
       }
       openProfilePage();
@@ -4420,6 +4430,11 @@
         return;
       }
       const encodedUserId = encodeURIComponent(String(userId));
+      const nextHash = `#perfil/${encodedUserId}`;
+      if (window.location.hash === nextHash) {
+        handleAppRoute();
+        return;
+      }
       window.location.hash = `perfil/${encodedUserId}`;
     }
 
@@ -4558,11 +4573,12 @@
     }
 
     function openProfilePage() {
-      if (!currentUser) {
+      const activeUser = getActiveSessionUser();
+      if (!activeUser?.uid) {
         alert('Debes iniciar sesión para ver tu perfil.');
         return;
       }
-      openUserProfile(currentUser.uid);
+      openUserProfile(activeUser.uid);
     }
 
     function closeProfilePage(updateUrl = true) {
